@@ -31,3 +31,5 @@ _up() {
     COMPREPLY=( $( compgen -W "$d" -- "$cur" ) )
 }
 complete -F _up up
+
+source /usr/local/etc/bash_completion.d/git-completion.bash
