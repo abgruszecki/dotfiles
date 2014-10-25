@@ -456,4 +456,5 @@ EXEC 01;31  # Unix
 .lisp 32
 .sbt 32
 .scala 32
+.jl 32
 .groovy 32
