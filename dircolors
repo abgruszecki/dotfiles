@@ -403,6 +403,46 @@ EXEC 01;31  # Unix
 # For universal scheme, use brightgreen 01;32
 # For optimal on light bg (but too prominent on dark bg), use white 01;34
 .log 01;32
+.log.1 01;32
+.log.2 01;32
+.log.3 01;32
+.log.4 01;32
+.log.5 01;32
+.log.6 01;32
+.log.7 01;32
+.log.8 01;32
+.log.9 01;32
+.log.10 01;32
+.log.11 01;32
+.log.12 01;32
+.log.13 01;32
+.log.14 01;32
+.log.15 01;32
+.log.16 01;32
+.log.17 01;32
+.log.18 01;32
+.log.19 01;32
+.log.20 01;32
+.log.21 01;32
+.log.22 01;32
+.log.23 01;32
+.log.24 01;32
+.log.25 01;32
+.log.26 01;32
+.log.27 01;32
+.log.28 01;32
+.log.29 01;32
+.log.30 01;32
+.log.31 01;32
+.log.32 01;32
+.log.33 01;32
+.log.34 01;32
+.log.35 01;32
+.log.36 01;32
+.log.37 01;32
+.log.38 01;32
+.log.39 01;32
+
 *~ 01;32
 *# 01;32
 #.log 01;34
@@ -458,3 +498,4 @@ EXEC 01;31  # Unix
 .scala 32
 .jl 32
 .groovy 32
+.go 32

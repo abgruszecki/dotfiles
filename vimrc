@@ -17,6 +17,7 @@ set smartcase
 set hlsearch
 
 set autoindent
+set smartindent
 set smarttab
 set tabstop=8
 set shiftwidth=8
@@ -37,7 +38,6 @@ set colorcolumn=81
 highlight ColorColumn ctermbg=lightgrey
 
 syntax on
-filetype plugin on
 filetype plugin indent on
 " }}}
 
@@ -67,30 +67,75 @@ nnoremap <F2> "+p
 set pastetoggle=<F5>
 " }}}
 
+" Bit xml syntax {{{
+function Setbitxmlopts()
+	set filetype=xml
+	set expandtab
+	set shiftwidth=8
+	set tabstop=4
+	set softtabstop=4
+endfunction
+augroup bitOpts
+	au!
+	au BufNewFile,BufRead datacapture.cfg call Setbitxmlopts()
+	au BufNewFile,BufRead *.page call Setbitxmlopts()
+augroup END
+" }}}
+
+function Setbitymlopts()
+	set filetype=yaml
+	set expandtab
+	set shiftwidth=8
+	set tabstop=2
+	set softtabstop=2
+endfunction
+
+nnoremap <Leader><F2> :set ft=ansible<CR>
+
 " It's syntastic!
 map <F4> :SyntasticCheck<CR>
 
 vnoremap il 0$
 
+" Add around-all motion
+onoremap aa :<C-U>normal! ggVG<CR>
+
+noremap <Leader>y "+y
+
+set backupdir=~/.vimrec/backup//
+set directory=~/.vimrec/swap//
+set undodir=~/.vimrec/undo//
+
 set tags=.tags,./.tags;,tags,./tags;
 
 " Better? windows
-nmap <silent> <Up> :wincmd k<CR>
-nmap <silent> <Down> :wincmd j<CR>
-nmap <silent> <Left> :wincmd h<CR>
-nmap <silent> <Right> :wincmd l<CR>
+nnoremap <silent> <Up> :wincmd k<CR>
+nnoremap <silent> <Down> :wincmd j<CR>
+nnoremap <silent> <Left> :wincmd h<CR>
+nnoremap <silent> <Right> :wincmd l<CR>
 
 nnoremap <C-e> <C-u>
 nnoremap <C-u> 5<C-e>
 nnoremap <C-y> 5<C-y>
 
 map \ :NERDTreeToggle
-map <Leader>s :w<CR>
+nnoremap <Leader>s :w<CR>
 map <silent> <Leader>z :NERDTreeToggle<CR>
+
+nnoremap [g :set nohls<CR>/<<<<<<<<CR>:set hls<CR>
+nnoremap ]g :set nohls<CR>?<<<<<<<<CR>:set hls<CR>
+nnoremap [= :set nohls<CR>/=======<CR>:set hls<CR>
+nnoremap ]= :set nohls<CR>/=======<CR>:set hls<CR>
+nnoremap [G :set nohls<CR>?>>>>>>><CR>:set hls<CR>
+nnoremap ]G :set nohls<CR>?>>>>>>><CR>:set hls<CR>
 
 " Swap mark jumping
 nnoremap ' `
 nnoremap ` '
+
+" Commands without shift
+" nnoremap ; :
+" nnoremap : ;
 
 " Use <C-L> to clear the highlighting of :set hlsearch.
 if maparg('<C-L>', 'n') ==# ''
@@ -98,9 +143,11 @@ nnoremap <silent> <C-L> :nohlsearch<CR><C-L>
 endif
 
 let g:syntastic_scala_checkers = [ 'scalac' ]
+let g:syntastic_javascript_checkers = [ 'jscs' ]
 let g:syntastic_mode_map = { 'mode': 'active',
                            \ 'active_filetypes': [],
-                           \ 'passive_filetypes': [ 'scala' ] }
+                           \ 'passive_filetypes': [ 'scala', 'java' ] }
+let g:syntastic_cpp_compiler_options = "-std=c++11 -Wall -Wextra -Wpedantic"
 
 " solarized scheme
 set background=dark
@@ -112,6 +159,3 @@ set timeoutlen=1000
 set noshowmode
 let g:airline_powerline_fonts=1
 let g:airline_theme='solarized'
-
-" ctrlp
-let g:ctrlp_extensions = ['tag', 'bookmarkdir']
