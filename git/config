@@ -1,0 +1,21 @@
+[user]
+	name = Aleksander Boruch-Gruszecki
+	email = aleksander.boruch-gruszecki@bright-it.com
+[core]
+[rerere]
+	enabled = true
+[filter "media"]
+	clean = git-media-clean %f
+	smudge = git-media-smudge %f
+[alias]
+	co = checkout
+	ci = commit
+	s = status
+	poh = push origin HEAD
+	merge- = merge --no-ff
+	unstage = reset HEAD --
+	stage = add
+	fix = commit --amend -C HEAD
+
+	ls = !git status --porcelain=v1 -- *
+	set-upstream = !git branch --set-upstream-to=origin/"$(git symbolic-ref --short HEAD)"

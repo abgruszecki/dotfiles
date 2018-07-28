@@ -43,7 +43,7 @@ filetype plugin indent on
 
 " Pathogen {{{
 runtime bundle/vim-pathogen/autoload/pathogen.vim
-let g:pathogen_disabled=[ '' ]
+let g:pathogen_disabled=[ 'vim-pandoc', 'vim-pandoc-syntax' ]
 execute pathogen#infect()
 " }}}
 
@@ -80,7 +80,15 @@ augroup bitOpts
 	au BufNewFile,BufRead datacapture.cfg call Setbitxmlopts()
 	au BufNewFile,BufRead *.page call Setbitxmlopts()
 augroup END
+augroup counterPandoc
+	au! BufNewFile,BufRead *.md setfiletype markdown
+augroup END
 " }}}
+
+augroup bitOpts
+	au!
+	au BufNewFile,BufRead *.sc set ft=scala
+augroup END
 
 function Setbitymlopts()
 	set filetype=yaml
@@ -89,6 +97,17 @@ function Setbitymlopts()
 	set tabstop=2
 	set softtabstop=2
 endfunction
+
+function SetTabStop(len)
+	set expandtab
+	echom a:len
+	let &shiftwidth = a:len
+	let &softtabstop = a:len
+endfunction
+
+nnoremap <Leader>2 :call SetTabStop(2)<CR>
+nnoremap <Leader>4 :call SetTabStop(4)<CR>
+nnoremap <Leader>8 :call SetTabStop(8)<CR>
 
 nnoremap <Leader><F2> :set ft=ansible<CR>
 
@@ -101,6 +120,7 @@ vnoremap il 0$
 onoremap aa :<C-U>normal! ggVG<CR>
 
 noremap <Leader>y "+y
+noremap <Leader>p "+p
 
 set backupdir=~/.vimrec/backup//
 set directory=~/.vimrec/swap//
@@ -143,7 +163,7 @@ nnoremap <silent> <C-L> :nohlsearch<CR><C-L>
 endif
 
 let g:syntastic_scala_checkers = [ 'scalac' ]
-let g:syntastic_javascript_checkers = [ 'jscs' ]
+let g:syntastic_javascript_checkers = [ 'eslint' ]
 let g:syntastic_mode_map = { 'mode': 'active',
                            \ 'active_filetypes': [],
                            \ 'passive_filetypes': [ 'scala', 'java' ] }
@@ -154,8 +174,40 @@ set background=dark
 colorscheme solarized
 
 " airline
+let g:airline_theme_patch_func = 'AirlineThemePatch'
+function! AirlineThemePatch(palette)
+  if g:airline_theme == 'solarized'
+
+    let g:airline#themes#solarized#palette.normal.airline_error =
+          \ g:airline#themes#solarized#palette.normal.airline_warning
+
+    let g:airline#themes#solarized#palette.normal_modified.airline_error =
+          \ g:airline#themes#solarized#palette.normal.airline_warning
+
+    let g:airline#themes#solarized#palette.insert.airline_error =
+          \ g:airline#themes#solarized#palette.normal.airline_warning
+
+    let g:airline#themes#solarized#palette.insert_modified.airline_error =
+          \ g:airline#themes#solarized#palette.normal.airline_warning
+
+    let g:airline#themes#solarized#palette.visual.airline_error =
+          \ g:airline#themes#solarized#palette.normal.airline_warning
+
+    let g:airline#themes#solarized#palette.visual_modified.airline_error =
+          \ g:airline#themes#solarized#palette.normal.airline_warning
+
+    let g:airline#themes#solarized#palette.replace.airline_error =
+          \ g:airline#themes#solarized#palette.normal.airline_warning
+
+    let g:airline#themes#solarized#palette.replace_modified.airline_error =
+          \ g:airline#themes#solarized#palette.normal.airline_warning
+
+  endif
+endfunction
 set ttimeoutlen=10
 set timeoutlen=1000
 set noshowmode
 let g:airline_powerline_fonts=1
 let g:airline_theme='solarized'
+
+let g:vimwiki_list = [{'path': '~/vimwiki'}, {'path': '~/bitwiki'}]
