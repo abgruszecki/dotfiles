@@ -1,5 +1,5 @@
 #!/usr/bin/bash
-export PATH=/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:~/bin:
+#export PATH=/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:~/bin:
 
 export LANG=C
 
@@ -7,25 +7,16 @@ export XDG_CONFIG_HOME=~/.config
 
 export BSH_VERSION=0.6.1-SNAPSHOT
 
-set-java-homes() {
-	export JAVA_9_HOME=$(/usr/libexec/java_home -v9)
-	export JAVA_8_HOME=$(/usr/libexec/java_home -v1.8)
-	export JAVA_7_HOME=$(/usr/libexec/java_home -v1.7)
-}
-
 set-java9() {
-	set-java-homes
-	export JAVA_HOME=$JAVA_9_HOME
+	export JAVA_HOME=$(/usr/libexec/java_home -v9)
 }
 
 set-java8() {
-	set-java-homes
-	export JAVA_HOME=$JAVA_8_HOME
+	export JAVA_HOME=$(/usr/libexec/java_home -v1.8)
 }
 
 set-java7() {
-	set-java-homes
-	export JAVA_HOME=$JAVA_7_HOME
+	export JAVA_HOME=$(/usr/libexec/java_home -v1.7)
 }
 
 set-java8
