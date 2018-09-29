@@ -36,7 +36,7 @@ export PS1=$'\\[\e[37;44m\\] $ \\[\e[01;30m\\]\ue0b1\ue0b1 \\[\e[37m\\]\W \\[\e[
 # \\[\e[00;33;44m\\]\ue0b0
 
 alias ls='gls --color=auto'
-eval "$(gdircolors -b ~/.dircolors)"
+eval "$(gdircolors -b ~/.config/dircolors)"
 
 alias l='gls -l --color=auto'
 alias ll='gls -l --color=auto'

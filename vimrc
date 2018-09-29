@@ -67,7 +67,7 @@ nnoremap <F2> "+p
 set pastetoggle=<F5>
 " }}}
 
-" Bit xml syntax {{{
+" Old BIT syntax {{{
 function Setbitxmlopts()
 	set filetype=xml
 	set expandtab
@@ -83,7 +83,6 @@ augroup END
 augroup counterPandoc
 	au! BufNewFile,BufRead *.md setfiletype markdown
 augroup END
-" }}}
 
 augroup bitOpts
 	au!
@@ -104,6 +103,7 @@ function SetTabStop(len)
 	let &shiftwidth = a:len
 	let &softtabstop = a:len
 endfunction
+" }}}
 
 nnoremap <Leader>2 :call SetTabStop(2)<CR>
 nnoremap <Leader>4 :call SetTabStop(4)<CR>
@@ -122,9 +122,9 @@ onoremap aa :<C-U>normal! ggVG<CR>
 noremap <Leader>y "+y
 noremap <Leader>p "+p
 
-set backupdir=~/.vimrec/backup//
-set directory=~/.vimrec/swap//
-set undodir=~/.vimrec/undo//
+set backupdir=~/.cache/vim/backup/
+set directory=~/.cache/vim/swap/
+set undodir=~/.cache/vim/undo/
 
 set tags=.tags,./.tags;,tags,./tags;
 
