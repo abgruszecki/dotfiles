@@ -23,6 +23,9 @@ set tabstop=8
 set shiftwidth=8
 set softtabstop=8
 
+set splitbelow
+set splitright
+
 set wildmenu
 set wildmode=list:longest
 
@@ -140,6 +143,13 @@ nnoremap <C-y> 5<C-y>
 
 map \ :NERDTreeToggle
 nnoremap <Leader>s :w<CR>
+nnoremap <Leader>fs :w<CR>
+nnoremap <Leader>tc :!tmux+ compile "%"<CR>
+function SplitAndCopyTmux()
+	:vnew
+	:%!tmux+ copy-output
+endfunction
+nnoremap <Leader>too :call SplitAndCopyTmux()<CR>
 map <silent> <Leader>z :NERDTreeToggle<CR>
 
 nnoremap [g :set nohls<CR>/<<<<<<<<CR>:set hls<CR>
@@ -210,4 +220,4 @@ set noshowmode
 let g:airline_powerline_fonts=1
 let g:airline_theme='solarized'
 
-let g:vimwiki_list = [{'path': '~/vimwiki'}, {'path': '~/epflwiki'}]
+let g:vimwiki_list = [{'path': '~/vimwikis/vimwiki'}, {'path': '~/vimwikis/epflwiki'}]

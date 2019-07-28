@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=Capslock
+GenericName=Making CapsLock great again
+Comment=no comment
+Exec=/home/gruszecki/.config/capslock.sh
+Terminal=false
+Type=Application
+StartupNotify=true

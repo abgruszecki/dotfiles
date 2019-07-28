@@ -1,6 +1,6 @@
 [user]
 	name = Aleksander Boruch-Gruszecki
-	email = aleksander.boruch-gruszecki@bright-it.com
+	email = aleksander.boruch-gruszecki@epfl.ch
 [core]
 [rerere]
 	enabled = true
@@ -12,6 +12,7 @@
 	ci = commit
 	s = status
 	poh = push origin HEAD
+	hps = push staging HEAD
 	merge- = merge --no-ff
 	unstage = reset HEAD --
 	stage = add
