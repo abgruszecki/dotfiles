@@ -159,6 +159,8 @@ nnoremap ]= :set nohls<CR>/=======<CR>:set hls<CR>
 nnoremap [G :set nohls<CR>?>>>>>>><CR>:set hls<CR>
 nnoremap ]G :set nohls<CR>?>>>>>>><CR>:set hls<CR>
 
+tnoremap <Esc> <C-\><C-n>
+
 " Swap mark jumping
 nnoremap ' `
 nnoremap ` '

@@ -314,3 +314,5 @@ loc() {
 }
 
 [ -f ~/.fzf.bash ] && source ~/.fzf.bash
+
+export PATH=/home/gruszecki/.local/bin:$PATH
