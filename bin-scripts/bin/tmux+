@@ -1,0 +1,236 @@
+#!/usr/bin/env perl6
+# sub tmux(|args) {
+#   sub argname(Str $s) { return ($s.chars == 1 ?? '-' !! '--') ~ $s }
+#   sub argify(Any \a) {
+#     given a {
+#       when Pair & *.value ~~ Bool { argname($p.key) }
+#       when Pair
+#     }
+#   multi argify(Any $a) { return $a.Str }
+#   multi argify(Pair $p where $p.key ~~ Bool) { 
+#   multi argify(Pair $p where $p.key ~~ Bool) { 
+#     return |(($p.key.chars == 1 ?? '-' !! '--') ~ $p.key, $p.value)
+#   }
+#   multi argify(
+#   run "tmux", |args
+# }
+
+
+my constant PaneOption = <alternate_on
+alternate_saved_x
+alternate_saved_y
+buffer_created
+buffer_name
+buffer_sample
+buffer_size
+client_activity
+client_created
+client_control_mode
+client_discarded
+client_height
+client_key_table
+client_last_session
+client_name
+client_pid
+client_prefix
+client_readonly
+client_session
+client_termname
+client_termtype
+client_tty
+client_utf8
+client_width
+client_written
+command
+command_list_name
+command_list_alias
+command_list_usage
+cursor_flag
+cursor_x
+cursor_y
+history_bytes
+history_limit
+history_size
+hook
+hook_pane
+hook_session
+hook_session_name
+hook_window
+hook_window_name
+host
+host_short
+insert_flag
+keypad_cursor_flag
+keypad_flag
+line
+mouse_any_flag
+mouse_button_flag
+mouse_standard_flag
+mouse_all_flag
+pane_active
+pane_at_bottom
+pane_at_left
+pane_at_right
+pane_at_top
+pane_bottom
+pane_current_command
+pane_current_path
+pane_dead
+pane_dead_status
+pane_format
+pane_height
+pane_id
+pane_in_mode
+pane_input_off
+pane_index
+pane_left
+pane_mode
+pane_pid
+pane_pipe
+pane_right
+pane_search_string
+pane_start_command
+pane_synchronized
+pane_tabs
+pane_title
+pane_top
+pane_tty
+pane_width
+pid
+scroll_region_lower
+scroll_region_upper
+scroll_position
+selection_present
+session_alerts
+session_attached
+session_activity
+session_created
+session_format
+session_last_attached
+session_group
+session_grouped
+session_height
+session_id
+session_many_attached
+session_name
+session_stack
+session_width
+session_windows
+socket_path
+start_time
+version
+window_activity
+window_activity_flag
+window_active
+window_bell_flag
+window_flags
+window_format
+window_height
+window_id
+window_index
+window_last_flag
+window_layout
+window_linked
+window_name
+window_panes
+window_silence_flag
+window_stack_index
+window_visible_layout
+window_width
+window_zoomed_flag
+wrap_flag>;
+
+class Pane {
+  has Str:D $.session = '';
+  has Str:D $.window = '';
+  has Str:D $.name = '';
+
+  method target(Pane:D:) returns Str:D {
+    return "$.session\:$.window.$.name"
+  }
+
+  method AT-KEY(Pane:D: Str:D(Cool) $opt where $opt (elem) PaneOption) {
+    return $.tmux-var($opt)
+  }
+
+  method tmux-proc(Pane:D: Str:D(Cool) $command, *@rest, *%kv) {
+    # say 'tmux-proc:', $command, '-t', $.target, @rest;
+    return run('tmux', $command, '-t', $.target, |@rest, |%kv);
+  }
+
+  method tmux(Pane:D: Str:D(Cool) $command, *@rest) {
+    my $proc = self.tmux-proc($command, @rest, :out);
+    sink $proc;
+    return $proc.out.slurp(:close).trim;
+  }
+
+  method tmux-var($varname) {
+    return $.tmux('display', '-p', "#\{$varname}")
+  }
+
+  method copy-cmd(Pane:D: Str:D $command, *@rest) {
+    # say 'copy-cmd:', $command, @rest;
+    return $.tmux-proc('send-keys', '-X', $command, |@rest);
+  }
+
+  method current-line(Pane:D: :$details = False) {
+    my $capture = $.tmux(|<capture -p>);
+    my $lineno = $.tmux-var('cursor_y');
+    my $line = $capture.split("\n")[$lineno];
+    # say 'current-line:', $lineno, +$capture.lines, $line;
+    if $details {
+      return ($line, $lineno+1, $capture.lines.elems);
+    } else {
+      return $line;
+    }
+  }
+
+  method is-copy-mode(Pane:D:) {
+    self<scroll_position> ne '';
+  }
+}
+
+sub pane($session, $window, $name = '1') {
+  my $p = Pane.new(:$session, :$window, :$name);
+  return $p;
+}
+
+sub normalize-or-die(Pane:D $p) {
+  my $ln = $p.current-line();
+  $ln eq 'sbt:dotty>' or die "{$p.target} current line: $ln";
+
+  $p.copy-cmd: 'cancel' if $p.is-copy-mode();
+}
+
+multi MAIN('current-line') {
+  my $p = pane 'dotty', 'sbt';
+  my ($line, $lineno, $linecount) = $p.current-line():details;
+  say "Current line ($lineno / $linecount):";
+  say $line;
+}
+
+multi MAIN('capture') {
+  my $p = pane 'dotty', 'sbt';
+  # normalize-or-die $p;
+  sink $p.tmux-proc: |<capture -p -S ->;
+}
+
+multi MAIN('copy-output') {
+  my $p = pane 'dotty', 'sbt';
+  normalize-or-die $p;
+  $p.tmux-proc: 'copy-mode';
+  $p.copy-cmd: 'search-backward', 'sbt:dotty>';
+  $p.copy-cmd: 'search-again';
+  $p.copy-cmd: 'begin-selection';
+  $p.copy-cmd: 'history-bottom';
+  $p.copy-cmd: 'cursor-left';
+  $p.copy-cmd: 'copy-selection-and-cancel';
+  run 'tmux', 'show-buffer';
+}
+
+multi MAIN('compile', Str:D $file) {
+  my $p = pane 'dotty', 'sbt';
+  normalize-or-die $p;
+  $file.IO.f or die "not a file: $file";
+  $p.tmux: 'send-keys', "dotc -d out \"$file\"", "Enter";
+}

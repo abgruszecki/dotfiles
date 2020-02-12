@@ -7,3 +7,6 @@ remove mod4 = Hyper_L
 
 ! Set mod3 to capslock
 add mod3 = Hyper_L
+
+! Set Insert to Compose, Shift+Insert to Insert
+keycode 118 = Multi_key Insert

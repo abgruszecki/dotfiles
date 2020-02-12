@@ -11,6 +11,8 @@
 	co = checkout
 	ci = commit
 	s = status
+	sw = switch
+	re = restore
 	poh = push origin HEAD
 	hps = push staging HEAD
 	merge- = merge --no-ff

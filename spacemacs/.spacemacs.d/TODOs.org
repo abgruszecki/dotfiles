@@ -1,0 +1,71 @@
+* Dotty output mode
+  
+  Najlepiej bazować na org-mode - jeżeli on mógł ponownie użyć jakiegoś mode'a, ja też powinienem.
+
+  Jeżeli nie - nie opłaca mi się próbować.
+
+* Outline mode
+  
+  Nie wygląda jakby mógł pracować z logami Dotty'ego - zakłada że dokument jest w całości podzielony nagłówkami.
+
+* HideShow mode
+  
+  Wygląda jakby mógł pomóc.
+
+** TODO Czy org-mode używa HideShow?
+
+* Higlight Parenthesis mode
+  
+  Wyglądał jakby mógł pomóc, ale nie radzi sobie z arbitrarnymi "nawiasami".
+  
+* Rainbow delimiters mode
+  
+  Pomimo nazwy, działa tylko z nawiasami. Dokumentacja wyjaśnia, że jest mocno zoptymalizowany, więc nic dziwnego.
+  
+* Org mode
+
+** TODO Ogarnąć deklarację =major-mode= dla org-mode
+
+   Zawiera inicjalizujący kod dla trybu. Powinna zademonstrować, jak chować nagłówki i szufladki.
+
+** TODO Ogarnąć =org-mode= tab-cyklowanie
+
+   Not only cycles headers, but drawers as well.
+   
+** TODO Pobawić się dopasowywalnymi stanami todo dla org-pliku na doktorat
+   
+   Mógłbym mieć status na potrzebowanie zadania pytania (czy to na pewno poprawny nie-gęsi, ta druga połowa?).
+   
+   (Poprawniejszy nie-gęsi: status reprezentujący potrzebę zadania pytania)
+
+* Dotty-sbt-output mode
+** TODO Dodać wyszukiwanie błędów
+   
+   Po początku linijki, ~-- Error~.
+** TODO Dodać przechodzenie do linijki z błędem
+
+   Wystarczy zaznaczyć region nazwę pliku i linijkę, bez kolumny
+** TODO Dodać skakanie między trace-headereami
+
+   Znajdować regexem odpowiednie linijki.
+** TODO Dodać szybkie skakanie między trace-headerami na tym samym poziomie
+   
+   Podobne do lisp-state.
+
+   Hydra?
+   Transient mode w Spacemasie?
+** TODO Dodać odczytywanie "konfiguracji" kompilatora z plików
+
+   Printers.scala,
+   Tracing,
+   ~trace.force~ (?)
+   
+   Najłatwiej znajdować je po początkach linijki.
+
+** TODO Dodać obsługę włączania/wyłączania flag kompilacji
+** TODO Dodać ponowne odczytywanie opcji kompilacji przy odświeżaniu plików
+   
+   Zamiast trzymać konkretną linijkę wysłaną do SBT, trzeba trzymać "komendę".
+
+* Emacs
+** TODO Ogarnąć =avy=, skakanie między headerami
