@@ -20,5 +20,8 @@ try() {
 
 try cd ~/dotfiles
 try git add --all
-try git commit --message="$(date +'%A %d %B (%d/%m/%Y)')"
-try git push
+if ! say git diff-index --quiet HEAD
+then
+  try git commit --message="$(date +'%A %d %B (%d/%m/%Y)')"
+  try git push
+fi
