@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+### GENERIC
+
 say() {
   # print command - %q escapes special shell characters
   {
@@ -16,12 +18,19 @@ try() {
   "$@" || exit
 }
 
+### FUNCTIONS
+
+preserve() {
+  try cd "$1"
+  try git add --all
+  if ! say git diff-index --quiet HEAD
+  then
+    try git commit --message="$(date +'%A %d %B (%d/%m/%Y)')"
+    try git push
+  fi
+}
+
 ### START
 
-try cd ~/dotfiles
-try git add --all
-if ! say git diff-index --quiet HEAD
-then
-  try git commit --message="$(date +'%A %d %B (%d/%m/%Y)')"
-  try git push
-fi
+preserve ~/dotfiles/
+preserve ~/.emacs.d/private/

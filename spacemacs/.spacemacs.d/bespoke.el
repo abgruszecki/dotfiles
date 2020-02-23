@@ -3,8 +3,9 @@
   "Arguments passed to compile command in SBT")
 
 ;; -Xprint:all
+;; -Xprompt
 ;; -uniqid
-(setq sbt/compile-arguments "-d out")
+(setq sbt/compile-arguments "-color:never -d out")
 
 (defvar-local sbt/output/source-buffer nil
   "Buffer that was used to create the output in this buffer")
@@ -126,7 +127,7 @@
     (error "Could not retrieve buffer for post-redirect cleanup (%s)" comint-redirect-output-buffer))
 
   (with-current-buffer comint-redirect-output-buffer
-    (sbt/clean)
+    ;; (sbt/clean)
     (origami-close-all-nodes (current-buffer))))
 
 (defun sbt/run (cmd &optional target-buffer)
@@ -143,7 +144,7 @@
       (setq sbt/output/source-buffer (sbt/buffer-name)
             sbt/output/command cmd))
     (sbt/in
-      (comint-redirect-send-command cmd resolved-target-buffer t))))
+      (comint-redirect-send-command cmd resolved-target-buffer nil))))
 
 (defun sbt/compile-file (file)
   (interactive (sbt//invocation
@@ -159,6 +160,32 @@
   (my/projectile/save-project-files)
   (setq sbt/last-operation `(sbt/compile-file ,buffer-file-name))
   (sbt/compile-file buffer-file-name))
+
+(defun sbt/send-command (command)
+  (interactive (sbt//invocation
+                'sbt/send-command
+                (read-string "Command: ")))
+  ;; TODO read through comint-redirect-send-command to see how it works
+  (sbt/in
+    (if (not (string-equal (buffer-substring (car comint-last-prompt)
+                                             (cdr comint-last-prompt))
+                           "sbt:dotty> "))
+        (error "Process is not ready for input")
+      (my/projectile/save-project-files)
+      (delete-region (cdr comint-last-prompt)
+                     (point-max))
+      (goto-char (point-max))
+      (insert command)
+      (comint-send-input))
+    (display-buffer (current-buffer))))
+
+(defun sbt/send-test-command ()
+  (interactive (sbt//invocation 'sbt/send-test-command))
+  (sbt/send-command "testCompilation .eff."))
+
+(defun sbt/send-compile-command ()
+  (interactive (sbt//invocation 'sbt/send-compile-command))
+  (sbt/send-command "compile"))
 
 (defun sbt/repeat-last-operation ()
   (interactive)
@@ -207,6 +234,7 @@
   (kbd "<backtab>") (lambda () (interactive) (re-search-backward "^#"))
   (kbd "<C-tab>") (lambda () (interactive) (re-search-forward "^#!"))
   (kbd "<C-iso-lefttab>") (lambda () (interactive) (re-search-backward "^#!"))
+  "g%" 'dotty/jump-to-matching-trace-header
   )
 
 ;;; My functions
@@ -224,13 +252,26 @@
 
 ;; TODO ask to save all files in project when trying to run a command in SBT?
 
-(defun sbt/current-line-trace-header ()
+(defun dotty/current-line-trace-header ()
   (save-excursion
     (goto-char (line-beginning-position))
     (let ((result (or
                    (and (looking-at " *==>") 'opening)
                    (and (looking-at " *<==") 'closing))))
       (and result (cons result (- (match-end 0) (match-beginning 0) 3))))))
+
+(evil-define-motion dotty/jump-to-matching-trace-header ()
+  :type line
+  (-if-let ((type . size) (dotty/current-line-trace-header))
+      (ecase type
+        ('opening
+         (re-search-forward
+          (rx-to-string `(seq bol (repeat ,size " ") "<=="))))
+
+        ('closing
+         (re-search-backward
+          (rx-to-string `(seq bol (repeat ,size " ") "==>")))))
+    (error "Not looking at a trace header!")))
 
 (defun my/jump-to-indent (direction cmp)
   "Test doc"
@@ -263,7 +304,6 @@
 (my/def-indent-variant my/forwards-jump-to-indent        1 -1)
 (my/def-indent-variant my/backwards-jump-to-outdent     -1  1)
 (my/def-indent-variant my/backwards-jump-to-same-indent -1  0)
-
 (my/def-indent-variant my/backwards-jump-to-indent      -1 -1)
 
 (defun my/jump-to-lesser-indent (direction)
@@ -294,11 +334,27 @@
                      (move-text--at-penultimate-line-p)))
       (forward-line 1)
       (transpose-lines 1)
-      (forward-line -2)
-      ;; (move-to-column col)
-      )
+      (forward-line -2))
     (beginning-of-line)
     (unless (looking-at "\n")
-      (indent-for-tab-command))
-    )
-  )
+      (indent-for-tab-command))))
+
+(defun my/magit/kill-all-buffers ()
+  (interactive)
+  (mapc #'kill-buffer (magit-mode-get-buffers)))
+
+(defvar dotty//prints-commented-out-p nil)
+(defun dotty/toggle-printing ()
+  (interactive)
+  (save-excursion
+    (if (not dotty//prints-commented-out-p)
+        (mapc (lambda (buf) (with-current-buffer buf
+                              (replace-string "trace.force(" "trace/*force*/(" nil (point-min) (point-max))
+                              (replace-string "new Printer" "/*newPrinter*/noPrinter" nil (point-min) (point-max))))
+              (projectile-project-buffers))
+      (mapc (lambda (buf) (with-current-buffer buf
+                            (replace-string "trace/*force*/(" "trace.force(" nil (point-min) (point-max))
+                            (replace-string "/*newPrinter*/noPrinter" "new Printer" nil (point-min) (point-max))))
+            (projectile-project-buffers))))
+  (setf dotty//prints-commented-out-p (not dotty//prints-commented-out-p))
+  (message "Dotty printing is: %s" (if dotty//prints-commented-out-p "disabled" "enabled")))
