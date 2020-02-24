@@ -43,7 +43,7 @@ This function should only modify configuration layer settings."
      ;; spell-checking
      ;; syntax-checking
      ;; version-control
-     origami
+     ;; origami
      helm
      (org :variables
           org-enable-reveal-js-support t)
@@ -51,6 +51,7 @@ This function should only modify configuration layer settings."
 
      git
      lsp
+     dotty
      (shell :variables
             shell-default-position 'bottom)
 
@@ -70,11 +71,8 @@ This function should only modify configuration layer settings."
    ;; '(your-package :location "~/path/to/your-package/")
    ;; Also include the dependencies as they will not be resolved automatically.
 
-   dotspacemacs-additional-packages
-   '(
-     ;; origami ; this /would/ be here, but spacemacs overrides it, so I need to install it manually below
-     scala-mode
-     )
+   dotspacemacs-additional-packages '()
+
    ;; A list of packages that cannot be updated.
    dotspacemacs-frozen-packages '()
 
@@ -479,13 +477,26 @@ configuration.
 Put your configuration code here, except for variables that should be set
 before packages are loaded."
 
-  ;; (package-install 'origami)
-  ;; (use-package origami)
+  ;; (require 'dotty)
+  (eval-after-load 'dotty
+    (progn
+      (setq sbt/test-command "testCompilation .eff.")
+      (setq sbt/compile-arguments (concat
+                                   "-color:never -d out"
+                                   ;; " -Xprint:all"
+                                   ;; " -Xprompt"
+                                   ;; " -uniqid"
+                                   )))
+  )
 
   (load "~/.spacemacs.d/bespoke.el")
 
   (setq spacemacs-layouts-restrict-spc-tab t
         create-lockfiles nil)
+
+  (setq lsp-signature-auto-activate nil
+        lsp-ui-doc-enable nil
+        lsp-ui-flycheck-live-reporting nil)
 
   (spacemacs/set-leader-keys
     "gd" 'my/magit/kill-all-buffers)
@@ -519,32 +530,7 @@ before packages are loaded."
   (evil-define-key 'insert 'global
     (kbd "<C-return>") 'my/slurp)
 
-  (spacemacs/set-leader-keys-for-major-mode 'scala-mode
-    "$" 'sbt/console
-    "@" 'sbt/repeat-last-command
-    "." 'sbt/repeat-last-operation
-
-    "!!" 'sbt/send-command
-    "!c" 'sbt/send-compile-command
-    "!t" 'sbt/send-test-command
-
-    "w" 'sbt/watch
-    "l" 'sbt/locked
-    "L" 'sbt/lock
-    "r" 'sbt/output/refresh-watched
-    "R" 'sbt/output/refresh
-    "c" 'sbt/compile-file
-    "C" 'sbt/compile-this-file)
-
   ;; NOTE to avoid stupid functions for setting values of custom settings, find a good way of setting them here
-
-  (progn
-    (require 'lsp-mode)
-
-    (lsp-register-client
-     (make-lsp--client :new-connection (lsp-stdio-connection "dotty-lsp.sh")
-                       :major-modes '(scala-mode)
-                       :server-id 'dotty-lsp)))
   )
 
 (defun dotspacemacs/emacs-custom-settings ()
@@ -558,9 +544,6 @@ This function is called at the very end of Spacemacs initialization."
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(evil-want-change-word-to-end nil)
- '(lsp-signature-auto-activate nil)
- '(lsp-ui-doc-enable nil t)
- '(lsp-ui-flycheck-live-reporting nil)
  '(org-capture-templates
    (quote
     (("g" "Note" entry
