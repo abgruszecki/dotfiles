@@ -16,20 +16,18 @@
 (defun my/jump-to-indent (direction cmp)
   "Test doc"
   (interactive)
+  (while (and (looking-at-p "^$")
+              (zerop (forward-line (or direction 1)))))
   (let ((start-indent (current-indentation)))
     ;; TODO pick up the first indent along the way if the current line is empty
-    (while
-        (and (not (bobp))
-             (zerop
-              ;; NOTE forward-line returns the number of lines it tried to
-              ;; to move, but couldn't - 0 means "all good"
-              (forward-line (or direction 1)))
-             (or (looking-at-p "^$")
-                 ;; TODO ignore comment lines?
-                 (cond
-                  ((= 0 cmp) (> (current-indentation) start-indent))
-                  ((> 0 cmp) (<= (current-indentation) start-indent))
-                  ((< 0 cmp ) (>= (current-indentation) start-indent)))))))
+    (while (and (not (bobp))
+                (zerop (forward-line (or direction 1)))
+                (or (looking-at-p "^$")
+                    ;; TODO ignore comment lines?
+                    (cond
+                     ((= 0 cmp) (> (current-indentation) start-indent))
+                     ((> 0 cmp) (<= (current-indentation) start-indent))
+                     ((< 0 cmp ) (>= (current-indentation) start-indent)))))))
   (back-to-indentation))
 
 (defmacro my/def-indent-variant (name direction cmp)
@@ -56,10 +54,11 @@
                  (>= (current-indentation) start-indent)))))
   (back-to-indentation))
 
-(defun my/projectile/save-project-files ()
+(defun my/projectile/save-project-files (&optional ask)
   "Save files in current project."
+  (interactive "P")
   (-let [project-root (projectile-project-root)]
-    (save-some-buffers nil (lambda ()
+    (save-some-buffers (not ask) (lambda ()
                              (projectile-project-buffer-p (current-buffer)
                                                           project-root)))))
 
@@ -82,3 +81,23 @@
 (defun my/magit/kill-all-buffers ()
   (interactive)
   (mapc #'kill-buffer (magit-mode-get-buffers)))
+
+;;; org-mode
+
+(defun my/org/set-ztk-id ()
+  (interactive)
+  (let* ((h (or (om-parse-this-headline) (error "Not looking at a headline!")))
+         (s (om-get-property :raw-value h))
+         (id (cadr (or (s-match "^#\\([^ ]+\\)" s)
+                       (error "Headline doesn't have a ZTK id!")))))
+    (org-set-property "CUSTOM_ID" id)))
+
+(defun my/org/sort-todos ()
+  (interactive)
+  "Sort todo items, /my/ way."
+  (unless (org-at-heading-p)
+      (error "Not at a heading!"))
+  (dolist (sort-type '(?p ?o)) (org-sort-entries nil sort-type))
+  (org-cycle)
+  (org-cycle)
+  (org-unlogged-message "Sorted TODOs!"))

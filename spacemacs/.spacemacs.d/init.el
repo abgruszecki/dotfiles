@@ -51,7 +51,6 @@ This function should only modify configuration layer settings."
 
      git
      lsp
-     dotty
      (shell :variables
             shell-default-position 'bottom)
 
@@ -61,6 +60,10 @@ This function should only modify configuration layer settings."
      javascript
      markdown
      racket
+
+     ;; bespoke!
+     dotty
+     bespoke
      )
 
    ;; List of additional packages that will be installed without being
@@ -71,7 +74,10 @@ This function should only modify configuration layer settings."
    ;; '(your-package :location "~/path/to/your-package/")
    ;; Also include the dependencies as they will not be resolved automatically.
 
-   dotspacemacs-additional-packages '()
+   dotspacemacs-additional-packages
+   '(
+     (om :location local)
+     )
 
    ;; A list of packages that cannot be updated.
    dotspacemacs-frozen-packages '()
@@ -477,29 +483,51 @@ configuration.
 Put your configuration code here, except for variables that should be set
 before packages are loaded."
 
-  ;; (require 'dotty)
+  (use-package om)
+
+  (load "~/.spacemacs.d/bespoke.el")
+
+  ;;; configuration
+
+  ;; (space)macs
+  (setq spacemacs-layouts-restrict-spc-tab t
+        create-lockfiles nil)
+
+  ;; dotty
   (eval-after-load 'dotty
     (progn
       (setq sbt/test-command "testCompilation .eff.")
       (setq sbt/compile-arguments (concat
                                    "-color:never -d out"
+                                   ;; " -Yescape-analysis"
                                    ;; " -Xprint:all"
                                    ;; " -Xprompt"
                                    ;; " -uniqid"
+                                   ;; " -Xprint:typer"
                                    )))
-  )
+    )
 
-  (load "~/.spacemacs.d/bespoke.el")
+  ;; org
+  (setq org-todo-keywords '((sequence "TODO(t)" "DONE(d)")
+                            (sequence "OPEN(o)" "CLSD(c)")))
 
-  (setq spacemacs-layouts-restrict-spc-tab t
-        create-lockfiles nil)
-
+  ;; lsp
   (setq lsp-signature-auto-activate nil
+        lsp-prefer-flymake nil
+
+        ;;; lsp-ui
         lsp-ui-doc-enable nil
+        lsp-ui-flycheck-enable t
         lsp-ui-flycheck-live-reporting nil)
 
+  ;; flycheck
+  (setq flycheck-check-syntax-automatically '(save mode-enabled))
+
+  ;;; keybindings
+
   (spacemacs/set-leader-keys
-    "gd" 'my/magit/kill-all-buffers)
+    "gd" 'my/magit/kill-all-buffers
+    "ps" 'my/projectile/save-project-files)
 
   (evil-define-key 'normal 'global
     "[-" 'my/backwards-jump-to-outdent
@@ -509,6 +537,10 @@ before packages are loaded."
     "[+" 'my/backwards-jump-to-indent
     "]+" 'my/forwards-jump-to-indent
     )
+
+  (spacemacs/set-leader-keys-for-major-mode 'org-mode
+    "oi" #'my/org/set-ztk-id
+    "os" #'my/org/sort-todos)
 
   (global-set-key (kbd "<f1>") 'spacemacs/persp-switch-to-1)
   (global-set-key (kbd "<f2>") 'spacemacs/persp-switch-to-2)
@@ -527,9 +559,6 @@ before packages are loaded."
     "]j" 'my/slurp
     )
 
-  (evil-define-key 'insert 'global
-    (kbd "<C-return>") 'my/slurp)
-
   ;; NOTE to avoid stupid functions for setting values of custom settings, find a good way of setting them here
   )
 
@@ -544,6 +573,7 @@ This function is called at the very end of Spacemacs initialization."
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(evil-want-change-word-to-end nil)
+ '(org-agenda-files (quote ("~/code/dotty/TODOs.org")))
  '(org-capture-templates
    (quote
     (("g" "Note" entry
