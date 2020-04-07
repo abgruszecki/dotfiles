@@ -1,0 +1,14 @@
+[Desktop Entry]
+Version=1.0
+Name=f-caps
+GenericName=f-caps
+Comment=Fixes caps-lock.
+Exec=/home/gruszecki/bin/f-caps
+# Terminal=false                             #Should the app run in terminal
+# Icon=/opt/PhpStorm-103.243/bin/webide.png  #The pretty picture :D
+Type=Application
+Categories=;
+# MimeType=text/html;                        #Mime types the launcher can open
+# Name[en_NZ]=My Awesome App                 #Localized version of above info
+# GenericName[en_NZ]=Awesome App             #Localized version of above info
+# Comment[en_NZ]=This app is awesome!        #Localized version of above info

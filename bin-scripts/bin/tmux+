@@ -215,7 +215,7 @@ multi MAIN('capture') {
   sink $p.tmux-proc: |<capture -p -S ->;
 }
 
-multi MAIN('copy-output') {
+multi MAIN('output') {
   my $p = pane 'dotty', 'sbt';
   normalize-or-die $p;
   $p.tmux-proc: 'copy-mode';

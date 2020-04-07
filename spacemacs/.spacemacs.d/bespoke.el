@@ -11,6 +11,10 @@
     (insert-file-contents "~/.spacemacs.d/org-templates/project-todo.org")
     (buffer-string)))
 
+(defun my/show-last-help ()
+  (interactive)
+  (select-window (display-buffer "*Help*")))
+
 ;; TODO ask to save all files in project when trying to run a command in SBT?
 
 (defun my/jump-to-indent (direction cmp)
@@ -54,13 +58,13 @@
                  (>= (current-indentation) start-indent)))))
   (back-to-indentation))
 
-(defun my/projectile/save-project-files (&optional ask)
-  "Save files in current project."
-  (interactive "P")
-  (-let [project-root (projectile-project-root)]
-    (save-some-buffers (not ask) (lambda ()
-                             (projectile-project-buffer-p (current-buffer)
-                                                          project-root)))))
+(defun my/grab-tmux ()
+  "Grab dotty sbt output with tmux+ script"
+  (interactive)
+  (erase-buffer)
+  (call-process "tmux+" nil (current-buffer) nil "output")
+  (origami-reset (current-buffer))
+  (origami-close-all-nodes (current-buffer)))
 
 (evil-define-command my/slurp ()
   :repeat t
@@ -77,6 +81,17 @@
     (beginning-of-line)
     (unless (looking-at "\n")
       (indent-for-tab-command))))
+
+;;; yasnippet
+
+(defun my-yas/expand-dotty-println-it ()
+  (interactive)
+  (yas-expand-snippet (yas-lookup-snippet "dotty-debug-println-it")
+                      (point-at-bol)
+                      (point-at-eol)
+                      `((yas-arg/it ,(buffer-substring (mark) (point))))))
+
+;;; magit
 
 (defun my/magit/kill-all-buffers ()
   (interactive)
@@ -101,3 +116,35 @@
   (org-cycle)
   (org-cycle)
   (org-unlogged-message "Sorted TODOs!"))
+
+;;; projectile
+
+(defun my/projectile/save-project-files (&optional ask)
+  "Save files in current project."
+  (interactive "P")
+  (-let [project-root (projectile-project-root)]
+    (save-some-buffers (not ask)
+                       (lambda ()
+                         (and buffer-file-name
+                              (projectile-project-buffer-p (current-buffer)
+                                                           project-root))))))
+
+;;; perspective
+
+(defvar my-perspective//loaded-all nil)
+(defun my-perspective//load-all ()
+  (persp-load-state-from-file "dotty")
+  (persp-load-state-from-file "bespoke")
+  (setq my-perspective//loaded-all t))
+
+(defun my-perspective/switch-to-dotty ()
+  (interactive)
+  (unless my-perspective//loaded-all
+    (my-perspective//load-all))
+  (spacemacs/persp-switch-to-2))
+
+(defun my-perspective/switch-to-bespoke ()
+  (interactive)
+  (unless my-perspective//loaded-all
+    (my-perspective//load-all))
+  (spacemacs/persp-switch-to-3))

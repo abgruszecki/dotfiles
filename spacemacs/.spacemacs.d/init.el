@@ -46,7 +46,8 @@ This function should only modify configuration layer settings."
      ;; origami
      helm
      (org :variables
-          org-enable-reveal-js-support t)
+          org-enable-reveal-js-support t
+          org-enable-org-journal-support t)
      treemacs
 
      git
@@ -58,8 +59,10 @@ This function should only modify configuration layer settings."
      common-lisp
      html
      javascript
-     markdown
      racket
+
+     yaml
+     markdown
 
      ;; bespoke!
      dotty
@@ -483,15 +486,17 @@ configuration.
 Put your configuration code here, except for variables that should be set
 before packages are loaded."
 
-  (use-package om)
+  (use-package om) ;; can't use :defer, since org-mode is loaded by default
 
   (load "~/.spacemacs.d/bespoke.el")
 
   ;;; configuration
 
   ;; (space)macs
-  (setq spacemacs-layouts-restrict-spc-tab t
-        create-lockfiles nil)
+  (setq create-lockfiles nil
+
+        ;; spacemacs
+        spacemacs-layouts-restrict-spc-tab t)
 
   ;; dotty
   (eval-after-load 'dotty
@@ -499,7 +504,7 @@ before packages are loaded."
       (setq sbt/test-command "testCompilation .eff.")
       (setq sbt/compile-arguments (concat
                                    "-color:never -d out"
-                                   ;; " -Yescape-analysis"
+                                   " -Yescape-analysis"
                                    ;; " -Xprint:all"
                                    ;; " -Xprompt"
                                    ;; " -uniqid"
@@ -509,7 +514,12 @@ before packages are loaded."
 
   ;; org
   (setq org-todo-keywords '((sequence "TODO(t)" "DONE(d)")
+                            (sequence "TASK(s)" "|")
                             (sequence "OPEN(o)" "CLSD(c)")))
+
+  ;; org-journal
+  (setq org-journal-dir "~/org/journal"
+        org-journal-file-type 'weekly)
 
   ;; lsp
   (setq lsp-signature-auto-activate nil
@@ -538,13 +548,16 @@ before packages are loaded."
     "]+" 'my/forwards-jump-to-indent
     )
 
+  (evil-define-key '(normal insert) org-mode-map
+    (kbd "<H-return>") (lookup-key spacemacs-org-mode-map "i"))
+
   (spacemacs/set-leader-keys-for-major-mode 'org-mode
     "oi" #'my/org/set-ztk-id
     "os" #'my/org/sort-todos)
 
   (global-set-key (kbd "<f1>") 'spacemacs/persp-switch-to-1)
-  (global-set-key (kbd "<f2>") 'spacemacs/persp-switch-to-2)
-  (global-set-key (kbd "<f3>") 'spacemacs/persp-switch-to-3)
+  (global-set-key (kbd "<f2>") 'my-perspective/switch-to-dotty)
+  (global-set-key (kbd "<f3>") 'my-perspective/switch-to-bespoke)
   (global-set-key (kbd "<f4>") 'spacemacs/persp-switch-to-4)
 
   (global-set-key (kbd "<f5>") 'eyebrowse-switch-to-window-config-1)
@@ -584,7 +597,7 @@ This function is called at the very end of Spacemacs initialization."
       (function my/org-template/project-todo-capture)))))
  '(package-selected-packages
    (quote
-    (origami yapfify yaml-mode xterm-color vterm utop tuareg caml terminal-here shell-pop seeing-is-believing rvm ruby-tools ruby-test-mode ruby-refactor ruby-hash-syntax rubocopfmt rubocop rspec-mode robe rjsx-mode rbenv rake pytest pyenv-mode py-isort pippel pipenv pyvenv pip-requirements ocp-indent ob-elixir mvn multi-term minitest meghanada maven-test-mode lsp-python-ms lsp-java live-py-mode importmagic epc ctable concurrent deferred helm-pydoc groovy-mode groovy-imports pcache gradle-mode git-gutter-fringe+ fringe-helper git-gutter+ flycheck-ocaml merlin flycheck-mix flycheck-credo eshell-z eshell-prompt-extras esh-help emojify emoji-cheat-sheet-plus dune cython-mode company-emoji company-anaconda chruby bundler inf-ruby browse-at-remote blacken auto-complete-rst anaconda-mode pythonic alchemist elixir-mode smeargle orgit magit-gitflow magit-popup helm-gitignore gitignore-mode gitconfig-mode gitattributes-mode git-timemachine git-messenger git-link evil-magit git-commit with-editor web-mode tagedit slim-mode scss-mode sass-mode pug-mode less-css-mode helm-css-scss haml-mode emmet-mode ox-reveal web-beautify livid-mode skewer-mode simple-httpd json-mode json-snatcher json-reformat js2-refactor yasnippet multiple-cursors js2-mode js-doc coffee-mode scala-mode mmm-mode markdown-toc markdown-mode gh-md org-projectile org-category-capture org-present org-pomodoro alert log4e gntp org-mime org-download lv htmlize gnuplot racket-mode faceup slime-company company slime ws-butler winum which-key volatile-highlights vi-tilde-fringe uuidgen use-package toc-org spaceline powerline restart-emacs request rainbow-delimiters popwin persp-mode pcre2el paradox spinner org-plus-contrib org-bullets open-junk-file neotree move-text macrostep lorem-ipsum linum-relative link-hint indent-guide hydra hungry-delete hl-todo highlight-parentheses highlight-numbers parent-mode highlight-indentation helm-themes helm-swoop helm-projectile helm-mode-manager helm-make projectile pkg-info epl helm-flx helm-descbinds helm-ag google-translate golden-ratio flx-ido flx fill-column-indicator fancy-battery eyebrowse expand-region exec-path-from-shell evil-visualstar evil-visual-mark-mode evil-unimpaired evil-tutor evil-surround evil-search-highlight-persist highlight evil-numbers evil-nerd-commenter evil-mc evil-matchit evil-lisp-state smartparens evil-indent-plus evil-iedit-state iedit evil-exchange evil-escape evil-ediff evil-args evil-anzu anzu evil goto-chg undo-tree eval-sexp-fu elisp-slime-nav dumb-jump f dash s diminish define-word column-enforce-mode clean-aindent-mode bind-map bind-key auto-highlight-symbol auto-compile packed aggressive-indent adaptive-wrap ace-window ace-link ace-jump-helm-line helm avy helm-core popup async))))
+    (org-journal origami yapfify yaml-mode xterm-color vterm utop tuareg caml terminal-here shell-pop seeing-is-believing rvm ruby-tools ruby-test-mode ruby-refactor ruby-hash-syntax rubocopfmt rubocop rspec-mode robe rjsx-mode rbenv rake pytest pyenv-mode py-isort pippel pipenv pyvenv pip-requirements ocp-indent ob-elixir mvn multi-term minitest meghanada maven-test-mode lsp-python-ms lsp-java live-py-mode importmagic epc ctable concurrent deferred helm-pydoc groovy-mode groovy-imports pcache gradle-mode git-gutter-fringe+ fringe-helper git-gutter+ flycheck-ocaml merlin flycheck-mix flycheck-credo eshell-z eshell-prompt-extras esh-help emojify emoji-cheat-sheet-plus dune cython-mode company-emoji company-anaconda chruby bundler inf-ruby browse-at-remote blacken auto-complete-rst anaconda-mode pythonic alchemist elixir-mode smeargle orgit magit-gitflow magit-popup helm-gitignore gitignore-mode gitconfig-mode gitattributes-mode git-timemachine git-messenger git-link evil-magit git-commit with-editor web-mode tagedit slim-mode scss-mode sass-mode pug-mode less-css-mode helm-css-scss haml-mode emmet-mode ox-reveal web-beautify livid-mode skewer-mode simple-httpd json-mode json-snatcher json-reformat js2-refactor yasnippet multiple-cursors js2-mode js-doc coffee-mode scala-mode mmm-mode markdown-toc markdown-mode gh-md org-projectile org-category-capture org-present org-pomodoro alert log4e gntp org-mime org-download lv htmlize gnuplot racket-mode faceup slime-company company slime ws-butler winum which-key volatile-highlights vi-tilde-fringe uuidgen use-package toc-org spaceline powerline restart-emacs request rainbow-delimiters popwin persp-mode pcre2el paradox spinner org-plus-contrib org-bullets open-junk-file neotree move-text macrostep lorem-ipsum linum-relative link-hint indent-guide hydra hungry-delete hl-todo highlight-parentheses highlight-numbers parent-mode highlight-indentation helm-themes helm-swoop helm-projectile helm-mode-manager helm-make projectile pkg-info epl helm-flx helm-descbinds helm-ag google-translate golden-ratio flx-ido flx fill-column-indicator fancy-battery eyebrowse expand-region exec-path-from-shell evil-visualstar evil-visual-mark-mode evil-unimpaired evil-tutor evil-surround evil-search-highlight-persist highlight evil-numbers evil-nerd-commenter evil-mc evil-matchit evil-lisp-state smartparens evil-indent-plus evil-iedit-state iedit evil-exchange evil-escape evil-ediff evil-args evil-anzu anzu evil goto-chg undo-tree eval-sexp-fu elisp-slime-nav dumb-jump f dash s diminish define-word column-enforce-mode clean-aindent-mode bind-map bind-key auto-highlight-symbol auto-compile packed aggressive-indent adaptive-wrap ace-window ace-link ace-jump-helm-line helm avy helm-core popup async))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
