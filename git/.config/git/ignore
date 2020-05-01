@@ -25,14 +25,7 @@ tags
 .tags
 sbt-ctags-dep-srcs
 
-target
-
-target-bundle
-
 .idea
 *.iml
 
-brightsite-shell.log
-*.bsh
-
-*.log
+,

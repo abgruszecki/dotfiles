@@ -498,19 +498,50 @@ before packages are loaded."
         ;; spacemacs
         spacemacs-layouts-restrict-spc-tab t)
 
+  (add-to-list 'spacemacs-indent-sensitive-modes 'scala-mode)
+  (electric-indent-mode nil)
+
+  (defun my-spacemacs//yank-ident-region (yank-func &rest args)
+    "If current mode is not one of spacemacs-indent-sensitive-modes
+indent yanked text (with universal arg don't indent)."
+    (evil-start-undo-step)
+    (prog1
+        (let ((prefix current-prefix-arg)
+              (enable (and (not (member major-mode spacemacs-indent-sensitive-modes))
+                           (or (derived-mode-p 'prog-mode)
+                               (member major-mode spacemacs-yank-indent-modes)))))
+          (when (and enable (equal '(4) prefix))
+            (setq args (cons 1 (cdr args))))
+          (prog1
+              (apply yank-func args)
+            (when (and enable (not (equal '(4) prefix)))
+              (let ((transient-mark-mode nil)
+                    (save-undo buffer-undo-list))
+                (spacemacs/yank-advised-indent-function (region-beginning)
+                                                        (region-end))))))
+      (evil-end-undo-step)))
+
+  (advice-remove #'spacemacs//yank-indent-region
+                 #'my-spacemacs//yank-ident-region)
+
+  (advice-add #'spacemacs//yank-indent-region
+              :override
+              #'my-spacemacs//yank-ident-region)
+
   ;; dotty
-  (eval-after-load 'dotty
-    (progn
-      (setq sbt/test-command "testCompilation .eff.")
-      (setq sbt/compile-arguments (concat
-                                   "-color:never -d out"
-                                   " -Yescape-analysis"
-                                   ;; " -Xprint:all"
-                                   ;; " -Xprompt"
-                                   ;; " -uniqid"
-                                   ;; " -Xprint:typer"
-                                   )))
-    )
+  (defun my-dotty//configure ()
+    (dotty/set-keys)
+    (setq sbt/test-command "testCompilation .eff.")
+    (setq sbt/compile-arguments (concat
+                                 "-color:never -d out"
+                                 " -Yescape-analysis"
+                                 ;; " -Yshow-suppressed-errors"
+                                 ;; " -Xprint:all"
+                                 ;; " -Xprompt"
+                                 ;; " -uniqid"
+                                 ;; " -Xprint:typer"
+                                 )))
+  (eval-after-load 'dotty #'my-dotty//configure)
 
   ;; org
   (setq org-todo-keywords '((sequence "TODO(t)" "DONE(d)")
@@ -535,6 +566,9 @@ before packages are loaded."
 
   ;;; keybindings
 
+  (define-key key-translation-map
+    (kbd "H-,") (kbd dotspacemacs-major-mode-emacs-leader-key))
+
   (spacemacs/set-leader-keys
     "gd" 'my/magit/kill-all-buffers
     "ps" 'my/projectile/save-project-files)
@@ -549,7 +583,8 @@ before packages are loaded."
     )
 
   (evil-define-key '(normal insert) org-mode-map
-    (kbd "<H-return>") (lookup-key spacemacs-org-mode-map "i"))
+    (kbd "<H-return>") (lookup-key spacemacs-org-mode-map "i")
+    (kbd "H-,") (kbd "ESC SPC m"))
 
   (spacemacs/set-leader-keys-for-major-mode 'org-mode
     "oi" #'my/org/set-ztk-id
