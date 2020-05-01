@@ -15,7 +15,6 @@
 	re = restore
 	poh = push origin HEAD
 	hps = push staging HEAD
-	merge- = merge --no-ff
 	unstage = reset HEAD --
 	stage = add
 	fix = commit --amend -C HEAD
