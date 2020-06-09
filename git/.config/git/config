@@ -21,3 +21,7 @@
 
 	ls = !git status --porcelain=v1 -- *
 	set-upstream = !git branch --set-upstream-to=origin/"$(git symbolic-ref --short HEAD)"
+
+	f = fuzzy
+	fs = fuzzy status
+	fl = fuzzy log

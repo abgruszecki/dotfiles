@@ -1,3 +1,5 @@
-xmodmap ~/dotfiles/capslock.d/xmodmaprc
+#!/usr/bin/env bash
+xmodmap /home/gruszecki/dotfiles/capslock.d/xmodmaprc
 
-xcape -t 500 -e "Hyper_L=Escape"
+killall xcape
+xcape -t 500 -e "Hyper_L=Escape;Shift_L=parenleft;Shift_R=parenright"

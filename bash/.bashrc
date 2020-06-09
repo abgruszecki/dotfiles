@@ -308,11 +308,9 @@ pull-wa() {
 
 }
 
-loc() {
-	dir=${2:-"."}
-	find "$dir" -iname "*$1*"
-}
+[ -f "${XDG_CONFIG_HOME:-$HOME/.config}"/fzf/fzf.bash ] && source "${XDG_CONFIG_HOME:-$HOME/.config}"/fzf/fzf.bash
 
-[ -f ~/.fzf.bash ] && source ~/.fzf.bash
+source ~/pkg/forgit/forgit.sh
 
 export PATH=/home/gruszecki/.local/bin:$PATH
+export PATH=$PATH:~/pkg/git-fuzzy/bin

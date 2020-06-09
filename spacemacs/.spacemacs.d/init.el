@@ -31,8 +31,7 @@ This function should only modify configuration layer settings."
    dotspacemacs-configuration-layer-path '()
    ;; List of configuration layers to load.
    dotspacemacs-configuration-layers
-   '(
-     ;; ----------------------------------------------------------------
+   '(;; ----------------------------------------------------------------
      ;; Example of useful layers you may want to use right away.
      ;; Uncomment some layer names and press `SPC f e R' (Vim style) or
      ;; `M-m f e R' (Emacs style) to install them.
@@ -48,7 +47,8 @@ This function should only modify configuration layer settings."
      (org :variables
           org-enable-reveal-js-support t
           org-enable-org-journal-support t)
-     treemacs
+
+     pdf
 
      git
      lsp
@@ -57,14 +57,16 @@ This function should only modify configuration layer settings."
 
      emacs-lisp
      common-lisp
-     html
+     haskell
      javascript
      racket
 
      yaml
      markdown
+     html
 
      ;; bespoke!
+     bespoke-scala-mode
      dotty
      bespoke
      )
@@ -173,6 +175,11 @@ It should only modify the values of Spacemacs settings."
    ;; (default 'vim)
    dotspacemacs-editing-style 'vim
 
+   ;; If non-nil show the version string in the Spacemacs buffer. It will
+   ;; appear as (spacemacs version)@(emacs version)
+   ;; (default t)
+   dotspacemacs-startup-buffer-show-version t
+
    ;; Specify the startup banner. Default value is `official', it displays
    ;; the official spacemacs logo. An integer value is the index of text
    ;; banner, `random' chooses a random text banner in `core/banners'
@@ -248,8 +255,10 @@ It should only modify the values of Spacemacs settings."
    dotspacemacs-major-mode-leader-key ","
 
    ;; Major mode leader key accessible in `emacs state' and `insert state'.
-   ;; (default "C-M-m")
-   dotspacemacs-major-mode-emacs-leader-key "C-M-m"
+   ;; (default "C-M-m" for terminal mode, "<M-return>" for GUI mode).
+   ;; Thus M-RET should work as leader key in both GUI and terminal modes.
+   ;; C-M-m also should work in terminal mode, but not in GUI mode.
+   dotspacemacs-major-mode-emacs-leader-key (if window-system "<M-return>" "C-M-m")
 
    ;; These variables control whether separate commands are bound in the GUI to
    ;; the key pairs `C-i', `TAB' and `C-m', `RET'.
@@ -447,6 +456,13 @@ It should only modify the values of Spacemacs settings."
    ;; (default nil)
    dotspacemacs-whitespace-cleanup nil
 
+   ;; If non nil activate `clean-aindent-mode' which tries to correct
+   ;; virtual indentation of simple modes. This can interfer with mode specific
+   ;; indent handling like has been reported for `go-mode'.
+   ;; If it does deactivate it here.
+   ;; (default t)
+   dotspacemacs-use-clean-aindent-mode t
+
    ;; Either nil or a number of seconds. If non-nil zone out after the specified
    ;; number of seconds. (default nil)
    dotspacemacs-zone-out-when-idle nil
@@ -528,19 +544,74 @@ indent yanked text (with universal arg don't indent)."
               :override
               #'my-spacemacs//yank-ident-region)
 
+  (defvar-local yas-arg/dotty-current-printer nil)
+
+  (defvar test-hs
+    )
+
+  (defun my-test/helm ()
+    (interactive)
+    (setq test-hs (helm-build-sync-source "Test Helm source"
+                    :candidates '("a" "b" "c")
+                    :action (helm-make-actions
+                             "Test action" (lambda (arg)
+                                             (message arg)))
+                    ))
+    (helm :sources test-hs)
+    )
+
+  (defvar dotty-sbt/known-options)
+  (setq dotty-sbt/known-options '("-Yescape-analysis"
+                                  "-Yshow-suppressed-errors"
+                                  "-Ythrough-tasty"
+                                  "-Xprint:typer"
+                                  "-Xprint:all"
+                                  "-Xprint:lambdaLift"
+                                  "-Xprompt"
+                                  "-uniqid"))
+
+  (defvar dotty-sbt//arglist-prefix "-color:never -d out")
+  (defvar dotty-sbt//set-arguments)
+  (setq dotty-sbt//set-arguments '("-Yescape-analysis"))
+
+  (defun dotty-sbt//apply-set-arguments ()
+    (let ((argstring (with-temp-buffer
+                       (insert dotty-sbt//arglist-prefix)
+                       (cl-loop for opt in dotty-sbt//set-arguments
+                                do (progn
+                                     (insert " ")
+                                     (insert opt)))
+                       (buffer-string))))
+      (setq sbt/compile-arguments argstring)
+      (when (bound-and-true-p helm-alive-p)
+        (helm-set-pattern "")
+        (helm-update))))
+
+  (defun dotty-sbt/helm-setopt-toggle-option (candidate)
+    (interactive)
+    (setq dotty-sbt//set-arguments
+          (if (-contains? dotty-sbt//set-arguments candidate)
+              (-remove-item candidate dotty-sbt//set-arguments)
+            (cons candidate dotty-sbt//set-arguments)))
+    (dotty-sbt//apply-set-arguments))
+
+  (defun dotty-sbt/helm-pick-opts ()
+    (interactive)
+    (helm :sources (helm-build-sync-source
+                    "Dotty options"
+                    :header-name (lambda (n)
+                                   (format "%s (current: `%s`)" n sbt/compile-arguments))
+                    :candidates dotty-sbt/known-options
+                    :action #'dotty-sbt/helm-setopt-toggle-option
+                    :persistent-action #'dotty-sbt/helm-setopt-toggle-option
+                    )
+          :buffer "*helm Dotty options*"))
+
   ;; dotty
   (defun my-dotty//configure ()
     (dotty/set-keys)
     (setq sbt/test-command "testCompilation .eff.")
-    (setq sbt/compile-arguments (concat
-                                 "-color:never -d out"
-                                 " -Yescape-analysis"
-                                 ;; " -Yshow-suppressed-errors"
-                                 ;; " -Xprint:all"
-                                 ;; " -Xprompt"
-                                 ;; " -uniqid"
-                                 ;; " -Xprint:typer"
-                                 )))
+    (dotty-sbt//apply-set-arguments))
   (eval-after-load 'dotty #'my-dotty//configure)
 
   ;; org
@@ -564,14 +635,23 @@ indent yanked text (with universal arg don't indent)."
   ;; flycheck
   (setq flycheck-check-syntax-automatically '(save mode-enabled))
 
+  ;;; fun
+
+  (defun my-sbt/abort ()
+    (interactive)
+    (with-current-buffer "*sbt<dotty>*"
+      (comint-interrupt-subjob)))
+
   ;;; keybindings
 
   (define-key key-translation-map
     (kbd "H-,") (kbd dotspacemacs-major-mode-emacs-leader-key))
 
-  (spacemacs/set-leader-keys
-    "gd" 'my/magit/kill-all-buffers
-    "ps" 'my/projectile/save-project-files)
+  (global-set-key (kbd "<f1>") #'spacemacs/persp-switch-to-1)
+  (global-set-key (kbd "<f2>") #'my-perspective/switch-to-para)
+  (global-set-key (kbd "<f3>") #'my-perspective/switch-to-bespoke)
+  (global-set-key (kbd "<f4>") #'my-perspective/switch-to-dotty)
+  (global-set-key (kbd "<f5>") #'spacemacs/persp-switch-to-5)
 
   (evil-define-key 'normal 'global
     "[-" 'my/backwards-jump-to-outdent
@@ -579,33 +659,29 @@ indent yanked text (with universal arg don't indent)."
     "[=" 'my/backwards-jump-to-same-indent
     "]=" 'my/forwards-jump-to-same-indent
     "[+" 'my/backwards-jump-to-indent
-    "]+" 'my/forwards-jump-to-indent
-    )
-
-  (evil-define-key '(normal insert) org-mode-map
-    (kbd "<H-return>") (lookup-key spacemacs-org-mode-map "i")
-    (kbd "H-,") (kbd "ESC SPC m"))
-
-  (spacemacs/set-leader-keys-for-major-mode 'org-mode
-    "oi" #'my/org/set-ztk-id
-    "os" #'my/org/sort-todos)
-
-  (global-set-key (kbd "<f1>") 'spacemacs/persp-switch-to-1)
-  (global-set-key (kbd "<f2>") 'my-perspective/switch-to-dotty)
-  (global-set-key (kbd "<f3>") 'my-perspective/switch-to-bespoke)
-  (global-set-key (kbd "<f4>") 'spacemacs/persp-switch-to-4)
-
-  (global-set-key (kbd "<f5>") 'eyebrowse-switch-to-window-config-1)
-  (global-set-key (kbd "<f6>") 'eyebrowse-switch-to-window-config-2)
-  (global-set-key (kbd "<f7>") 'eyebrowse-switch-to-window-config-3)
-  (global-set-key (kbd "<f8>") 'eyebrowse-switch-to-window-config-4)
+    "]+" 'my/forwards-jump-to-indent)
 
   (evil-define-key 'motion 'global
     "]a" 'evil-forward-arg
     "[a" 'evil-backward-arg
     "[A" 'evil-jump-out-args
-    "]j" 'my/slurp
-    )
+    "]j" 'my/slurp)
+
+  (evil-define-key '(normal insert) org-mode-map
+    (kbd "<H-return>") (lookup-key spacemacs-org-mode-map "i")
+    (kbd "H-,") (kbd "ESC SPC m"))
+
+  (spacemacs/set-leader-keys
+    "gd" #'my/magit/kill-all-buffers
+    "ps" #'my/projectile/save-project-files
+    "oc" #'my-sbt/abort)
+
+  (spacemacs/set-leader-keys-for-major-mode 'org-mode
+    "oi" #'my/org/set-ztk-id
+    "os" #'my/org/sort-todos)
+
+  (spacemacs/set-leader-keys-for-major-mode 'lisp-mode
+    "," #'lisp-state-toggle-lisp-state)
 
   ;; NOTE to avoid stupid functions for setting values of custom settings, find a good way of setting them here
   )
@@ -621,7 +697,9 @@ This function is called at the very end of Spacemacs initialization."
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(evil-want-change-word-to-end nil)
- '(org-agenda-files (quote ("~/code/dotty/TODOs.org")))
+ '(org-agenda-files
+   (quote
+    ("~/org/para/domeny/doktorat/doktorat.org" "~/code/dotty/TODOs.org")))
  '(org-capture-templates
    (quote
     (("g" "Note" entry
@@ -632,7 +710,7 @@ This function is called at the very end of Spacemacs initialization."
       (function my/org-template/project-todo-capture)))))
  '(package-selected-packages
    (quote
-    (org-journal origami yapfify yaml-mode xterm-color vterm utop tuareg caml terminal-here shell-pop seeing-is-believing rvm ruby-tools ruby-test-mode ruby-refactor ruby-hash-syntax rubocopfmt rubocop rspec-mode robe rjsx-mode rbenv rake pytest pyenv-mode py-isort pippel pipenv pyvenv pip-requirements ocp-indent ob-elixir mvn multi-term minitest meghanada maven-test-mode lsp-python-ms lsp-java live-py-mode importmagic epc ctable concurrent deferred helm-pydoc groovy-mode groovy-imports pcache gradle-mode git-gutter-fringe+ fringe-helper git-gutter+ flycheck-ocaml merlin flycheck-mix flycheck-credo eshell-z eshell-prompt-extras esh-help emojify emoji-cheat-sheet-plus dune cython-mode company-emoji company-anaconda chruby bundler inf-ruby browse-at-remote blacken auto-complete-rst anaconda-mode pythonic alchemist elixir-mode smeargle orgit magit-gitflow magit-popup helm-gitignore gitignore-mode gitconfig-mode gitattributes-mode git-timemachine git-messenger git-link evil-magit git-commit with-editor web-mode tagedit slim-mode scss-mode sass-mode pug-mode less-css-mode helm-css-scss haml-mode emmet-mode ox-reveal web-beautify livid-mode skewer-mode simple-httpd json-mode json-snatcher json-reformat js2-refactor yasnippet multiple-cursors js2-mode js-doc coffee-mode scala-mode mmm-mode markdown-toc markdown-mode gh-md org-projectile org-category-capture org-present org-pomodoro alert log4e gntp org-mime org-download lv htmlize gnuplot racket-mode faceup slime-company company slime ws-butler winum which-key volatile-highlights vi-tilde-fringe uuidgen use-package toc-org spaceline powerline restart-emacs request rainbow-delimiters popwin persp-mode pcre2el paradox spinner org-plus-contrib org-bullets open-junk-file neotree move-text macrostep lorem-ipsum linum-relative link-hint indent-guide hydra hungry-delete hl-todo highlight-parentheses highlight-numbers parent-mode highlight-indentation helm-themes helm-swoop helm-projectile helm-mode-manager helm-make projectile pkg-info epl helm-flx helm-descbinds helm-ag google-translate golden-ratio flx-ido flx fill-column-indicator fancy-battery eyebrowse expand-region exec-path-from-shell evil-visualstar evil-visual-mark-mode evil-unimpaired evil-tutor evil-surround evil-search-highlight-persist highlight evil-numbers evil-nerd-commenter evil-mc evil-matchit evil-lisp-state smartparens evil-indent-plus evil-iedit-state iedit evil-exchange evil-escape evil-ediff evil-args evil-anzu anzu evil goto-chg undo-tree eval-sexp-fu elisp-slime-nav dumb-jump f dash s diminish define-word column-enforce-mode clean-aindent-mode bind-map bind-key auto-highlight-symbol auto-compile packed aggressive-indent adaptive-wrap ace-window ace-link ace-jump-helm-line helm avy helm-core popup async))))
+    (pdf-tools org-journal origami yapfify yaml-mode xterm-color vterm utop tuareg caml terminal-here shell-pop seeing-is-believing rvm ruby-tools ruby-test-mode ruby-refactor ruby-hash-syntax rubocopfmt rubocop rspec-mode robe rjsx-mode rbenv rake pytest pyenv-mode py-isort pippel pipenv pyvenv pip-requirements ocp-indent ob-elixir mvn multi-term minitest meghanada maven-test-mode lsp-python-ms lsp-java live-py-mode importmagic epc ctable concurrent deferred helm-pydoc groovy-mode groovy-imports pcache gradle-mode git-gutter-fringe+ fringe-helper git-gutter+ flycheck-ocaml merlin flycheck-mix flycheck-credo eshell-z eshell-prompt-extras esh-help emojify emoji-cheat-sheet-plus dune cython-mode company-emoji company-anaconda chruby bundler inf-ruby browse-at-remote blacken auto-complete-rst anaconda-mode pythonic alchemist elixir-mode smeargle orgit magit-gitflow magit-popup helm-gitignore gitignore-mode gitconfig-mode gitattributes-mode git-timemachine git-messenger git-link evil-magit git-commit with-editor web-mode tagedit slim-mode scss-mode sass-mode pug-mode less-css-mode helm-css-scss haml-mode emmet-mode ox-reveal web-beautify livid-mode skewer-mode simple-httpd json-mode json-snatcher json-reformat js2-refactor yasnippet multiple-cursors js2-mode js-doc coffee-mode scala-mode mmm-mode markdown-toc markdown-mode gh-md org-projectile org-category-capture org-present org-pomodoro alert log4e gntp org-mime org-download lv htmlize gnuplot racket-mode faceup slime-company company slime ws-butler winum which-key volatile-highlights vi-tilde-fringe uuidgen use-package toc-org spaceline powerline restart-emacs request rainbow-delimiters popwin persp-mode pcre2el paradox spinner org-plus-contrib org-bullets open-junk-file neotree move-text macrostep lorem-ipsum linum-relative link-hint indent-guide hydra hungry-delete hl-todo highlight-parentheses highlight-numbers parent-mode highlight-indentation helm-themes helm-swoop helm-projectile helm-mode-manager helm-make projectile pkg-info epl helm-flx helm-descbinds helm-ag google-translate golden-ratio flx-ido flx fill-column-indicator fancy-battery eyebrowse expand-region exec-path-from-shell evil-visualstar evil-visual-mark-mode evil-unimpaired evil-tutor evil-surround evil-search-highlight-persist highlight evil-numbers evil-nerd-commenter evil-mc evil-matchit evil-lisp-state smartparens evil-indent-plus evil-iedit-state iedit evil-exchange evil-escape evil-ediff evil-args evil-anzu anzu evil goto-chg undo-tree eval-sexp-fu elisp-slime-nav dumb-jump f dash s diminish define-word column-enforce-mode clean-aindent-mode bind-map bind-key auto-highlight-symbol auto-compile packed aggressive-indent adaptive-wrap ace-window ace-link ace-jump-helm-line helm avy helm-core popup async))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.

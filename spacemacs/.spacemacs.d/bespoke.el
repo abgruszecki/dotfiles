@@ -133,18 +133,32 @@
 
 (defvar my-perspective//loaded-all nil)
 (defun my-perspective//load-all ()
-  (persp-load-state-from-file "dotty")
-  (persp-load-state-from-file "bespoke")
-  (setq my-perspective//loaded-all t))
-
-(defun my-perspective/switch-to-dotty ()
-  (interactive)
   (unless my-perspective//loaded-all
-    (my-perspective//load-all))
-  (spacemacs/persp-switch-to-2))
+    (persp-load-state-from-file "bespoke")
+    (persp-load-state-from-file "para")
+    (persp-load-state-from-file "dotty")
+    (setq my-perspective//loaded-all t)))
 
 (defun my-perspective/switch-to-bespoke ()
   (interactive)
-  (unless my-perspective//loaded-all
-    (my-perspective//load-all))
+  (my-perspective//load-all)
+  (spacemacs/persp-switch-to-2))
+
+(defun my-perspective/switch-to-para ()
+  (interactive)
+  (my-perspective//load-all)
   (spacemacs/persp-switch-to-3))
+
+(defun my-perspective/switch-to-dotty ()
+  (interactive)
+  (my-perspective//load-all)
+  (spacemacs/persp-switch-to-4))
+
+(defun my/fixup-whitespace (&rest a)
+  (when (or
+         (and (eq (char-before) ?\{)
+              (not (eq (char-after) ?\})))
+         (and (eq (char-after) ?\})
+              (not (eq (char-before) ?\{))))
+    (insert ?\s)))
+(advice-add #'evil-join :after #'my/fixup-whitespace)
