@@ -48,6 +48,7 @@ This function should only modify configuration layer settings."
           org-enable-reveal-js-support t
           org-enable-org-journal-support t)
 
+     bibtex
      pdf
 
      git
@@ -81,6 +82,7 @@ This function should only modify configuration layer settings."
 
    dotspacemacs-additional-packages
    '(
+     (org-roam)
      (om :location local)
      )
 
@@ -504,6 +506,24 @@ before packages are loaded."
 
   (use-package om) ;; can't use :defer, since org-mode is loaded by default
 
+  (defvar my-spacemacs/org-roam-prefix-map (make-sparse-keymap)
+    "Prefix map for org-roam")
+  (use-package org-roam
+    :demand t
+    :hook (after-init . org-roam-mode)
+    :custom
+    (org-roam-directory "~/org/roam")
+    (org-roam-db-location "~/.cache/org-roam/org-roam.db")
+    :config
+    (bind-keys :map my-spacemacs/org-roam-prefix-map
+               ((kbd "<f2>")  . org-roam-find-file)
+               ((kbd "<f3>")  . org-roam-find-ref)
+               ((kbd "<tab>") . org-roam)
+               ((kbd "i")     . org-roam-insert)
+               )
+    (spacemacs/set-leader-keys "<f2>" my-spacemacs/org-roam-prefix-map)
+    )
+
   (load "~/.spacemacs.d/bespoke.el")
 
   ;;; configuration
@@ -614,7 +634,7 @@ indent yanked text (with universal arg don't indent)."
     (dotty-sbt//apply-set-arguments))
   (eval-after-load 'dotty #'my-dotty//configure)
 
-  ;; org
+  ;; org-mode
   (setq org-todo-keywords '((sequence "TODO(t)" "DONE(d)")
                             (sequence "TASK(s)" "|")
                             (sequence "OPEN(o)" "CLSD(c)")))
@@ -622,6 +642,12 @@ indent yanked text (with universal arg don't indent)."
   ;; org-journal
   (setq org-journal-dir "~/org/journal"
         org-journal-file-type 'weekly)
+
+  ;; org-ref
+  ;; NOTE: bibliography is supposed to be exported from Zotero with better-bibtex
+  (setq org-ref-default-bibliography '("~/.cache/zotero-export/PhD.bib")
+        org-ref-pdf-directory "~/.cache/zotero-export/"
+        org-ref-bibliography-notes "~/org/bibliograph.org")
 
   ;; lsp
   (setq lsp-signature-auto-activate nil
@@ -652,6 +678,7 @@ indent yanked text (with universal arg don't indent)."
   (global-set-key (kbd "<f3>") #'my-perspective/switch-to-bespoke)
   (global-set-key (kbd "<f4>") #'my-perspective/switch-to-dotty)
   (global-set-key (kbd "<f5>") #'spacemacs/persp-switch-to-5)
+  (global-set-key (kbd "<f6>") #'spacemacs/persp-switch-to-6)
 
   (evil-define-key 'normal 'global
     "[-" 'my/backwards-jump-to-outdent
@@ -710,7 +737,7 @@ This function is called at the very end of Spacemacs initialization."
       (function my/org-template/project-todo-capture)))))
  '(package-selected-packages
    (quote
-    (pdf-tools org-journal origami yapfify yaml-mode xterm-color vterm utop tuareg caml terminal-here shell-pop seeing-is-believing rvm ruby-tools ruby-test-mode ruby-refactor ruby-hash-syntax rubocopfmt rubocop rspec-mode robe rjsx-mode rbenv rake pytest pyenv-mode py-isort pippel pipenv pyvenv pip-requirements ocp-indent ob-elixir mvn multi-term minitest meghanada maven-test-mode lsp-python-ms lsp-java live-py-mode importmagic epc ctable concurrent deferred helm-pydoc groovy-mode groovy-imports pcache gradle-mode git-gutter-fringe+ fringe-helper git-gutter+ flycheck-ocaml merlin flycheck-mix flycheck-credo eshell-z eshell-prompt-extras esh-help emojify emoji-cheat-sheet-plus dune cython-mode company-emoji company-anaconda chruby bundler inf-ruby browse-at-remote blacken auto-complete-rst anaconda-mode pythonic alchemist elixir-mode smeargle orgit magit-gitflow magit-popup helm-gitignore gitignore-mode gitconfig-mode gitattributes-mode git-timemachine git-messenger git-link evil-magit git-commit with-editor web-mode tagedit slim-mode scss-mode sass-mode pug-mode less-css-mode helm-css-scss haml-mode emmet-mode ox-reveal web-beautify livid-mode skewer-mode simple-httpd json-mode json-snatcher json-reformat js2-refactor yasnippet multiple-cursors js2-mode js-doc coffee-mode scala-mode mmm-mode markdown-toc markdown-mode gh-md org-projectile org-category-capture org-present org-pomodoro alert log4e gntp org-mime org-download lv htmlize gnuplot racket-mode faceup slime-company company slime ws-butler winum which-key volatile-highlights vi-tilde-fringe uuidgen use-package toc-org spaceline powerline restart-emacs request rainbow-delimiters popwin persp-mode pcre2el paradox spinner org-plus-contrib org-bullets open-junk-file neotree move-text macrostep lorem-ipsum linum-relative link-hint indent-guide hydra hungry-delete hl-todo highlight-parentheses highlight-numbers parent-mode highlight-indentation helm-themes helm-swoop helm-projectile helm-mode-manager helm-make projectile pkg-info epl helm-flx helm-descbinds helm-ag google-translate golden-ratio flx-ido flx fill-column-indicator fancy-battery eyebrowse expand-region exec-path-from-shell evil-visualstar evil-visual-mark-mode evil-unimpaired evil-tutor evil-surround evil-search-highlight-persist highlight evil-numbers evil-nerd-commenter evil-mc evil-matchit evil-lisp-state smartparens evil-indent-plus evil-iedit-state iedit evil-exchange evil-escape evil-ediff evil-args evil-anzu anzu evil goto-chg undo-tree eval-sexp-fu elisp-slime-nav dumb-jump f dash s diminish define-word column-enforce-mode clean-aindent-mode bind-map bind-key auto-highlight-symbol auto-compile packed aggressive-indent adaptive-wrap ace-window ace-link ace-jump-helm-line helm avy helm-core popup async))))
+    (org-roam pdf-tools org-journal origami yapfify yaml-mode xterm-color vterm utop tuareg caml terminal-here shell-pop seeing-is-believing rvm ruby-tools ruby-test-mode ruby-refactor ruby-hash-syntax rubocopfmt rubocop rspec-mode robe rjsx-mode rbenv rake pytest pyenv-mode py-isort pippel pipenv pyvenv pip-requirements ocp-indent ob-elixir mvn multi-term minitest meghanada maven-test-mode lsp-python-ms lsp-java live-py-mode importmagic epc ctable concurrent deferred helm-pydoc groovy-mode groovy-imports pcache gradle-mode git-gutter-fringe+ fringe-helper git-gutter+ flycheck-ocaml merlin flycheck-mix flycheck-credo eshell-z eshell-prompt-extras esh-help emojify emoji-cheat-sheet-plus dune cython-mode company-emoji company-anaconda chruby bundler inf-ruby browse-at-remote blacken auto-complete-rst anaconda-mode pythonic alchemist elixir-mode smeargle orgit magit-gitflow magit-popup helm-gitignore gitignore-mode gitconfig-mode gitattributes-mode git-timemachine git-messenger git-link evil-magit git-commit with-editor web-mode tagedit slim-mode scss-mode sass-mode pug-mode less-css-mode helm-css-scss haml-mode emmet-mode ox-reveal web-beautify livid-mode skewer-mode simple-httpd json-mode json-snatcher json-reformat js2-refactor yasnippet multiple-cursors js2-mode js-doc coffee-mode scala-mode mmm-mode markdown-toc markdown-mode gh-md org-projectile org-category-capture org-present org-pomodoro alert log4e gntp org-mime org-download lv htmlize gnuplot racket-mode faceup slime-company company slime ws-butler winum which-key volatile-highlights vi-tilde-fringe uuidgen use-package toc-org spaceline powerline restart-emacs request rainbow-delimiters popwin persp-mode pcre2el paradox spinner org-plus-contrib org-bullets open-junk-file neotree move-text macrostep lorem-ipsum linum-relative link-hint indent-guide hydra hungry-delete hl-todo highlight-parentheses highlight-numbers parent-mode highlight-indentation helm-themes helm-swoop helm-projectile helm-mode-manager helm-make projectile pkg-info epl helm-flx helm-descbinds helm-ag google-translate golden-ratio flx-ido flx fill-column-indicator fancy-battery eyebrowse expand-region exec-path-from-shell evil-visualstar evil-visual-mark-mode evil-unimpaired evil-tutor evil-surround evil-search-highlight-persist highlight evil-numbers evil-nerd-commenter evil-mc evil-matchit evil-lisp-state smartparens evil-indent-plus evil-iedit-state iedit evil-exchange evil-escape evil-ediff evil-args evil-anzu anzu evil goto-chg undo-tree eval-sexp-fu elisp-slime-nav dumb-jump f dash s diminish define-word column-enforce-mode clean-aindent-mode bind-map bind-key auto-highlight-symbol auto-compile packed aggressive-indent adaptive-wrap ace-window ace-link ace-jump-helm-line helm avy helm-core popup async))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.

@@ -162,3 +162,24 @@
               (not (eq (char-before) ?\{))))
     (insert ?\s)))
 (advice-add #'evil-join :after #'my/fixup-whitespace)
+
+;;; input method
+
+(defvar my/greek-input-keymap (make-keymap))
+(global-set-key (kbd "H-\\") my/greek-input-keymap)
+
+(defmacro my/define-input-key (prefix key input &rest rest)
+  `(progn
+     (define-key my/greek-input-keymap ,key (lambda () (interactive) (insert-char ,(elt input 0))))
+     (which-key-add-key-based-replacements ,(concat prefix " " key) ,input)
+     ,@(if rest (cdr (macroexpand-all `(my/define-input-key ,prefix ,@rest))))
+     ))
+
+(my/define-input-key "H-\\"
+                     "a" "α"
+                     "b" "β"
+                     "d" "δ"
+                     "D" "Δ"
+                     "G" "Γ"
+                     "l" "λ"
+                     "L" "Λ")
