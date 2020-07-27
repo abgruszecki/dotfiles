@@ -128,8 +128,6 @@ bind '"\e[Z": menu-complete-backward'
 
 #export PATH=/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:~/bin:
 
-export PATH="$PATH:/home/gruszecki/.local/share/coursier/bin"
-
 # export LANG=C
 
 export XDG_CONFIG_HOME=~/.config
@@ -314,3 +312,6 @@ source ~/pkg/forgit/forgit.sh
 
 export PATH=/home/gruszecki/.local/bin:$PATH
 export PATH=$PATH:~/pkg/git-fuzzy/bin
+export PATH="$PATH:/home/gruszecki/.local/share/coursier/bin"
+export PATH=$PATH:~/opt/coursier/bin
+export PATH=$PATH:~/opt/metals-emacs/bin
