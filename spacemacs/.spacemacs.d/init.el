@@ -72,6 +72,7 @@ This function should only modify configuration layer settings."
 
      ;; bespoke!
      bespoke-scala-mode
+     bespoke-org-roam
      dotty
      bespoke
      )
@@ -85,9 +86,7 @@ This function should only modify configuration layer settings."
    ;; Also include the dependencies as they will not be resolved automatically.
 
    dotspacemacs-additional-packages
-   '(
-     (org-roam)
-     (om :location local)
+   '((om :location local)
      )
 
    ;; A list of packages that cannot be updated.
@@ -521,29 +520,7 @@ before packages are loaded."
 
   (use-package om) ;; can't use :defer, since org-mode is loaded by default
 
-  (defvar my-spacemacs/org-roam-prefix-map (make-sparse-keymap)
-    "Prefix map for org-roam")
-  (use-package org-roam
-    :demand t
-    :hook (after-init . org-roam-mode)
-    :custom
-    (org-roam-directory "~/org/roam")
-    (org-roam-db-location "~/.cache/org-roam/org-roam.db")
-    :config
-    (bind-keys :map my-spacemacs/org-roam-prefix-map
-               ((kbd "<f2>")  . org-roam-find-file)
-               ((kbd "<f3>")  . org-roam-find-ref)
-               ((kbd "<tab>") . org-roam)
-               ((kbd "i")     . org-roam-insert)
-               )
-    (spacemacs/set-leader-keys "<f2>" my-spacemacs/org-roam-prefix-map)
-    )
-
   (load "~/.spacemacs.d/bespoke.el")
-
-  (add-to-list 'racket-mode-hook
-               (lambda ()
-                 (define-key racket-mode-map (kbd "<f5>") nil)))
 
   ;;; configuration
 
@@ -670,27 +647,81 @@ indent yanked text (with universal arg don't indent)."
                                                                    (string-equal "Notes" (om-get-property :title el))))
                                                  (org-element-parse-buffer 'headline)))))
 
+  (defun my-org/archive-repeating-meeting ()
+    (interactive)
+    ;; make current date inactive
+    (-let [stamp (->> (om-parse-this-headline)
+                      (om-get-property :title)
+                      (car))]
+      (unless (eq 'timestamp (om-get-type stamp))
+        (user-error "Headline at point doesn't have a timestamp"))
+      (om-update (lambda (stamp)
+                   (om-timestamp-set-active nil stamp))
+                 stamp))
+    ;; refile the meeting
+    (if-let ((target (let ((org-refile-targets '((nil . (:tag . "past")))))
+                       (cl-find-if (lambda (it)
+                                     (> (nth 3 it) (point)))
+                                   (org-refile-get-targets)))))
+        (org-refile nil nil target "Make it part of the past")
+      (user-error "Could not find a target to refile to"))
+    )
+
+  (defun my-org/duplicate-repeating-meeting ()
+    (interactive)
+    (save-excursion
+      (-let [line (buffer-substring (line-beginning-position)
+                                    (line-end-position))]
+        (forward-line -1)
+        (insert line)))
+    ;; move next date into the future
+    (save-excursion
+      (forward-line -1)
+      (-let [stamp (->> (om-parse-this-headline)
+                        (om-get-property :title)
+                        (car))]
+        (unless (eq 'timestamp (om-get-type stamp))
+          (user-error "Headline at point doesn't have a timestamp"))
+        (let ((shift-value (om-get-property :repeater-value stamp))
+              (shift-unit (om-get-property :repeater-unit stamp)))
+          (unless (and shift-value shift-unit)
+            (user-error "Timestamp doesn't have a repeater"))
+          (om-update (lambda (stamp)
+                       (om-timestamp-shift shift-value shift-unit stamp))
+                     stamp)))))
+
+  (progn ;; org-ref
+    ;; NOTE: bibliography is supposed to be exported from Zotero with better-bibtex
+    (setq org-ref-default-bibliography '("~/.cache/zotero-export/PhD.bib")
+          org-ref-pdf-directory "~/zotero-pdf/"
+          org-ref-bibliography-notes "~/org/bibliography.org"
+          org-ref-show-citation-on-enter nil)
+    (setq reftex-default-bibliography org-ref-default-bibliography)
+    (setq bibtex-completion-library-path org-ref-pdf-directory)
+   )
+
   ;; org-journal
   (setq org-journal-dir "~/org/journal"
         org-journal-file-type 'weekly)
 
-  ;; org-ref
-  ;; NOTE: bibliography is supposed to be exported from Zotero with better-bibtex
-  (setq org-ref-default-bibliography '("~/.cache/zotero-export/PhD.bib")
-        org-ref-pdf-directory "~/.cache/zotero-export/"
-        org-ref-bibliography-notes "~/org/bibliograph.org")
-
-  ;; lsp
-  (setq lsp-signature-auto-activate nil
-        lsp-prefer-flymake nil
+  (progn ;; lsp
+    (setq lsp-signature-auto-activate nil
+          lsp-prefer-flymake nil
 
         ;;; lsp-ui
-        lsp-ui-doc-enable nil
-        lsp-ui-flycheck-enable t
-        lsp-ui-flycheck-live-reporting nil)
+          lsp-ui-doc-enable nil
+          lsp-ui-flycheck-enable t
+          lsp-ui-flycheck-live-reporting nil)
+  )
 
   ;; flycheck
   (setq flycheck-check-syntax-automatically '(save mode-enabled))
+
+  (progn ;; racket
+    (add-hook 'racket-mode-hook (lambda ()
+                                  (define-key racket-mode-map (kbd "<f5>") nil)))
+    (remove-hook 'racket-mode-hook #'racket-xp-mode)
+    )
 
   ;;; fun
 
@@ -741,7 +772,9 @@ indent yanked text (with universal arg don't indent)."
 
   (spacemacs/set-leader-keys-for-major-mode 'org-mode
     "oi" #'my/org/set-ztk-id
-    "os" #'my/org/sort-todos)
+    "os" #'my/org/sort-todos
+    "o1" #'my-org/duplicate-repeating-meeting
+    "o2" #'my-org/archive-repeating-meeting)
 
   (spacemacs/set-leader-keys-for-major-mode 'lisp-mode
     "," #'lisp-state-toggle-lisp-state)
@@ -765,7 +798,13 @@ This function is called at the very end of Spacemacs initialization."
     ("~/org/para/domeny/doktorat/doktorat.org" "~/code/dotty/TODOs.org")))
  '(org-capture-templates
    (quote
-    (("c" "Roam note" entry
+    (("r" "Roam reading list" entry
+      (file+headline "~/org/roam/do_przeczytania.org" "Notes")
+      "* 
+  %u
+** Dlaczego?
+" :prepend t :empty-lines 1)
+     ("c" "Roam note" entry
       (function my-org/move-to-notes)
       "* ")
      ("g" "Note" entry
@@ -776,7 +815,7 @@ This function is called at the very end of Spacemacs initialization."
       (function my/org-template/project-todo-capture)))))
  '(package-selected-packages
    (quote
-    (sbt-mode tide typescript-mode kotlin-mode flycheck-kotlin tern org-roam pdf-tools org-journal origami yapfify yaml-mode xterm-color vterm utop tuareg caml terminal-here shell-pop seeing-is-believing rvm ruby-tools ruby-test-mode ruby-refactor ruby-hash-syntax rubocopfmt rubocop rspec-mode robe rjsx-mode rbenv rake pytest pyenv-mode py-isort pippel pipenv pyvenv pip-requirements ocp-indent ob-elixir mvn multi-term minitest meghanada maven-test-mode lsp-python-ms lsp-java live-py-mode importmagic epc ctable concurrent deferred helm-pydoc groovy-mode groovy-imports pcache gradle-mode git-gutter-fringe+ fringe-helper git-gutter+ flycheck-ocaml merlin flycheck-mix flycheck-credo eshell-z eshell-prompt-extras esh-help emojify emoji-cheat-sheet-plus dune cython-mode company-emoji company-anaconda chruby bundler inf-ruby browse-at-remote blacken auto-complete-rst anaconda-mode pythonic alchemist elixir-mode smeargle orgit magit-gitflow magit-popup helm-gitignore gitignore-mode gitconfig-mode gitattributes-mode git-timemachine git-messenger git-link evil-magit git-commit with-editor web-mode tagedit slim-mode scss-mode sass-mode pug-mode less-css-mode helm-css-scss haml-mode emmet-mode ox-reveal web-beautify livid-mode skewer-mode simple-httpd json-mode json-snatcher json-reformat js2-refactor yasnippet multiple-cursors js2-mode js-doc coffee-mode scala-mode mmm-mode markdown-toc markdown-mode gh-md org-projectile org-category-capture org-present org-pomodoro alert log4e gntp org-mime org-download lv htmlize gnuplot racket-mode faceup slime-company company slime ws-butler winum which-key volatile-highlights vi-tilde-fringe uuidgen use-package toc-org spaceline powerline restart-emacs request rainbow-delimiters popwin persp-mode pcre2el paradox spinner org-plus-contrib org-bullets open-junk-file neotree move-text macrostep lorem-ipsum linum-relative link-hint indent-guide hydra hungry-delete hl-todo highlight-parentheses highlight-numbers parent-mode highlight-indentation helm-themes helm-swoop helm-projectile helm-mode-manager helm-make projectile pkg-info epl helm-flx helm-descbinds helm-ag google-translate golden-ratio flx-ido flx fill-column-indicator fancy-battery eyebrowse expand-region exec-path-from-shell evil-visualstar evil-visual-mark-mode evil-unimpaired evil-tutor evil-surround evil-search-highlight-persist highlight evil-numbers evil-nerd-commenter evil-mc evil-matchit evil-lisp-state smartparens evil-indent-plus evil-iedit-state iedit evil-exchange evil-escape evil-ediff evil-args evil-anzu anzu evil goto-chg undo-tree eval-sexp-fu elisp-slime-nav dumb-jump f dash s diminish define-word column-enforce-mode clean-aindent-mode bind-map bind-key auto-highlight-symbol auto-compile packed aggressive-indent adaptive-wrap ace-window ace-link ace-jump-helm-line helm avy helm-core popup async))))
+    (org-roam-bibtex dap-mode posframe bui sbt-mode tide typescript-mode kotlin-mode flycheck-kotlin tern org-roam pdf-tools org-journal origami yapfify yaml-mode xterm-color vterm utop tuareg caml terminal-here shell-pop seeing-is-believing rvm ruby-tools ruby-test-mode ruby-refactor ruby-hash-syntax rubocopfmt rubocop rspec-mode robe rjsx-mode rbenv rake pytest pyenv-mode py-isort pippel pipenv pyvenv pip-requirements ocp-indent ob-elixir mvn multi-term minitest meghanada maven-test-mode lsp-python-ms lsp-java live-py-mode importmagic epc ctable concurrent deferred helm-pydoc groovy-mode groovy-imports pcache gradle-mode git-gutter-fringe+ fringe-helper git-gutter+ flycheck-ocaml merlin flycheck-mix flycheck-credo eshell-z eshell-prompt-extras esh-help emojify emoji-cheat-sheet-plus dune cython-mode company-emoji company-anaconda chruby bundler inf-ruby browse-at-remote blacken auto-complete-rst anaconda-mode pythonic alchemist elixir-mode smeargle orgit magit-gitflow magit-popup helm-gitignore gitignore-mode gitconfig-mode gitattributes-mode git-timemachine git-messenger git-link evil-magit git-commit with-editor web-mode tagedit slim-mode scss-mode sass-mode pug-mode less-css-mode helm-css-scss haml-mode emmet-mode ox-reveal web-beautify livid-mode skewer-mode simple-httpd json-mode json-snatcher json-reformat js2-refactor yasnippet multiple-cursors js2-mode js-doc coffee-mode scala-mode mmm-mode markdown-toc markdown-mode gh-md org-projectile org-category-capture org-present org-pomodoro alert log4e gntp org-mime org-download lv htmlize gnuplot racket-mode faceup slime-company company slime ws-butler winum which-key volatile-highlights vi-tilde-fringe uuidgen use-package toc-org spaceline powerline restart-emacs request rainbow-delimiters popwin persp-mode pcre2el paradox spinner org-plus-contrib org-bullets open-junk-file neotree move-text macrostep lorem-ipsum linum-relative link-hint indent-guide hydra hungry-delete hl-todo highlight-parentheses highlight-numbers parent-mode highlight-indentation helm-themes helm-swoop helm-projectile helm-mode-manager helm-make projectile pkg-info epl helm-flx helm-descbinds helm-ag google-translate golden-ratio flx-ido flx fill-column-indicator fancy-battery eyebrowse expand-region exec-path-from-shell evil-visualstar evil-visual-mark-mode evil-unimpaired evil-tutor evil-surround evil-search-highlight-persist highlight evil-numbers evil-nerd-commenter evil-mc evil-matchit evil-lisp-state smartparens evil-indent-plus evil-iedit-state iedit evil-exchange evil-escape evil-ediff evil-args evil-anzu anzu evil goto-chg undo-tree eval-sexp-fu elisp-slime-nav dumb-jump f dash s diminish define-word column-enforce-mode clean-aindent-mode bind-map bind-key auto-highlight-symbol auto-compile packed aggressive-indent adaptive-wrap ace-window ace-link ace-jump-helm-line helm avy helm-core popup async))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
