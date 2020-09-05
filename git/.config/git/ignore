@@ -21,11 +21,19 @@ Network Trash Folder
 Temporary Items
 .apdisk
 
+# Tags
+
 tags
 .tags
 sbt-ctags-dep-srcs
 
+# IDE
+
 .idea
 *.iml
 
+# Personal
+
 ,
+
+.sbt-hydra-history

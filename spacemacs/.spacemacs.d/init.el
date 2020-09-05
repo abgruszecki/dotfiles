@@ -199,6 +199,7 @@ It should only modify the values of Spacemacs settings."
    ;; by your Emacs build.
    ;; If the value is nil then no banner is displayed. (default 'official)
    dotspacemacs-startup-banner 'official
+
    ;; List of items to show in startup buffer or an association list of
    ;; the form `(list-type . list-size)`. If nil then it is disabled.
    ;; Possible values for list-type are:
@@ -475,6 +476,13 @@ It should only modify the values of Spacemacs settings."
    ;; (default t)
    dotspacemacs-use-clean-aindent-mode t
 
+   ;; If non-nil shift your number row to match the entered keyboard layout
+   ;; (only in insert state). Currently supported keyboard layouts are:
+   ;; `qwerty-us', `qwertz-de' and `querty-ca-fr'.
+   ;; New layouts can be added in `spacemacs-editing' layer.
+   ;; (default nil)
+   dotspacemacs-swap-number-row nil
+
    ;; Either nil or a number of seconds. If non-nil zone out after the specified
    ;; number of seconds. (default nil)
    dotspacemacs-zone-out-when-idle nil
@@ -502,7 +510,24 @@ This function is called immediately after `dotspacemacs/init', before layer
 configuration.
 It is mostly for variables that should be set before packages are loaded.
 If you are unsure, try setting them in `dotspacemacs/user-config' first."
+
+  (spacemacs|use-package-add-hook racket-mode
+    :post-config
+    (define-key racket-mode-map (kbd "<f5>") nil)
+    (remove-hook 'racket-mode-hook #'racket-xp-mode))
+
+  (spacemacs|use-package-add-hook kotlin-mode
+    :post-config
+    (remove-hook 'kotlin-mode-hook #'spacemacs//kotlin-setup-backend))
+
+  (spacemacs|use-package-add-hook scala-mode
+    :post-config
+    (setq scala-auto-insert-asterisk-in-comments t)
+    (add-to-list 'spacemacs-indent-sensitive-modes 'scala-mode)
+    (remove-hook 'scala-mode-hook #'lsp))
+
   )
+
 
 (defun dotspacemacs/user-load ()
   "Library to load while dumping.
@@ -518,7 +543,7 @@ configuration.
 Put your configuration code here, except for variables that should be set
 before packages are loaded."
 
-  (use-package om) ;; can't use :defer, since org-mode is loaded by default
+  (use-package org-ml) ;; can't use :defer, since org-mode is loaded by default
 
   (load "~/.spacemacs.d/bespoke.el")
 
@@ -530,11 +555,7 @@ before packages are loaded."
         ;; spacemacs
         spacemacs-layouts-restrict-spc-tab t)
 
-  (add-to-list 'spacemacs-indent-sensitive-modes 'scala-mode)
   (electric-indent-mode nil)
-
-  (remove-hook 'kotlin-mode-hook #'spacemacs//kotlin-setup-backend)
-  (remove-hook 'scala-mode-hook #'lsp)
 
   (defun my-spacemacs//yank-ident-region (yank-func &rest args)
     "If current mode is not one of spacemacs-indent-sensitive-modes
@@ -565,19 +586,6 @@ indent yanked text (with universal arg don't indent)."
 
   (defvar-local yas-arg/dotty-current-printer nil)
 
-  (defvar test-hs
-    )
-
-  (defun my-test/helm ()
-    (interactive)
-    (setq test-hs (helm-build-sync-source "Test Helm source"
-                    :candidates '("a" "b" "c")
-                    :action (helm-make-actions
-                             "Test action" (lambda (arg)
-                                             (message arg)))
-                    ))
-    (helm :sources test-hs)
-    )
 
   (defvar dotty-sbt/known-options)
   (setq dotty-sbt/known-options '("-Yescape-analysis"
@@ -643,20 +651,20 @@ indent yanked text (with universal arg don't indent)."
     (interactive)
     (org-roam-find-file)
     (goto-char (org-element-property :begin
-                                     (cl-find-if (lambda (el) (and (om-is-type 'headline el)
-                                                                   (string-equal "Notes" (om-get-property :title el))))
+                                     (cl-find-if (lambda (el) (and (org-ml-is-type 'headline el)
+                                                                   (string-equal "Notes" (org-ml-get-property :title el))))
                                                  (org-element-parse-buffer 'headline)))))
 
   (defun my-org/archive-repeating-meeting ()
     (interactive)
     ;; make current date inactive
-    (-let [stamp (->> (om-parse-this-headline)
-                      (om-get-property :title)
+    (-let [stamp (->> (org-ml-parse-this-headline)
+                      (org-ml-get-property :title)
                       (car))]
-      (unless (eq 'timestamp (om-get-type stamp))
+      (unless (eq 'timestamp (org-ml-get-type stamp))
         (user-error "Headline at point doesn't have a timestamp"))
-      (om-update (lambda (stamp)
-                   (om-timestamp-set-active nil stamp))
+      (org-ml-update (lambda (stamp)
+                   (org-ml-timestamp-set-active nil stamp))
                  stamp))
     ;; refile the meeting
     (if-let ((target (let ((org-refile-targets '((nil . (:tag . "past")))))
@@ -677,17 +685,17 @@ indent yanked text (with universal arg don't indent)."
     ;; move next date into the future
     (save-excursion
       (forward-line -1)
-      (-let [stamp (->> (om-parse-this-headline)
-                        (om-get-property :title)
+      (-let [stamp (->> (org-ml-parse-this-headline)
+                        (org-ml-get-property :title)
                         (car))]
-        (unless (eq 'timestamp (om-get-type stamp))
+        (unless (eq 'timestamp (org-ml-get-type stamp))
           (user-error "Headline at point doesn't have a timestamp"))
-        (let ((shift-value (om-get-property :repeater-value stamp))
-              (shift-unit (om-get-property :repeater-unit stamp)))
+        (let ((shift-value (org-ml-get-property :repeater-value stamp))
+              (shift-unit (org-ml-get-property :repeater-unit stamp)))
           (unless (and shift-value shift-unit)
             (user-error "Timestamp doesn't have a repeater"))
-          (om-update (lambda (stamp)
-                       (om-timestamp-shift shift-value shift-unit stamp))
+          (org-ml-update (lambda (stamp)
+                       (org-ml-timestamp-shift shift-value shift-unit stamp))
                      stamp)))))
 
   (progn ;; org-ref
@@ -717,12 +725,6 @@ indent yanked text (with universal arg don't indent)."
   ;; flycheck
   (setq flycheck-check-syntax-automatically '(save mode-enabled))
 
-  (progn ;; racket
-    (add-hook 'racket-mode-hook (lambda ()
-                                  (define-key racket-mode-map (kbd "<f5>") nil)))
-    (remove-hook 'racket-mode-hook #'racket-xp-mode)
-    )
-
   ;;; fun
 
   (defun my-sbt/abort ()
@@ -734,6 +736,8 @@ indent yanked text (with universal arg don't indent)."
 
   (define-key key-translation-map
     (kbd "H-,") (kbd dotspacemacs-major-mode-emacs-leader-key))
+  (define-key key-translation-map
+    (kbd "H-SPC") (kbd dotspacemacs-emacs-leader-key))
 
   (global-set-key (kbd "H-1") #'eyebrowse-switch-to-window-config-1)
   (global-set-key (kbd "H-2") #'eyebrowse-switch-to-window-config-2)
@@ -794,28 +798,33 @@ This function is called at the very end of Spacemacs initialization."
  ;; If there is more than one, they won't work right.
  '(evil-want-change-word-to-end nil)
  '(org-agenda-files
-   (quote
-    ("~/org/para/domeny/doktorat/doktorat.org" "~/code/dotty/TODOs.org")))
+   '("~/org/para/domeny/doktorat/doktorat.org" "~/code/dotty/TODOs.org"))
  '(org-capture-templates
-   (quote
-    (("r" "Roam reading list" entry
+   '(("z" "Roam ZTK note" entry
+      (file+olp buffer-file-name "ZTK" "Niezorganizowane")
+      "* #? %?
+  :PROPERTIES:%(org-cycle)
+  :ID:       %(org-id-new)
+  :ZTK:      ?
+  :END:"
+      :unnarrowed t
+      :no-save t
+      )
+     ("r" "Roam reading list" entry
       (file+headline "~/org/roam/do_przeczytania.org" "Notes")
       "* 
   %u
 ** Dlaczego?
 " :prepend t :empty-lines 1)
-     ("c" "Roam note" entry
-      (function my-org/move-to-notes)
-      "* ")
+     ("c" "Roam note" entry #'my-org/move-to-notes "* ")
      ("g" "Note" entry
       (file "~/org/notes.org")
       "")
      ("t" "Project TODO" entry
       (file+headline my/current-project-TODOs-file "TODOs")
-      (function my/org-template/project-todo-capture)))))
+      #'my/org-template/project-todo-capture)))
  '(package-selected-packages
-   (quote
-    (org-roam-bibtex dap-mode posframe bui sbt-mode tide typescript-mode kotlin-mode flycheck-kotlin tern org-roam pdf-tools org-journal origami yapfify yaml-mode xterm-color vterm utop tuareg caml terminal-here shell-pop seeing-is-believing rvm ruby-tools ruby-test-mode ruby-refactor ruby-hash-syntax rubocopfmt rubocop rspec-mode robe rjsx-mode rbenv rake pytest pyenv-mode py-isort pippel pipenv pyvenv pip-requirements ocp-indent ob-elixir mvn multi-term minitest meghanada maven-test-mode lsp-python-ms lsp-java live-py-mode importmagic epc ctable concurrent deferred helm-pydoc groovy-mode groovy-imports pcache gradle-mode git-gutter-fringe+ fringe-helper git-gutter+ flycheck-ocaml merlin flycheck-mix flycheck-credo eshell-z eshell-prompt-extras esh-help emojify emoji-cheat-sheet-plus dune cython-mode company-emoji company-anaconda chruby bundler inf-ruby browse-at-remote blacken auto-complete-rst anaconda-mode pythonic alchemist elixir-mode smeargle orgit magit-gitflow magit-popup helm-gitignore gitignore-mode gitconfig-mode gitattributes-mode git-timemachine git-messenger git-link evil-magit git-commit with-editor web-mode tagedit slim-mode scss-mode sass-mode pug-mode less-css-mode helm-css-scss haml-mode emmet-mode ox-reveal web-beautify livid-mode skewer-mode simple-httpd json-mode json-snatcher json-reformat js2-refactor yasnippet multiple-cursors js2-mode js-doc coffee-mode scala-mode mmm-mode markdown-toc markdown-mode gh-md org-projectile org-category-capture org-present org-pomodoro alert log4e gntp org-mime org-download lv htmlize gnuplot racket-mode faceup slime-company company slime ws-butler winum which-key volatile-highlights vi-tilde-fringe uuidgen use-package toc-org spaceline powerline restart-emacs request rainbow-delimiters popwin persp-mode pcre2el paradox spinner org-plus-contrib org-bullets open-junk-file neotree move-text macrostep lorem-ipsum linum-relative link-hint indent-guide hydra hungry-delete hl-todo highlight-parentheses highlight-numbers parent-mode highlight-indentation helm-themes helm-swoop helm-projectile helm-mode-manager helm-make projectile pkg-info epl helm-flx helm-descbinds helm-ag google-translate golden-ratio flx-ido flx fill-column-indicator fancy-battery eyebrowse expand-region exec-path-from-shell evil-visualstar evil-visual-mark-mode evil-unimpaired evil-tutor evil-surround evil-search-highlight-persist highlight evil-numbers evil-nerd-commenter evil-mc evil-matchit evil-lisp-state smartparens evil-indent-plus evil-iedit-state iedit evil-exchange evil-escape evil-ediff evil-args evil-anzu anzu evil goto-chg undo-tree eval-sexp-fu elisp-slime-nav dumb-jump f dash s diminish define-word column-enforce-mode clean-aindent-mode bind-map bind-key auto-highlight-symbol auto-compile packed aggressive-indent adaptive-wrap ace-window ace-link ace-jump-helm-line helm avy helm-core popup async))))
+   '(org-pdftools org-noter-pdftools org-noter org-roam-bibtex dap-mode posframe bui sbt-mode tide typescript-mode kotlin-mode flycheck-kotlin tern org-roam pdf-tools org-journal origami yapfify yaml-mode xterm-color vterm utop tuareg caml terminal-here shell-pop seeing-is-believing rvm ruby-tools ruby-test-mode ruby-refactor ruby-hash-syntax rubocopfmt rubocop rspec-mode robe rjsx-mode rbenv rake pytest pyenv-mode py-isort pippel pipenv pyvenv pip-requirements ocp-indent ob-elixir mvn multi-term minitest meghanada maven-test-mode lsp-python-ms lsp-java live-py-mode importmagic epc ctable concurrent deferred helm-pydoc groovy-mode groovy-imports pcache gradle-mode git-gutter-fringe+ fringe-helper git-gutter+ flycheck-ocaml merlin flycheck-mix flycheck-credo eshell-z eshell-prompt-extras esh-help emojify emoji-cheat-sheet-plus dune cython-mode company-emoji company-anaconda chruby bundler inf-ruby browse-at-remote blacken auto-complete-rst anaconda-mode pythonic alchemist elixir-mode smeargle orgit magit-gitflow magit-popup helm-gitignore gitignore-mode gitconfig-mode gitattributes-mode git-timemachine git-messenger git-link evil-magit git-commit with-editor web-mode tagedit slim-mode scss-mode sass-mode pug-mode less-css-mode helm-css-scss haml-mode emmet-mode ox-reveal web-beautify livid-mode skewer-mode simple-httpd json-mode json-snatcher json-reformat js2-refactor yasnippet multiple-cursors js2-mode js-doc coffee-mode scala-mode mmm-mode markdown-toc markdown-mode gh-md org-projectile org-category-capture org-present org-pomodoro alert log4e gntp org-mime org-download lv htmlize gnuplot racket-mode faceup slime-company company slime ws-butler winum which-key volatile-highlights vi-tilde-fringe uuidgen use-package toc-org spaceline powerline restart-emacs request rainbow-delimiters popwin persp-mode pcre2el paradox spinner org-plus-contrib org-bullets open-junk-file neotree move-text macrostep lorem-ipsum linum-relative link-hint indent-guide hydra hungry-delete hl-todo highlight-parentheses highlight-numbers parent-mode highlight-indentation helm-themes helm-swoop helm-projectile helm-mode-manager helm-make projectile pkg-info epl helm-flx helm-descbinds helm-ag google-translate golden-ratio flx-ido flx fill-column-indicator fancy-battery eyebrowse expand-region exec-path-from-shell evil-visualstar evil-visual-mark-mode evil-unimpaired evil-tutor evil-surround evil-search-highlight-persist highlight evil-numbers evil-nerd-commenter evil-mc evil-matchit evil-lisp-state smartparens evil-indent-plus evil-iedit-state iedit evil-exchange evil-escape evil-ediff evil-args evil-anzu anzu evil goto-chg undo-tree eval-sexp-fu elisp-slime-nav dumb-jump f dash s diminish define-word column-enforce-mode clean-aindent-mode bind-map bind-key auto-highlight-symbol auto-compile packed aggressive-indent adaptive-wrap ace-window ace-link ace-jump-helm-line helm avy helm-core popup async)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.

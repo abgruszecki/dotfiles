@@ -1,5 +1,96 @@
 ;;; My functions
 
+(defun my//org-roam--get-headlines (&optional file with-marker use-stack)
+  "Return all outline headings for the current buffer.
+If FILE, return outline headings for passed FILE instead.
+If WITH-MARKER, return a cons cell of (headline . marker).
+If USE-STACK, include the parent paths as well."
+  (let* ((buf (or (and file
+                       (or (find-buffer-visiting file)
+                           (find-file-noselect file)))
+                  (current-buffer)))
+         (outline-level-fn outline-level)
+         (path-separator "/")
+         (stack-level 0)
+         stack cands name level marker)
+    (with-current-buffer buf
+      (save-excursion
+        (goto-char (point-min))
+        (while (re-search-forward org-complex-heading-regexp nil t)
+          (save-excursion
+            (setq name (substring-no-properties (or (match-string 4) "")))
+            (setq marker (point-marker))
+            (when use-stack
+              (goto-char (match-beginning 0))
+              (setq level (funcall outline-level-fn))
+              ;; Update stack.  The empty entry guards against incorrect
+              ;; headline hierarchies, e.g. a level 3 headline
+              ;; immediately following a level 1 entry.
+              (while (<= level stack-level)
+                (pop stack)
+                (cl-decf stack-level))
+              (while (> level stack-level)
+                (push name stack)
+                (cl-incf stack-level))
+              (setq name (mapconcat #'identity
+                                    (reverse stack)
+                                    path-separator)))
+            (push (if with-marker
+                      (cons name marker)
+                    name) cands)))))
+    (nreverse cands)))
+
+(defun my/foo ()
+  (interactive)
+  ;; (org-entry-properties)
+  ;; (org-set-property "ZTK" "1")
+  (helm :sources (helm-build-sync-source
+                     "Headlines"
+                   :candidates (my//org-roam--get-headlines nil t)
+                   :action (lambda (m)
+                             (let ((props (save-excursion
+                                            (goto-char m)
+                                            (org-entry-properties))))
+                               (insert (format "[[id:%s][#%s]]"
+                                               (cdr (assoc "ID" props))
+                                               (cdr (assoc "ZTK" props))
+                                               )))
+                             )
+                   ;; :persistent-action #'dotty-sbt/helm-setopt-toggle-option
+                   )
+        :buffer "*helm Dotty options*"))
+
+(defun my-ztk/set-id (new-id)
+  (interactive ;; "M"
+               (list (read-string "ZTK ID: "
+                                  ;; ""
+                                  (condition-case nil
+                                      (save-excursion
+                                        (beginning-of-line)
+                                        (org-up-element)
+                                        (cdr (assoc "ZTK" (org-entry-properties))))
+                                    (error ""))
+                                  ))
+               )
+  (let* ((node (org-element-context))
+         (new-id-str (format "#%s" new-id))
+         (old-title (org-element-property :title node))
+         (new-title (if (s-starts-with? "#" old-title)
+                        (s-replace-regexp "^#[^ ]*" new-id-str old-title t t)
+                      (concat new-id-str " " old-title)
+                      )))
+    (org-element-put-property node :title new-title)
+    (kill-whole-line)
+    (insert (org-element-interpret-data node))
+    (forward-line -1)
+    (org-ml-set-property :title (list new-title) node)
+    (org-set-property "ZTK" new-id)
+    (org-id-get-create)
+    ;; (org-ml-headline-set-node-property "ZTK" new-id-str node)
+    )
+
+  )
+
 (defun my/current-project-root ()
   (car (project-roots (project-current))))
 
@@ -184,3 +275,5 @@
                      "l" "λ"
                      "L" "Λ"
                      "|" "‣")
+
+(define-key my/greek-input-keymap (kbd "H-a") (cons "∀" (lambda () (interactive) (insert "∀"))))
