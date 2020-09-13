@@ -35,5 +35,6 @@ sbt-ctags-dep-srcs
 # Personal
 
 ,
+,,
 
 .sbt-hydra-history
