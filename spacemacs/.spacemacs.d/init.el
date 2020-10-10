@@ -557,154 +557,156 @@ before packages are loaded."
 
   ;;; configuration
 
-  ;; (space)macs
-  (setq create-lockfiles nil
-
-        ;; spacemacs
-        spacemacs-layouts-restrict-spc-tab t)
-
-  (electric-indent-mode nil)
-
-  (defun my-spacemacs//yank-ident-region (yank-func &rest args)
-    "If current mode is not one of spacemacs-indent-sensitive-modes
-indent yanked text (with universal arg don't indent)."
-    (evil-start-undo-step)
-    (prog1
-        (let ((prefix current-prefix-arg)
-              (enable (and (not (member major-mode spacemacs-indent-sensitive-modes))
-                           (or (derived-mode-p 'prog-mode)
-                               (member major-mode spacemacs-yank-indent-modes)))))
-          (when (and enable (equal '(4) prefix))
-            (setq args (cons 1 (cdr args))))
-          (prog1
-              (apply yank-func args)
-            (when (and enable (not (equal '(4) prefix)))
-              (let ((transient-mark-mode nil)
-                    (save-undo buffer-undo-list))
-                (spacemacs/yank-advised-indent-function (region-beginning)
-                                                        (region-end))))))
-      (evil-end-undo-step)))
-
-  (advice-remove #'spacemacs//yank-indent-region
-                 #'my-spacemacs//yank-ident-region)
-
-  (advice-add #'spacemacs//yank-indent-region
-              :override
-              #'my-spacemacs//yank-ident-region)
-
-  (defvar-local yas-arg/dotty-current-printer nil)
-
-
-  (defvar dotty-sbt/known-options)
-  (setq dotty-sbt/known-options '("-Yescape-analysis"
-                                  "-Yshow-suppressed-errors"
-                                  "-Ythrough-tasty"
-                                  "-Xprint:typer"
-                                  "-Xprint:all"
-                                  "-Xprint:lambdaLift"
-                                  "-Xprompt"
-                                  "-uniqid"))
-
-  (defvar dotty-sbt//arglist-prefix "-color:never -d out")
-  (defvar dotty-sbt//set-arguments)
-  (setq dotty-sbt//set-arguments '("-Yescape-analysis"))
-
-  (defun dotty-sbt//apply-set-arguments ()
-    (let ((argstring (with-temp-buffer
-                       (insert dotty-sbt//arglist-prefix)
-                       (cl-loop for opt in dotty-sbt//set-arguments
-                                do (progn
-                                     (insert " ")
-                                     (insert opt)))
-                       (buffer-string))))
-      (setq sbt/compile-arguments argstring)
-      (when (bound-and-true-p helm-alive-p)
-        (helm-set-pattern "")
-        (helm-update))))
-
-  (defun dotty-sbt/helm-setopt-toggle-option (candidate)
-    (interactive)
-    (setq dotty-sbt//set-arguments
-          (if (-contains? dotty-sbt//set-arguments candidate)
-              (-remove-item candidate dotty-sbt//set-arguments)
-            (cons candidate dotty-sbt//set-arguments)))
-    (dotty-sbt//apply-set-arguments))
-
-  (defun dotty-sbt/helm-pick-opts ()
-    (interactive)
-    (helm :sources (helm-build-sync-source
-                    "Dotty options"
-                    :header-name (lambda (n)
-                                   (format "%s (current: `%s`)" n sbt/compile-arguments))
-                    :candidates dotty-sbt/known-options
-                    :action #'dotty-sbt/helm-setopt-toggle-option
-                    :persistent-action #'dotty-sbt/helm-setopt-toggle-option
-                    )
-          :buffer "*helm Dotty options*"))
-
-  ;; dotty
-  (defun my-dotty//configure ()
-    (dotty/set-keys)
-    (setq sbt/test-command "testCompilation .eff.")
-    (dotty-sbt//apply-set-arguments))
-  (eval-after-load 'dotty #'my-dotty//configure)
-
-  ;; org-mode
-  (setq org-todo-keywords '((sequence "TODO(t)" "DONE(d)")
-                            (sequence "TASK(s)" "|")
-                            (sequence "OPEN(o)" "CLSD(c)")))
-  (setq org-reverse-note-order t)
-
-  (defun my-org/move-to-notes ()
-    (interactive)
-    (org-roam-find-file)
-    (goto-char (org-element-property :begin
-                                     (cl-find-if (lambda (el) (and (org-ml-is-type 'headline el)
-                                                                   (string-equal "Notes" (org-ml-get-property :title el))))
-                                                 (org-element-parse-buffer 'headline)))))
-
-  (defun my-org/archive-repeating-meeting ()
-    (interactive)
-    ;; make current date inactive
-    (-let [stamp (->> (org-ml-parse-this-headline)
-                      (org-ml-get-property :title)
-                      (car))]
-      (unless (eq 'timestamp (org-ml-get-type stamp))
-        (user-error "Headline at point doesn't have a timestamp"))
-      (org-ml-update (lambda (stamp)
-                   (org-ml-timestamp-set-active nil stamp))
-                 stamp))
-    ;; refile the meeting
-    (if-let ((target (let ((org-refile-targets '((nil . (:tag . "past")))))
-                       (cl-find-if (lambda (it)
-                                     (> (nth 3 it) (point)))
-                                   (org-refile-get-targets)))))
-        (org-refile nil nil target "Make it part of the past")
-      (user-error "Could not find a target to refile to"))
+  (progn ;;emacs
+    (setq create-lockfiles nil)
     )
 
-  (defun my-org/duplicate-repeating-meeting ()
-    (interactive)
-    (save-excursion
-      (-let [line (buffer-substring (line-beginning-position)
-                                    (line-end-position))]
-        (forward-line -1)
-        (insert line)))
-    ;; move next date into the future
-    (save-excursion
-      (forward-line -1)
+  (progn ;; spacemacs
+    (setq
+     spacemacs-layouts-restrict-spc-tab t)
+
+    (electric-indent-mode nil)
+
+    (defun my-spacemacs//yank-ident-region (yank-func &rest args)
+      "If current mode is not one of spacemacs-indent-sensitive-modes
+indent yanked text (with universal arg don't indent)."
+      (evil-start-undo-step)
+      (prog1
+          (let ((prefix current-prefix-arg)
+                (enable (and (not (member major-mode spacemacs-indent-sensitive-modes))
+                             (or (derived-mode-p 'prog-mode)
+                                 (member major-mode spacemacs-yank-indent-modes)))))
+            (when (and enable (equal '(4) prefix))
+              (setq args (cons 1 (cdr args))))
+            (prog1
+                (apply yank-func args)
+              (when (and enable (not (equal '(4) prefix)))
+                (let ((transient-mark-mode nil)
+                      (save-undo buffer-undo-list))
+                  (spacemacs/yank-advised-indent-function (region-beginning)
+                                                          (region-end))))))
+        (evil-end-undo-step)))
+
+    (advice-remove #'spacemacs//yank-indent-region
+                   #'my-spacemacs//yank-ident-region)
+
+    (advice-add #'spacemacs//yank-indent-region
+                :override
+                #'my-spacemacs//yank-ident-region))
+
+  (progn ;; dotty
+    (defvar-local yas-arg/dotty-current-printer nil)
+
+    (defvar dotty-sbt/known-options)
+    (setq dotty-sbt/known-options '("-Yescape-analysis"
+                                    "-Yshow-suppressed-errors"
+                                    "-Ythrough-tasty"
+                                    "-Xprint:typer"
+                                    "-Xprint:all"
+                                    "-Xprint:lambdaLift"
+                                    "-Xprompt"
+                                    "-uniqid"))
+
+    (defvar dotty-sbt//arglist-prefix "-color:never -d out")
+    (defvar dotty-sbt//set-arguments)
+    (setq dotty-sbt//set-arguments '("-Yescape-analysis"))
+
+    (defun dotty-sbt//apply-set-arguments ()
+      (let ((argstring (with-temp-buffer
+                         (insert dotty-sbt//arglist-prefix)
+                         (cl-loop for opt in dotty-sbt//set-arguments
+                                  do (progn
+                                       (insert " ")
+                                       (insert opt)))
+                         (buffer-string))))
+        (setq sbt/compile-arguments argstring)
+        (when (bound-and-true-p helm-alive-p)
+          (helm-set-pattern "")
+          (helm-update))))
+
+    (defun dotty-sbt/helm-setopt-toggle-option (candidate)
+      (interactive)
+      (setq dotty-sbt//set-arguments
+            (if (-contains? dotty-sbt//set-arguments candidate)
+                (-remove-item candidate dotty-sbt//set-arguments)
+              (cons candidate dotty-sbt//set-arguments)))
+      (dotty-sbt//apply-set-arguments))
+
+    (defun dotty-sbt/helm-pick-opts ()
+      (interactive)
+      (helm :sources (helm-build-sync-source
+                         "Dotty options"
+                       :header-name (lambda (n)
+                                      (format "%s (current: `%s`)" n sbt/compile-arguments))
+                       :candidates dotty-sbt/known-options
+                       :action #'dotty-sbt/helm-setopt-toggle-option
+                       :persistent-action #'dotty-sbt/helm-setopt-toggle-option
+                       )
+            :buffer "*helm Dotty options*"))
+
+    (defun my-dotty//configure ()
+      (dotty/set-keys)
+      (setq sbt/test-command "testCompilation .eff.")
+      (dotty-sbt//apply-set-arguments))
+    (eval-after-load 'dotty #'my-dotty//configure))
+
+  (progn ;; org-mode
+    (setq org-todo-keywords '((sequence "TODO(t)" "DONE(d)")
+                              (sequence "TASK(s)" "|")
+                              (sequence "OPEN(o)" "CLSD(c)"))
+          org-reverse-note-order t
+          org-agenda-files "~/.cache/emacs-org-mode/agenda")
+
+    (defun my-org/move-to-notes ()
+      (interactive)
+      (org-roam-find-file)
+      (goto-char (org-element-property :begin
+                                       (cl-find-if (lambda (el) (and (org-ml-is-type 'headline el)
+                                                                     (string-equal "Notes" (org-ml-get-property :title el))))
+                                                   (org-element-parse-buffer 'headline)))))
+
+    (defun my-org/archive-repeating-meeting ()
+      (interactive)
+      ;; make current date inactive
       (-let [stamp (->> (org-ml-parse-this-headline)
                         (org-ml-get-property :title)
                         (car))]
         (unless (eq 'timestamp (org-ml-get-type stamp))
           (user-error "Headline at point doesn't have a timestamp"))
-        (let ((shift-value (org-ml-get-property :repeater-value stamp))
-              (shift-unit (org-ml-get-property :repeater-unit stamp)))
-          (unless (and shift-value shift-unit)
-            (user-error "Timestamp doesn't have a repeater"))
-          (org-ml-update (lambda (stamp)
-                       (org-ml-timestamp-shift shift-value shift-unit stamp))
-                     stamp)))))
+        (org-ml-update (lambda (stamp)
+                         (org-ml-timestamp-set-active nil stamp))
+                       stamp))
+      ;; refile the meeting
+      (if-let ((target (let ((org-refile-targets '((nil . (:tag . "past")))))
+                         (cl-find-if (lambda (it)
+                                       (> (nth 3 it) (point)))
+                                     (org-refile-get-targets)))))
+          (org-refile nil nil target "Make it part of the past")
+        (user-error "Could not find a target to refile to"))
+      )
+
+    (defun my-org/duplicate-repeating-meeting ()
+      (interactive)
+      (save-excursion
+        (-let [line (buffer-substring (line-beginning-position)
+                                      (line-end-position))]
+          (forward-line -1)
+          (insert line)))
+      ;; move next date into the future
+      (save-excursion
+        (forward-line -1)
+        (-let [stamp (->> (org-ml-parse-this-headline)
+                          (org-ml-get-property :title)
+                          (car))]
+          (unless (eq 'timestamp (org-ml-get-type stamp))
+            (user-error "Headline at point doesn't have a timestamp"))
+          (let ((shift-value (org-ml-get-property :repeater-value stamp))
+                (shift-unit (org-ml-get-property :repeater-unit stamp)))
+            (unless (and shift-value shift-unit)
+              (user-error "Timestamp doesn't have a repeater"))
+            (org-ml-update (lambda (stamp)
+                             (org-ml-timestamp-shift shift-value shift-unit stamp))
+                           stamp))))))
 
   (progn ;; org-ref
     ;; NOTE: bibliography is supposed to be exported from Zotero with better-bibtex
@@ -716,9 +718,9 @@ indent yanked text (with universal arg don't indent)."
     (setq bibtex-completion-library-path org-ref-pdf-directory)
    )
 
-  ;; org-journal
-  (setq org-journal-dir "~/org/journal"
-        org-journal-file-type 'weekly)
+  (progn ;; org-journal
+    (setq org-journal-dir "~/org/journal"
+          org-journal-file-type 'weekly))
 
   (progn ;; shell
     (setq shell-default-shell 'eshell)
@@ -743,8 +745,8 @@ indent yanked text (with universal arg don't indent)."
         (lsp arg)))
     )
 
-  ;; flycheck
-  (setq flycheck-check-syntax-automatically '(save mode-enabled))
+  (progn ;; flycheck
+    (setq flycheck-check-syntax-automatically '(save mode-enabled)))
 
   ;;; fun
 
@@ -780,9 +782,6 @@ indent yanked text (with universal arg don't indent)."
     "]=" 'my/forwards-jump-to-same-indent
     "[+" 'my/backwards-jump-to-indent
     "]+" 'my/forwards-jump-to-indent)
-
-  (evil-define-key nil 'global
-    (kbd "<C-escape>") #'evil-execute-in-normal-state)
 
   (evil-define-key 'motion 'global
     "]a" 'evil-forward-arg
@@ -827,7 +826,6 @@ This function is called at the very end of Spacemacs initialization."
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(evil-want-change-word-to-end nil)
- '(org-agenda-files '("~/org/roam/agenda.org"))
  '(org-capture-templates
    '(("z" "Roam ZTK note" entry
       (file+olp buffer-file-name "ZTK" "Niezorganizowane")

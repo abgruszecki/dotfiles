@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+
+ROAM_DIR=~/org/roam
+
+rg "^(#\+agenda)|(#\+category:)" -i -l "$ROAM_DIR" > ~/.cache/emacs-org-mode/agenda
