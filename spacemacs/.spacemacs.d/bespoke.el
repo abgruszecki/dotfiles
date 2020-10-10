@@ -237,13 +237,19 @@ If USE-STACK, include the parent paths as well."
 (defun my-perspective/switch-to-bespoke ()
   (interactive)
   (my-perspective//load-all)
+  (if (eq major-mode 'help-mode)
+      (progn
+        (pupo/close-window)
+        (spacemacs/persp-switch-to-2)
+        (my/help-resume)))
   (spacemacs/persp-switch-to-2))
 
 (defun my-perspective/switch-to-para ()
   (interactive)
   (my-perspective//load-all)
-  (if (string= (persp-name (get-current-persp))
-               "para")
+  (if (and (get-current-persp)
+           (string= (persp-name (get-current-persp))
+                    "para"))
       (call-interactively #'org-roam-find-file)
     (spacemacs/persp-switch-to-3)))
 
@@ -263,24 +269,27 @@ If USE-STACK, include the parent paths as well."
 
 ;;; input method
 
-(defvar my/greek-input-keymap (make-keymap))
-(global-set-key (kbd "H-\\") my/greek-input-keymap)
+(defvar my-greek/input-keymap (make-sparse-keymap))
+(global-set-key (kbd "H-\\") my-greek/input-keymap)
 
-(defmacro my/define-input-key (prefix key input &rest rest)
-  `(progn
-     (define-key my/greek-input-keymap ,key (lambda () (interactive) (insert-char ,(elt input 0))))
-     (which-key-add-key-based-replacements ,(concat prefix " " key) ,input)
-     ,@(if rest (cdr (macroexpand-all `(my/define-input-key ,prefix ,@rest))))
-     ))
+(defun my-greek/krazy-self-insert ()
+  "Krazy thing that looks up its own keybinding in the greek input keymap and inserts its own description."
+  (interactive)
+  (let* ((keys (this-command-keys-vector))
+         (last-key (elt keys (1- (length keys))))
+         (key (cadr (assoc last-key (cdr my-greek/input-keymap)))))
+    (insert-char (elt key 0))))
 
-(my/define-input-key "H-\\"
-                     "a" "α"
-                     "b" "β"
-                     "d" "δ"
-                     "D" "Δ"
-                     "G" "Γ"
-                     "l" "λ"
-                     "L" "Λ"
-                     "|" "‣")
+(defmacro my-greek/define-key (key input)
+  `(define-key my-greek/input-keymap (kbd ,key) (cons ,input #'my-greek/krazy-self-insert)))
 
-(define-key my/greek-input-keymap (kbd "H-a") (cons "∀" (lambda () (interactive) (insert "∀"))))
+;; Reminder: these depend on `which-key-enable-extended-define-key'
+(define-key my-greek/input-keymap (kbd "H-a") (cons "∀" #'my-greek/krazy-self-insert))
+(my-greek/define-key "a" "α")
+(my-greek/define-key "b" "β")
+(my-greek/define-key "d" "δ")
+(my-greek/define-key "D" "Δ")
+(my-greek/define-key "G" "Γ")
+(my-greek/define-key "l" "λ")
+(my-greek/define-key "L" "Λ")
+(my-greek/define-key "|" "‣")

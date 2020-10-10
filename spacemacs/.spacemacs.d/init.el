@@ -534,6 +534,7 @@ If you are unsure, try setting them in `dotspacemacs/user-config' first."
     (add-to-list 'spacemacs-indent-sensitive-modes 'scala-mode)
     (remove-hook 'scala-mode-hook #'lsp))
 
+  (setq which-key-enable-extended-define-key t)
   )
 
 (defun dotspacemacs/user-load ()
