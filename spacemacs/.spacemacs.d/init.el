@@ -29,9 +29,11 @@ This function should only modify configuration layer settings."
    ;; List of additional paths where to look for configuration layers.
    ;; Paths must have a trailing slash (i.e. `~/.mycontribs/')
    dotspacemacs-configuration-layer-path '()
+
    ;; List of configuration layers to load.
    dotspacemacs-configuration-layers
-   '(;; ----------------------------------------------------------------
+   '(
+     ;; ----------------------------------------------------------------
      ;; Example of useful layers you may want to use right away.
      ;; Uncomment some layer names and press `SPC f e R' (Vim style) or
      ;; `M-m f e R' (Emacs style) to install them.
@@ -58,6 +60,7 @@ This function should only modify configuration layer settings."
 
      emacs-lisp
      common-lisp
+     coq
      haskell
      (python :variables python-backend 'anaconda)
      javascript
@@ -88,6 +91,8 @@ This function should only modify configuration layer settings."
 
    dotspacemacs-additional-packages
    '((om :location local)
+     yequake
+     edit-server
      )
 
    ;; A list of packages that cannot be updated.
@@ -132,7 +137,7 @@ It should only modify the values of Spacemacs settings."
    ;; To load it when starting Emacs add the parameter `--dump-file'
    ;; when invoking Emacs 27.1 executable on the command line, for instance:
    ;;   ./emacs --dump-file=$HOME/.emacs.d/.cache/dumps/spacemacs-27.1.pdmp
-   ;; (default spacemacs-27.1.pdmp)
+   ;; (default (format "spacemacs-%s.pdmp" emacs-version))
    dotspacemacs-emacs-dumper-dump-file (format "spacemacs-%s.pdmp" emacs-version)
 
    ;; If non-nil ELPA repositories are contacted via HTTPS whenever it's
@@ -162,7 +167,9 @@ It should only modify the values of Spacemacs settings."
 
    ;; If non-nil then Spacelpa repository is the primary source to install
    ;; a locked version of packages. If nil then Spacemacs will install the
-   ;; latest version of packages from MELPA. (default nil)
+   ;; latest version of packages from MELPA. Spacelpa is currently in
+   ;; experimental state please use only for testing purposes.
+   ;; (default nil)
    dotspacemacs-use-spacelpa nil
 
    ;; If non-nil then verify the signature for downloaded Spacelpa archives.
@@ -529,7 +536,6 @@ If you are unsure, try setting them in `dotspacemacs/user-config' first."
 
   )
 
-
 (defun dotspacemacs/user-load ()
   "Library to load while dumping.
 This function is called only while dumping Spacemacs configuration. You can
@@ -713,6 +719,10 @@ indent yanked text (with universal arg don't indent)."
   (setq org-journal-dir "~/org/journal"
         org-journal-file-type 'weekly)
 
+  (progn ;; shell
+    (setq shell-default-shell 'eshell)
+    )
+
   (progn ;; lsp
     (setq lsp-signature-auto-activate nil
           lsp-prefer-flymake nil
@@ -721,7 +731,16 @@ indent yanked text (with universal arg don't indent)."
           lsp-ui-doc-enable nil
           lsp-ui-flycheck-enable t
           lsp-ui-flycheck-live-reporting nil)
-  )
+
+    (defvar my-lsp//forced 'nil)
+    (defun my-lsp//advice-defang-lsp (f &rest r)
+      (if my-lsp//forced (apply f r) (message "Defanged LSP.")))
+    (advice-add 'lsp :around #'my-lsp//advice-defang-lsp)
+    (defun my-lsp (arg)
+      (interactive "p")
+      (let ((my-lsp//forced t))
+        (lsp arg)))
+    )
 
   ;; flycheck
   (setq flycheck-check-syntax-automatically '(save mode-enabled))
@@ -761,6 +780,9 @@ indent yanked text (with universal arg don't indent)."
     "[+" 'my/backwards-jump-to-indent
     "]+" 'my/forwards-jump-to-indent)
 
+  (evil-define-key nil 'global
+    (kbd "<C-escape>") #'evil-execute-in-normal-state)
+
   (evil-define-key 'motion 'global
     "]a" 'evil-forward-arg
     "[a" 'evil-backward-arg
@@ -776,9 +798,14 @@ indent yanked text (with universal arg don't indent)."
     "ps" #'my/projectile/save-project-files
     "oc" #'my-sbt/abort)
 
+  (spacemacs/set-leader-keys
+    "rh" #'my/help-resume)
+
   (spacemacs/set-leader-keys-for-major-mode 'org-mode
+    "i <f2>" #'org-roam-insert
     "oi" #'my/org/set-ztk-id
     "os" #'my/org/sort-todos
+    "oc" #'my-org/set-created
     "o1" #'my-org/duplicate-repeating-meeting
     "o2" #'my-org/archive-repeating-meeting)
 
@@ -799,8 +826,7 @@ This function is called at the very end of Spacemacs initialization."
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(evil-want-change-word-to-end nil)
- '(org-agenda-files
-   '("~/org/para/domeny/doktorat/doktorat.org" "~/code/dotty/TODOs.org"))
+ '(org-agenda-files '("~/org/roam/agenda.org"))
  '(org-capture-templates
    '(("z" "Roam ZTK note" entry
       (file+olp buffer-file-name "ZTK" "Niezorganizowane")
@@ -815,7 +841,10 @@ This function is called at the very end of Spacemacs initialization."
   %u
 ** Dlaczego?
 " :prepend t :empty-lines 1)
-     ("c" "Roam note" entry #'my-org/move-to-notes "* ")
+     ("c" "Roam capture note" entry
+      (file "~/org/roam/captured.org")
+      "* ")
+     ("n" "Roam note" entry #'my-org/move-to-notes "* ")
      ("g" "Note" entry
       (file "~/org/notes.org")
       "")
@@ -823,7 +852,18 @@ This function is called at the very end of Spacemacs initialization."
       (file+headline my/current-project-TODOs-file "TODOs")
       #'my/org-template/project-todo-capture)))
  '(package-selected-packages
-   '(merlin-eldoc stickyfunc-enhance helm-gtags helm-cscope xcscope ggtags counsel-gtags counsel swiper org-pdftools org-noter-pdftools org-noter org-roam-bibtex dap-mode posframe bui sbt-mode tide typescript-mode kotlin-mode flycheck-kotlin tern org-roam pdf-tools org-journal origami yapfify yaml-mode xterm-color vterm utop tuareg caml terminal-here shell-pop seeing-is-believing rvm ruby-tools ruby-test-mode ruby-refactor ruby-hash-syntax rubocopfmt rubocop rspec-mode robe rjsx-mode rbenv rake pytest pyenv-mode py-isort pippel pipenv pyvenv pip-requirements ocp-indent ob-elixir mvn multi-term minitest meghanada maven-test-mode lsp-python-ms lsp-java live-py-mode importmagic epc ctable concurrent deferred helm-pydoc groovy-mode groovy-imports pcache gradle-mode git-gutter-fringe+ fringe-helper git-gutter+ flycheck-ocaml merlin flycheck-mix flycheck-credo eshell-z eshell-prompt-extras esh-help emojify emoji-cheat-sheet-plus dune cython-mode company-emoji company-anaconda chruby bundler inf-ruby browse-at-remote blacken auto-complete-rst anaconda-mode pythonic alchemist elixir-mode smeargle orgit magit-gitflow magit-popup helm-gitignore gitignore-mode gitconfig-mode gitattributes-mode git-timemachine git-messenger git-link evil-magit git-commit with-editor web-mode tagedit slim-mode scss-mode sass-mode pug-mode less-css-mode helm-css-scss haml-mode emmet-mode ox-reveal web-beautify livid-mode skewer-mode simple-httpd json-mode json-snatcher json-reformat js2-refactor yasnippet multiple-cursors js2-mode js-doc coffee-mode scala-mode mmm-mode markdown-toc markdown-mode gh-md org-projectile org-category-capture org-present org-pomodoro alert log4e gntp org-mime org-download lv htmlize gnuplot racket-mode faceup slime-company company slime ws-butler winum which-key volatile-highlights vi-tilde-fringe uuidgen use-package toc-org spaceline powerline restart-emacs request rainbow-delimiters popwin persp-mode pcre2el paradox spinner org-plus-contrib org-bullets open-junk-file neotree move-text macrostep lorem-ipsum linum-relative link-hint indent-guide hydra hungry-delete hl-todo highlight-parentheses highlight-numbers parent-mode highlight-indentation helm-themes helm-swoop helm-projectile helm-mode-manager helm-make projectile pkg-info epl helm-flx helm-descbinds helm-ag google-translate golden-ratio flx-ido flx fill-column-indicator fancy-battery eyebrowse expand-region exec-path-from-shell evil-visualstar evil-visual-mark-mode evil-unimpaired evil-tutor evil-surround evil-search-highlight-persist highlight evil-numbers evil-nerd-commenter evil-mc evil-matchit evil-lisp-state smartparens evil-indent-plus evil-iedit-state iedit evil-exchange evil-escape evil-ediff evil-args evil-anzu anzu evil goto-chg undo-tree eval-sexp-fu elisp-slime-nav dumb-jump f dash s diminish define-word column-enforce-mode clean-aindent-mode bind-map bind-key auto-highlight-symbol auto-compile packed aggressive-indent adaptive-wrap ace-window ace-link ace-jump-helm-line helm avy helm-core popup async)))
+   '(edit-server yequake proof-general company-coq company-math math-symbol-lists merlin-eldoc stickyfunc-enhance helm-gtags helm-cscope xcscope ggtags counsel-gtags counsel swiper org-pdftools org-noter-pdftools org-noter org-roam-bibtex dap-mode posframe bui sbt-mode tide typescript-mode kotlin-mode flycheck-kotlin tern org-roam pdf-tools org-journal origami yapfify yaml-mode xterm-color vterm utop tuareg caml terminal-here shell-pop seeing-is-believing rvm ruby-tools ruby-test-mode ruby-refactor ruby-hash-syntax rubocopfmt rubocop rspec-mode robe rjsx-mode rbenv rake pytest pyenv-mode py-isort pippel pipenv pyvenv pip-requirements ocp-indent ob-elixir mvn multi-term minitest meghanada maven-test-mode lsp-python-ms lsp-java live-py-mode importmagic epc ctable concurrent deferred helm-pydoc groovy-mode groovy-imports pcache gradle-mode git-gutter-fringe+ fringe-helper git-gutter+ flycheck-ocaml merlin flycheck-mix flycheck-credo eshell-z eshell-prompt-extras esh-help emojify emoji-cheat-sheet-plus dune cython-mode company-emoji company-anaconda chruby bundler inf-ruby browse-at-remote blacken auto-complete-rst anaconda-mode pythonic alchemist elixir-mode smeargle orgit magit-gitflow magit-popup helm-gitignore gitignore-mode gitconfig-mode gitattributes-mode git-timemachine git-messenger git-link evil-magit git-commit with-editor web-mode tagedit slim-mode scss-mode sass-mode pug-mode less-css-mode helm-css-scss haml-mode emmet-mode ox-reveal web-beautify livid-mode skewer-mode simple-httpd json-mode json-snatcher json-reformat js2-refactor yasnippet multiple-cursors js2-mode js-doc coffee-mode scala-mode mmm-mode markdown-toc markdown-mode gh-md org-projectile org-category-capture org-present org-pomodoro alert log4e gntp org-mime org-download lv htmlize gnuplot racket-mode faceup slime-company company slime ws-butler winum which-key volatile-highlights vi-tilde-fringe uuidgen use-package toc-org spaceline powerline restart-emacs request rainbow-delimiters popwin persp-mode pcre2el paradox spinner org-plus-contrib org-bullets open-junk-file neotree move-text macrostep lorem-ipsum linum-relative link-hint indent-guide hydra hungry-delete hl-todo highlight-parentheses highlight-numbers parent-mode highlight-indentation helm-themes helm-swoop helm-projectile helm-mode-manager helm-make projectile pkg-info epl helm-flx helm-descbinds helm-ag google-translate golden-ratio flx-ido flx fill-column-indicator fancy-battery eyebrowse expand-region exec-path-from-shell evil-visualstar evil-visual-mark-mode evil-unimpaired evil-tutor evil-surround evil-search-highlight-persist highlight evil-numbers evil-nerd-commenter evil-mc evil-matchit evil-lisp-state smartparens evil-indent-plus evil-iedit-state iedit evil-exchange evil-escape evil-ediff evil-args evil-anzu anzu evil goto-chg undo-tree eval-sexp-fu elisp-slime-nav dumb-jump f dash s diminish define-word column-enforce-mode clean-aindent-mode bind-map bind-key auto-highlight-symbol auto-compile packed aggressive-indent adaptive-wrap ace-window ace-link ace-jump-helm-line helm avy helm-core popup async))
+ '(yequake-frames
+   '(("Scratch"
+      (buffer-fns "*scratch*")
+      (width . 1.0)
+      (height . 1.0)
+      (left . 0)
+      (top . 0)
+      (frame-parameters
+       (skip-taskbar . t)
+       (sticky . t)
+       (undecorated . t))))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -831,3 +871,6 @@ This function is called at the very end of Spacemacs initialization."
  ;; If there is more than one, they won't work right.
  )
 )
+
+
+

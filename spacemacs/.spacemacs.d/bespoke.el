@@ -91,6 +91,10 @@ If USE-STACK, include the parent paths as well."
 
   )
 
+(defun my-org/set-created ()
+  (interactive)
+  (org-set-property "CREATED" (format-time-string "[%Y-%m-%d]")))
+
 (defun my/current-project-root ()
   (car (project-roots (project-current))))
 
@@ -102,7 +106,7 @@ If USE-STACK, include the parent paths as well."
     (insert-file-contents "~/.spacemacs.d/org-templates/project-todo.org")
     (buffer-string)))
 
-(defun my/show-last-help ()
+(defun my/help-resume ()
   (interactive)
   (select-window (display-buffer "*Help*")))
 
@@ -238,7 +242,10 @@ If USE-STACK, include the parent paths as well."
 (defun my-perspective/switch-to-para ()
   (interactive)
   (my-perspective//load-all)
-  (spacemacs/persp-switch-to-3))
+  (if (string= (persp-name (get-current-persp))
+               "para")
+      (call-interactively #'org-roam-find-file)
+    (spacemacs/persp-switch-to-3)))
 
 (defun my-perspective/switch-to-dotty ()
   (interactive)
