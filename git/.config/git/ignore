@@ -26,6 +26,9 @@ Temporary Items
 tags
 .tags
 sbt-ctags-dep-srcs
+#
+# Python
+__pycache__
 
 # IDE
 
