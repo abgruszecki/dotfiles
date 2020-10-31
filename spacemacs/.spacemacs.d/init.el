@@ -48,7 +48,8 @@ This function should only modify configuration layer settings."
      helm
      (org :variables
           org-enable-reveal-js-support t
-          org-enable-org-journal-support t)
+          org-enable-org-journal-support t
+          org-enable-roam-support t)
 
      bibtex
      pdf
@@ -555,6 +556,8 @@ before packages are loaded."
 
   (load "~/.spacemacs.d/bespoke.el")
 
+  ;; (org-roam-mode 1)
+
   ;;; configuration
 
   (progn ;;emacs
@@ -772,8 +775,11 @@ indent yanked text (with universal arg don't indent)."
   (global-set-key (kbd "<f2>") #'my-perspective/switch-to-para)
   (global-set-key (kbd "<f3>") #'my-perspective/switch-to-bespoke)
   (global-set-key (kbd "<f4>") #'my-perspective/switch-to-dotty)
-  (global-set-key (kbd "<f5>") #'spacemacs/persp-switch-to-5)
-  (global-set-key (kbd "<f6>") #'spacemacs/persp-switch-to-6)
+
+  (global-set-key (kbd "<f5>") #'my-perspective/switch-to-dynamic)
+  (global-set-key (kbd "<f6>") #'my-perspective/switch-to-dynamic)
+  (global-set-key (kbd "<f7>") #'my-perspective/switch-to-dynamic)
+  (global-set-key (kbd "<f8>") #'my-perspective/switch-to-dynamic)
 
   (evil-define-key 'normal 'global
     "[-" 'my/backwards-jump-to-outdent

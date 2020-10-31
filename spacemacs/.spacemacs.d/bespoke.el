@@ -93,7 +93,13 @@ If USE-STACK, include the parent paths as well."
 
 (defun my-org/set-created ()
   (interactive)
-  (org-set-property "CREATED" (format-time-string "[%Y-%m-%d]")))
+  (save-excursion
+    (while (not (org-at-heading-p))
+      (org-up-element))
+    (unless (org-entry-get (point) "CREATED")
+      (org-set-property "CREATED" (format-time-string "[%Y-%m-%d]")))
+    (org-set-property "UPDATED" (format-time-string "[%Y-%m-%d]")))
+  )
 
 (defun my/current-project-root ()
   (car (project-roots (project-current))))
@@ -236,27 +242,51 @@ If USE-STACK, include the parent paths as well."
 
 (defun my-perspective/switch-to-bespoke ()
   (interactive)
-  (my-perspective//load-all)
+  (unless (persp-with-name-exists-p "bespoke")
+    (persp-load-state-from-file "bespoke"))
   (if (eq major-mode 'help-mode)
       (progn
         (pupo/close-window)
-        (spacemacs/persp-switch-to-2)
+        (persp-switch "bespoke")
         (my/help-resume)))
-  (spacemacs/persp-switch-to-2))
+  (persp-switch "bespoke"))
 
 (defun my-perspective/switch-to-para ()
   (interactive)
-  (my-perspective//load-all)
-  (if (and (get-current-persp)
-           (string= (persp-name (get-current-persp))
-                    "para"))
+  (unless (persp-with-name-exists-p "para")
+    (persp-load-state-from-file "para"))
+  (if (string= "para" (spacemacs//current-layout-name))
       (call-interactively #'org-roam-find-file)
-    (spacemacs/persp-switch-to-3)))
+    (persp-switch "para")))
 
 (defun my-perspective/switch-to-dotty ()
   (interactive)
-  (my-perspective//load-all)
-  (spacemacs/persp-switch-to-4))
+  (let ((p-name "dotty"))
+    (unless (persp-with-name-exists-p p-name)
+      (persp-load-state-from-file p-name))
+    (persp-switch p-name)))
+
+(defvar my-perspective//current-dynamic-bindings nil)
+(defvar my-perspective/known-dynamic
+  (list "scala3doc"
+        "papers"
+        "capture-calc"))
+
+(defun my-perspective/switch-to-dynamic (force-pick &optional force-key)
+  (interactive "P")
+  (let* ((k (or force-key
+                (elt (this-command-keys-vector) 0)))
+         (entry (alist-get k my-perspective//current-dynamic-bindings)))
+    (when (or force-pick (not entry))
+      (-if-let (picked (helm :sources (helm-build-sync-source "Perspective name"
+                                        :candidates my-perspective/known-dynamic)))
+          (setf (alist-get k my-perspective//current-dynamic-bindings) picked
+                entry picked)
+        (user-error "No perspective picked."))
+      )
+    (unless (persp-with-name-exists-p entry)
+      (persp-load-state-from-file entry))
+    (persp-switch entry)))
 
 (defun my/fixup-whitespace (&rest a)
   (when (or

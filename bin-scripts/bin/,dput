@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+
+mv "$(xclip -o -sel clip)" "$1"
