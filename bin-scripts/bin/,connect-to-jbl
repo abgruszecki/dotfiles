@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+
+bluetoothctl connect F8:DF:15:D5:15:A5

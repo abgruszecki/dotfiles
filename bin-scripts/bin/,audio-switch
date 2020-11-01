@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+
+pacmd set-default-sink 1
+pacmd set-default-sink 2
