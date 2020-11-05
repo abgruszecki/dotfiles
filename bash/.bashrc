@@ -154,6 +154,7 @@ alias edit-vimrc="vim ~/.vimrc"
 alias annihilate="rm -rf"
 
 export CLICOLOR=1
+export PAGER=less
 export EDITOR=vim
 
 # superawesome prompt
