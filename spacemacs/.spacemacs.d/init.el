@@ -771,6 +771,8 @@ indent yanked text (with universal arg don't indent)."
   (global-set-key (kbd "H-3") #'eyebrowse-switch-to-window-config-3)
   (global-set-key (kbd "H-4") #'eyebrowse-switch-to-window-config-4)
 
+  (global-set-key (kbd "<C-tab>") #'spacemacs/alternate-window)
+
   (global-set-key (kbd "<f1>") #'spacemacs/persp-switch-to-1)
   (global-set-key (kbd "<f2>") #'my-perspective/switch-to-para)
   (global-set-key (kbd "<f3>") #'my-perspective/switch-to-bespoke)
@@ -849,7 +851,7 @@ This function is called at the very end of Spacemacs initialization."
      ("c" "Roam capture note" entry
       (file "~/org/roam/captured.org")
       "* ")
-     ("n" "Roam note" entry #'my-org/move-to-notes "* ")
+     ("n" "Roam note" entry #'my-org/move-to-notes "* %?\n%a")
      ("g" "Note" entry
       (file "~/org/notes.org")
       "")

@@ -269,6 +269,7 @@ If USE-STACK, include the parent paths as well."
 (defvar my-perspective//current-dynamic-bindings nil)
 (defvar my-perspective/known-dynamic
   (list "scala3doc"
+        "fos"
         "papers"
         "capture-calc"))
 
