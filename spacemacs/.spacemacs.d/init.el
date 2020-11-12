@@ -553,6 +553,7 @@ Put your configuration code here, except for variables that should be set
 before packages are loaded."
 
   (use-package org-ml) ;; can't use :defer, since org-mode is loaded by default
+  (use-package ox-md) ;; fixes md export being unavailable in Org menu
 
   (load "~/.spacemacs.d/bespoke.el")
 

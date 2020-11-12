@@ -270,6 +270,7 @@ If USE-STACK, include the parent paths as well."
 (defvar my-perspective/known-dynamic
   (list "scala3doc"
         "fos"
+        "fos-coq"
         "papers"
         "capture-calc"))
 
