@@ -267,12 +267,13 @@ If USE-STACK, include the parent paths as well."
     (persp-switch p-name)))
 
 (defvar my-perspective//current-dynamic-bindings nil)
-(defvar my-perspective/known-dynamic
-  (list "scala3doc"
-        "fos"
-        "fos-coq"
-        "papers"
-        "capture-calc"))
+(defvar my-perspective/known-dynamic nil)
+(setq my-perspective/known-dynamic
+      (list "scala3doc"
+            "fos"
+            "fos-coq"
+            "papers"
+            "capture-calc"))
 
 (defun my-perspective/switch-to-dynamic (force-pick &optional force-key)
   (interactive "P")
@@ -280,8 +281,19 @@ If USE-STACK, include the parent paths as well."
                 (elt (this-command-keys-vector) 0)))
          (entry (alist-get k my-perspective//current-dynamic-bindings)))
     (when (or force-pick (not entry))
-      (-if-let (picked (helm :sources (helm-build-sync-source "Perspective name"
-                                        :candidates my-perspective/known-dynamic)))
+      (-if-let (picked (helm :sources
+                             `(,(helm-build-sync-source "Perspective name"
+                                  :candidates my-perspective/known-dynamic)
+                               ,(helm-build-dummy-source "Create perspective"
+                                  :action
+                                  '(("Create new perspective" .
+                                     my-perspective//create-persp-with-home-buffer)
+                                    ("Create new perspective with buffers from current project" .
+                                     my-perspective//create-persp-with-current-project-buffers)
+                                    ("Create new perspective with buffers from current perspective" .
+                                     my-perspective//persp-copy))
+                                  ))
+                             ))
           (setf (alist-get k my-perspective//current-dynamic-bindings) picked
                 entry picked)
         (user-error "No perspective picked."))
@@ -289,6 +301,21 @@ If USE-STACK, include the parent paths as well."
     (unless (persp-with-name-exists-p entry)
       (persp-load-state-from-file entry))
     (persp-switch entry)))
+
+(defun my-perspective//create-persp-with-home-buffer (name)
+  (add-to-list 'my-perspective/known-dynamic name nil #'string=)
+  (spacemacs//create-persp-with-home-buffer name)
+  name)
+
+(defun my-perspective//create-persp-with-current-project-buffers (name)
+  (add-to-list 'my-perspective/known-dynamic name nil #'string=)
+  (spacemacs//create-persp-with-current-project-buffers name)
+  name)
+
+(defun my-perspective//persp-copy (name)
+  (add-to-list 'my-perspective/known-dynamic name nil #'string=)
+  (persp-copy name)
+  name)
 
 (defun my/fixup-whitespace (&rest a)
   (when (or

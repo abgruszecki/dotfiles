@@ -89,9 +89,9 @@ This function should only modify configuration layer settings."
    ;; To use a local version of a package, use the `:location' property:
    ;; '(your-package :location "~/path/to/your-package/")
    ;; Also include the dependencies as they will not be resolved automatically.
-
    dotspacemacs-additional-packages
    '((om :location local)
+		 org-super-agenda
      yequake
      edit-server
      )
@@ -228,6 +228,14 @@ It should only modify the values of Spacemacs settings."
 
    ;; Default major mode of the scratch buffer (default `text-mode')
    dotspacemacs-scratch-mode 'text-mode
+
+   ;; If non-nil, *scratch* buffer will be persistent. Things you write down in
+   ;; *scratch* buffer will be saved and restored automatically.
+   dotspacemacs-scratch-buffer-persistent nil
+
+   ;; If non-nil, `kill-buffer' on *scratch* buffer
+   ;; will bury it instead of killing.
+   dotspacemacs-scratch-buffer-unkillable nil
 
    ;; Initial message in the scratch buffer, such as "Welcome to Spacemacs!"
    ;; (default nil)
@@ -410,7 +418,7 @@ It should only modify the values of Spacemacs settings."
    ;; (default nil)
    dotspacemacs-line-numbers 'visual
 
-   ;; Code folding method. Possible values are `evil' and `origami'.
+   ;; Code folding method. Possible values are `evil', `origami' and `vimish'.
    ;; (default 'evil)
    dotspacemacs-folding-method 'evil
 
@@ -552,8 +560,27 @@ configuration.
 Put your configuration code here, except for variables that should be set
 before packages are loaded."
 
+  (use-package smartparens) ;; sometimes the smartparens self-insert hook inexplicably doesn't get inserted, manually using it fixes that
   (use-package org-ml) ;; can't use :defer, since org-mode is loaded by default
   (use-package ox-md) ;; fixes md export being unavailable in Org menu
+	(use-package org-super-agenda
+    :config
+    (org-super-agenda-mode 1)
+    (defun my-super-agenda/go ()
+      (interactive)
+      (let* ((work-categories (list "Dotty" "doctool"))
+             (org-super-agenda-groups
+              `((:name "Work (TODO)"
+                       :and (:category ,work-categories :todo ("TODO")))
+                (:name "Work (TASK)"
+                       :and (:category ,work-categories :todo ("TASK")))
+                (:name "Work (Problems)"
+                       :and (:category ,work-categories :todo ("OPEN")))
+                )))
+        (org-agenda nil "t"))
+      ))
+
+  (add-hook 'xref-backend-functions #'dumb-jump-xref-activate)
 
   (load "~/.spacemacs.d/bespoke.el")
 
@@ -805,10 +832,9 @@ indent yanked text (with universal arg don't indent)."
   (spacemacs/set-leader-keys
     "gd" #'my/magit/kill-all-buffers
     "ps" #'my/projectile/save-project-files
-    "oc" #'my-sbt/abort)
-
-  (spacemacs/set-leader-keys
-    "rh" #'my/help-resume)
+    "rh" #'my/help-resume
+    "oc" #'my-sbt/abort
+    "oa" #'my-super-agenda/go)
 
   (spacemacs/set-leader-keys-for-major-mode 'org-mode
     "i <f2>" #'org-roam-insert
