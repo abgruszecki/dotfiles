@@ -218,9 +218,82 @@ If USE-STACK, include the parent paths as well."
   (org-cycle)
   (org-unlogged-message "Sorted TODOs!"))
 
+(defun my-org//jump-to-headline (headline)
+  (re-search-forward
+   (format org-complex-heading-regexp-format
+           (regexp-quote headline))
+   nil
+   t))
+
+(defun my-org/jump-to-events ()
+  (interactive)
+  (my-perspective/switch-to-para)
+  (find-file "~/org/roam/captured.org")
+  (my-org//jump-to-headline "Wydarzenia")
+  (outline-hide-sublevels 1)
+  (outline-show-children)
+  )
+
+(defun my-org/sort-todos ()
+  (interactive)
+  (unless (my-org//up-top-heading)
+    (user-error "Not under a top-level heading!"))
+  (org-sort-entries nil ?f #'org-element-at-point #'my-org//compare-todo-headings)
+  (outline-hide-subtree)
+  (outline-show-children))
+
+(defun my-org//compare-todo-headings (fst snd)
+  (cl-macrolet ((do-compare (op accessor)
+                            `(,op (,@accessor fst)
+                                  (,@accessor snd)))
+                ;; compare begin positions of trees to avoid sort-subr mangling heading order
+                (do-compare-pos ()
+                                `(do-compare <= (org-element-property :begin))))
+    (cl-labels ((todo-kw-ord (elt)
+                             (cl-position (org-element-property :todo-keyword elt)
+                                          org-todo-keywords-1
+                                          :test #'string=))
+                (todo-prio-ord (elt)
+                               (or (org-element-property :priority elt) org-priority-default))
+                (closed-ord (elt)
+                            (org-ml-time-to-unixtime
+                             (org-ml-timestamp-get-start-time
+                              (org-element-property :closed elt)
+                              ))
+                            ))
+      (cond
+       ((org-element-property :archivedp snd) t)
+       ((org-element-property :archivedp fst) nil)
+       ((not (org-element-property :todo-keyword fst)) (do-compare-pos))
+       ((not (org-element-property :todo-keyword snd)) nil)
+       (t
+        (let ((fst-todo-type (org-element-property :todo-type fst))
+              (snd-todo-type (org-element-property :todo-type snd))
+              (todo-kw-cnt (length org-todo-keywords-1)))
+          (and (cond
+                ((not (eq fst-todo-type snd-todo-type))
+                 (eq fst-todo-type 'todo))
+                ((eq fst-todo-type 'todo)
+                 (let ((fst-idx (todo-kw-ord fst))
+                       (snd-idx (todo-kw-ord snd)))
+                   (if (= fst-idx snd-idx)
+                       (<= (todo-prio-ord fst)
+                           (todo-prio-ord snd))
+                     (< fst-idx snd-idx))))
+                ((eq fst-todo-type 'done)
+                 (>= (closed-ord fst)
+                     (closed-ord snd)))
+                (t (error "???")))
+
+               (do-compare-pos))))))))
+
+(defun my-org//up-top-heading ()
+  (or (and (org-at-heading-p) (eql (funcall outline-level) 1))
+      (re-search-backward (rx bol "* ") nil t)))
+
 ;;; projectile
 
-(defun my/projectile/save-project-files (&optional ask)
+(defun my-projectile/save-project-files (&optional ask)
   "Save files in current project."
   (interactive "P")
   (-let [project-root (projectile-project-root)]
@@ -251,11 +324,12 @@ If USE-STACK, include the parent paths as well."
         (my/help-resume)))
   (persp-switch "bespoke"))
 
-(defun my-perspective/switch-to-para ()
-  (interactive)
+(defun my-perspective/switch-to-para (&optional interactive-p)
+  (interactive "p")
   (unless (persp-with-name-exists-p "para")
     (persp-load-state-from-file "para"))
-  (if (string= "para" (spacemacs//current-layout-name))
+  (if (and interactive-p
+           (string= "para" (spacemacs//current-layout-name)))
       (call-interactively #'org-roam-find-file)
     (persp-switch "para")))
 
@@ -272,8 +346,12 @@ If USE-STACK, include the parent paths as well."
       (list "scala3doc"
             "fos"
             "fos-coq"
+
             "papers"
-            "capture-calc"))
+            "capture-calc"
+
+            "wynajem"
+            ))
 
 (defun my-perspective/switch-to-dynamic (force-pick &optional force-key)
   (interactive "P")

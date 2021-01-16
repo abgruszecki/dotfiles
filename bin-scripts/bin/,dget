@@ -4,7 +4,7 @@ DEFAULT_DIR=~/Downloads
 DIR=${1:-"$DEFAULT_DIR"}
 
 function list-files {
-  echo DIR= "$DIR" >&2
+  # echo DIR= "$DIR" >&2
   find "$DIR" -maxdepth 1 -type f -print0 -printf '%A@\0' |
 	while read -d '' -r fname && read -d '' -r fstamp; do printf '%q %q\n' "$fstamp" "$fname"; done |
 	sort -r |
