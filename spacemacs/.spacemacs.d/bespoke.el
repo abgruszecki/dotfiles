@@ -242,6 +242,19 @@ If USE-STACK, include the parent paths as well."
   (outline-hide-subtree)
   (outline-show-children))
 
+(defun my-org//trace-compare-todo-headings (self fst snd)
+  (let ((res (funcall self fst snd)))
+    (message "Comparing %s / %s : %s"
+             (org-element-property :title fst)
+             (org-element-property :title snd)
+             res
+             )
+    res
+    ))
+
+;; (advice-add 'my-org//compare-todo-headings :around #'my-org//trace-compare-todo-headings)
+;; (advice-remove 'my-org//compare-todo-headings #'my-org//trace-compare-todo-headings)
+
 (defun my-org//compare-todo-headings (fst snd)
   (cl-macrolet ((do-compare (op accessor)
                             `(,op (,@accessor fst)
@@ -270,22 +283,26 @@ If USE-STACK, include the parent paths as well."
         (let ((fst-todo-type (org-element-property :todo-type fst))
               (snd-todo-type (org-element-property :todo-type snd))
               (todo-kw-cnt (length org-todo-keywords-1)))
-          (and (cond
-                ((not (eq fst-todo-type snd-todo-type))
-                 (eq fst-todo-type 'todo))
-                ((eq fst-todo-type 'todo)
-                 (let ((fst-idx (todo-kw-ord fst))
-                       (snd-idx (todo-kw-ord snd)))
-                   (if (= fst-idx snd-idx)
-                       (<= (todo-prio-ord fst)
-                           (todo-prio-ord snd))
-                     (< fst-idx snd-idx))))
-                ((eq fst-todo-type 'done)
-                 (>= (closed-ord fst)
-                     (closed-ord snd)))
-                (t (error "???")))
-
-               (do-compare-pos))))))))
+          (cond
+           ((not (eq fst-todo-type snd-todo-type))
+            (eq fst-todo-type 'todo))
+           ((eq fst-todo-type 'todo)
+            (let ((fst-idx (todo-kw-ord fst))
+                  (snd-idx (todo-kw-ord snd)))
+              (if (= fst-idx snd-idx)
+                  (if (= (todo-prio-ord fst)
+                         (todo-prio-ord snd))
+                      (do-compare-pos)
+                    (<= (todo-prio-ord fst)
+                        (todo-prio-ord snd)))
+                (< fst-idx snd-idx))))
+           ((eq fst-todo-type 'done)
+            (if (= (closed-ord fst)
+                   (closed-ord snd))
+                (do-compare-pos)
+              (>= (closed-ord fst)
+                  (closed-ord snd))))
+           (t (error "???")))))))))
 
 (defun my-org//up-top-heading ()
   (or (and (org-at-heading-p) (eql (funcall outline-level) 1))
@@ -430,3 +447,5 @@ If USE-STACK, include the parent paths as well."
 (my-greek/define-key "l" "λ")
 (my-greek/define-key "L" "Λ")
 (my-greek/define-key "|" "‣")
+(my-greek/define-key "1" "⩒")
+(my-greek/define-key "2" "≗")
