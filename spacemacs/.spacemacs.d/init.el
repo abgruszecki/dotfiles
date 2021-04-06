@@ -32,8 +32,7 @@ This function should only modify configuration layer settings."
 
    ;; List of configuration layers to load.
    dotspacemacs-configuration-layers
-   '(csv
-     ;; ----------------------------------------------------------------
+   '(;; ----------------------------------------------------------------
      ;; Example of useful layers you may want to use right away.
      ;; Uncomment some layer names and press `SPC f e R' (Vim style) or
      ;; `M-m f e R' (Emacs style) to install them.
@@ -71,12 +70,14 @@ This function should only modify configuration layer settings."
 
      ipython-notebook
 
-     yaml
+     csv
      markdown
      html
+     yaml
 
-     ;; (scala :variables
-     ;;        scala-backend 'scala-metals)
+     (scala :variables
+            scala-backend 'scala-metals
+            scala-auto-treeview nil)
 
      ;; bespoke!
      bespoke-scala-mode
@@ -96,6 +97,7 @@ This function should only modify configuration layer settings."
    dotspacemacs-additional-packages
    '((om :location local)
 		 org-super-agenda
+     ox-gfm
      yequake
      edit-server
      )
@@ -580,20 +582,7 @@ before packages are loaded."
   (use-package ox-md) ;; fixes md export being unavailable in Org menu
 	(use-package org-super-agenda
     :config
-    (org-super-agenda-mode 1)
-    (defun my-super-agenda/go ()
-      (interactive)
-      (let* ((work-categories (list "Dotty" "doctool"))
-             (org-super-agenda-groups
-              `((:name "Work (TODO)"
-                       :and (:category ,work-categories :todo ("TODO")))
-                (:name "Work (TASK)"
-                       :and (:category ,work-categories :todo ("TASK")))
-                (:name "Work (Problems)"
-                       :and (:category ,work-categories :todo ("OPEN")))
-                )))
-        (org-agenda nil "t"))
-      ))
+    (org-super-agenda-mode 1))
 
   (add-hook 'xref-backend-functions #'dumb-jump-xref-activate)
 
@@ -841,6 +830,7 @@ indent yanked text (with universal arg don't indent)."
   (define-key key-translation-map
     (kbd "H-SPC") (kbd dotspacemacs-emacs-leader-key))
 
+  (global-set-key (kbd "H-0") #'eyebrowse-switch-to-window-config-0)
   (global-set-key (kbd "H-1") #'eyebrowse-switch-to-window-config-1)
   (global-set-key (kbd "H-2") #'eyebrowse-switch-to-window-config-2)
   (global-set-key (kbd "H-3") #'eyebrowse-switch-to-window-config-3)
@@ -859,6 +849,8 @@ indent yanked text (with universal arg don't indent)."
   (global-set-key (kbd "<f8>") #'my-perspective/switch-to-dynamic)
 
   (global-set-key (kbd "<f12>") #'org-capture)
+
+  (global-set-key (kbd "<H-tab>") #'eyebrowse-last-window-config)
 
   (evil-define-key 'normal 'global
     "[-" 'my/backwards-jump-to-outdent
@@ -883,17 +875,21 @@ indent yanked text (with universal arg don't indent)."
     "rh" #'my/help-resume
     "oc" #'my-sbt/abort
     "oa" #'my-super-agenda/go
+    "ob" #'bespoke-org-ref/top-helm-bibtex
     "oje" #'my-org/jump-to-events
     )
 
   (spacemacs/set-leader-keys-for-major-mode 'org-mode
     "i <f2>" #'org-roam-insert
+    "i `" #'my-org/insert-code-block
     "oa" #'org-archive-to-archive-sibling
     "oi" #'my/org/set-ztk-id
     "os" #'my-org/sort-todos
     "oc" #'my-org/set-created
     "o1" #'my-org/duplicate-repeating-meeting
-    "o2" #'my-org/archive-repeating-meeting)
+    "o2" #'my-org/archive-repeating-meeting
+    "C-'" #'dotty/edit-scala3-trace
+    )
 
   (spacemacs/set-leader-keys-for-major-mode 'lisp-mode
     "," #'lisp-state-toggle-lisp-state)
@@ -969,7 +965,15 @@ This function is called at the very end of Spacemacs initialization."
       (file+headline my/current-project-TODOs-file "TODOs")
       #'my/org-template/project-todo-capture)))
  '(package-selected-packages
-   '(csv-mode insert-shebang flycheck-bashate fish-mode company-shell edit-server yequake proof-general company-coq company-math math-symbol-lists merlin-eldoc stickyfunc-enhance helm-gtags helm-cscope xcscope ggtags counsel-gtags counsel swiper org-pdftools org-noter-pdftools org-noter org-roam-bibtex dap-mode posframe bui sbt-mode tide typescript-mode kotlin-mode flycheck-kotlin tern org-roam pdf-tools org-journal origami yapfify yaml-mode xterm-color vterm utop tuareg caml terminal-here shell-pop seeing-is-believing rvm ruby-tools ruby-test-mode ruby-refactor ruby-hash-syntax rubocopfmt rubocop rspec-mode robe rjsx-mode rbenv rake pytest pyenv-mode py-isort pippel pipenv pyvenv pip-requirements ocp-indent ob-elixir mvn multi-term minitest meghanada maven-test-mode lsp-python-ms lsp-java live-py-mode importmagic epc ctable concurrent deferred helm-pydoc groovy-mode groovy-imports pcache gradle-mode git-gutter-fringe+ fringe-helper git-gutter+ flycheck-ocaml merlin flycheck-mix flycheck-credo eshell-z eshell-prompt-extras esh-help emojify emoji-cheat-sheet-plus dune cython-mode company-emoji company-anaconda chruby bundler inf-ruby browse-at-remote blacken auto-complete-rst anaconda-mode pythonic alchemist elixir-mode smeargle orgit magit-gitflow magit-popup helm-gitignore gitignore-mode gitconfig-mode gitattributes-mode git-timemachine git-messenger git-link evil-magit git-commit with-editor web-mode tagedit slim-mode scss-mode sass-mode pug-mode less-css-mode helm-css-scss haml-mode emmet-mode ox-reveal web-beautify livid-mode skewer-mode simple-httpd json-mode json-snatcher json-reformat js2-refactor yasnippet multiple-cursors js2-mode js-doc coffee-mode scala-mode mmm-mode markdown-toc markdown-mode gh-md org-projectile org-category-capture org-present org-pomodoro alert log4e gntp org-mime org-download lv htmlize gnuplot racket-mode faceup slime-company company slime ws-butler winum which-key volatile-highlights vi-tilde-fringe uuidgen use-package toc-org spaceline powerline restart-emacs request rainbow-delimiters popwin persp-mode pcre2el paradox spinner org-plus-contrib org-bullets open-junk-file neotree move-text macrostep lorem-ipsum linum-relative link-hint indent-guide hydra hungry-delete hl-todo highlight-parentheses highlight-numbers parent-mode highlight-indentation helm-themes helm-swoop helm-projectile helm-mode-manager helm-make projectile pkg-info epl helm-flx helm-descbinds helm-ag google-translate golden-ratio flx-ido flx fill-column-indicator fancy-battery eyebrowse expand-region exec-path-from-shell evil-visualstar evil-visual-mark-mode evil-unimpaired evil-tutor evil-surround evil-search-highlight-persist highlight evil-numbers evil-nerd-commenter evil-mc evil-matchit evil-lisp-state smartparens evil-indent-plus evil-iedit-state iedit evil-exchange evil-escape evil-ediff evil-args evil-anzu anzu evil goto-chg undo-tree eval-sexp-fu elisp-slime-nav dumb-jump f dash s diminish define-word column-enforce-mode clean-aindent-mode bind-map bind-key auto-highlight-symbol auto-compile packed aggressive-indent adaptive-wrap ace-window ace-link ace-jump-helm-line helm avy helm-core popup async))
+   '(ox-gfm ox-hugo ob-async csv-mode insert-shebang flycheck-bashate fish-mode company-shell edit-server yequake proof-general company-coq company-math math-symbol-lists merlin-eldoc stickyfunc-enhance helm-gtags helm-cscope xcscope ggtags counsel-gtags counsel swiper org-pdftools org-noter-pdftools org-noter org-roam-bibtex dap-mode posframe bui sbt-mode tide typescript-mode kotlin-mode flycheck-kotlin tern org-roam pdf-tools org-journal origami yapfify yaml-mode xterm-color vterm utop tuareg caml terminal-here shell-pop seeing-is-believing rvm ruby-tools ruby-test-mode ruby-refactor ruby-hash-syntax rubocopfmt rubocop rspec-mode robe rjsx-mode rbenv rake pytest pyenv-mode py-isort pippel pipenv pyvenv pip-requirements ocp-indent ob-elixir mvn multi-term minitest meghanada maven-test-mode lsp-python-ms lsp-java live-py-mode importmagic epc ctable concurrent deferred helm-pydoc groovy-mode groovy-imports pcache gradle-mode git-gutter-fringe+ fringe-helper git-gutter+ flycheck-ocaml merlin flycheck-mix flycheck-credo eshell-z eshell-prompt-extras esh-help emojify emoji-cheat-sheet-plus dune cython-mode company-emoji company-anaconda chruby bundler inf-ruby browse-at-remote blacken auto-complete-rst anaconda-mode pythonic alchemist elixir-mode smeargle orgit magit-gitflow magit-popup helm-gitignore gitignore-mode gitconfig-mode gitattributes-mode git-timemachine git-messenger git-link evil-magit git-commit with-editor web-mode tagedit slim-mode scss-mode sass-mode pug-mode less-css-mode helm-css-scss haml-mode emmet-mode ox-reveal web-beautify livid-mode skewer-mode simple-httpd json-mode json-snatcher json-reformat js2-refactor yasnippet multiple-cursors js2-mode js-doc coffee-mode scala-mode mmm-mode markdown-toc markdown-mode gh-md org-projectile org-category-capture org-present org-pomodoro alert log4e gntp org-mime org-download lv htmlize gnuplot racket-mode faceup slime-company company slime ws-butler winum which-key volatile-highlights vi-tilde-fringe uuidgen use-package toc-org spaceline powerline restart-emacs request rainbow-delimiters popwin persp-mode pcre2el paradox spinner org-plus-contrib org-bullets open-junk-file neotree move-text macrostep lorem-ipsum linum-relative link-hint indent-guide hydra hungry-delete hl-todo highlight-parentheses highlight-numbers parent-mode highlight-indentation helm-themes helm-swoop helm-projectile helm-mode-manager helm-make projectile pkg-info epl helm-flx helm-descbinds helm-ag google-translate golden-ratio flx-ido flx fill-column-indicator fancy-battery eyebrowse expand-region exec-path-from-shell evil-visualstar evil-visual-mark-mode evil-unimpaired evil-tutor evil-surround evil-search-highlight-persist highlight evil-numbers evil-nerd-commenter evil-mc evil-matchit evil-lisp-state smartparens evil-indent-plus evil-iedit-state iedit evil-exchange evil-escape evil-ediff evil-args evil-anzu anzu evil goto-chg undo-tree eval-sexp-fu elisp-slime-nav dumb-jump f dash s diminish define-word column-enforce-mode clean-aindent-mode bind-map bind-key auto-highlight-symbol auto-compile packed aggressive-indent adaptive-wrap ace-window ace-link ace-jump-helm-line helm avy helm-core popup async))
+ '(safe-local-variable-values
+   '((org-roam-db-directory . "~/.cache/org-roam/org-roam-dotty-wiki.db")
+     (org-roam-directory . "~/workspace/dotty-wiki")
+     (org-roam-db-directory "~/.cache/org-roam/org-roam-dotty-wiki.db")
+     (org-roam-directory "~/workspace/dotty-wiki")
+     (javascript-backend . tide)
+     (javascript-backend . tern)
+     (javascript-backend . lsp)))
  '(winum-scope 'frame-local)
  '(yequake-frames
    '(("Scratch"

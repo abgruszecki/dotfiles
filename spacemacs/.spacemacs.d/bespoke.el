@@ -308,6 +308,62 @@ If USE-STACK, include the parent paths as well."
   (or (and (org-at-heading-p) (eql (funcall outline-level) 1))
       (re-search-backward (rx bol "* ") nil t)))
 
+(defun my-org/set-code ()
+  (interactive)
+  (save-excursion
+    (back-to-indentation)
+    (unless (looking-at (rx "#+begin_src"))
+      (user-error "Not at a code block!"))
+    (goto-char (match-end 0))
+    (delete-region (point) (line-end-position))
+    (let ((picked (helm :sources (list (helm-build-sync-source
+                                           "Well-known"
+                                           :candidates (list "scala" "coq"))
+                                       (helm-build-dummy-source
+                                           "Bespoke")))))
+      (insert " " picked))))
+
+(defun my-org/insert-code-block ()
+  (interactive)
+  (org-insert-structure-template "src")
+  (let ((picked (helm :sources (list (helm-build-sync-source
+                                         "Well-known"
+                                       :candidates (list "scala"
+                                                         "coq"
+                                                         "elisp"
+                                                         "text"))
+                                     (helm-build-dummy-source
+                                         "Bespoke")))))
+    (insert picked)))
+
+(defun my-org/test ()
+  (interactive)
+  (let ((fs (org-agenda-files)))
+    ;; allows checking which file is which
+    (org-roam-db-query [:select * :from tags :where (in file $v1)]
+                       (apply #'vector fs)))
+  )
+
+;;; org-super-agenda
+
+(defun my-super-agenda/go ()
+  (interactive)
+  (let* ((work-categories (list "Dotty" "Doctool" "Students" "TA"))
+         (org-super-agenda-groups
+          `((:name "Scheduled"
+                   :scheduled past
+                   :scheduled today)
+            (:name "Work (TODO)"
+                   :and (:category ,work-categories :todo ("TODO")))
+            (:name "Work (TASK)"
+                   :and (:category ,work-categories :todo ("TASK")))
+            (:name "Work (Problems)"
+                   :and (:category ,work-categories :todo ("OPEN")))
+            (:name "Empty"
+                   :discard (:anything t))
+            )))
+    (org-agenda nil "t")))
+
 ;;; projectile
 
 (defun my-projectile/save-project-files (&optional ask)
@@ -341,14 +397,28 @@ If USE-STACK, include the parent paths as well."
         (my/help-resume)))
   (persp-switch "bespoke"))
 
-(defun my-perspective/switch-to-para (&optional interactive-p)
-  (interactive "p")
-  (unless (persp-with-name-exists-p "para")
-    (persp-load-state-from-file "para"))
+(defvar my-perspective//para-persp "para")
+(defun my-perspective/switch-to-para (&optional prefix interactive-p)
+  (interactive "P\np")
+  (when (consp prefix)
+    (setf frame-title-format "Dotty roam"
+          my-perspective//para-persp "dotty-roam"
+          org-roam-directory "~/workspace/dotty-wiki"
+          org-roam-db-directory "~/.cache/org-roam/org-roam-dotty-wiki.db"
+          ))
+  (org-roam-mode 1)
+  (unless (persp-with-name-exists-p my-perspective//para-persp)
+    (persp-load-state-from-file my-perspective//para-persp))
   (if (and interactive-p
-           (string= "para" (spacemacs//current-layout-name)))
+           (not prefix)
+           (string= my-perspective//para-persp (spacemacs//current-layout-name)))
       (call-interactively #'org-roam-find-file)
-    (persp-switch "para")))
+    (persp-switch my-perspective//para-persp)
+    (if (numberp prefix)
+        (eyebrowse-switch-to-window-config prefix)
+      (eyebrowse-switch-to-window-config-1)
+      )
+    ))
 
 (defun my-perspective/switch-to-dotty ()
   (interactive)
@@ -360,15 +430,19 @@ If USE-STACK, include the parent paths as well."
 (defvar my-perspective//current-dynamic-bindings nil)
 (defvar my-perspective/known-dynamic nil)
 (setq my-perspective/known-dynamic
-      (list "scala3doc"
-            "fos"
-            "fos-coq"
+      (list
+       "papers"
+       "capture-calc"
+       "eff-coeff"
 
-            "papers"
-            "capture-calc"
+       "scala3doc"
 
-            "wynajem"
-            ))
+       "fos"
+       "fos-coq"
+       "parprog"
+
+       "wynajem"
+       ))
 
 (defun my-perspective/switch-to-dynamic (force-pick &optional force-key)
   (interactive "P")
@@ -425,6 +499,7 @@ If USE-STACK, include the parent paths as well."
 
 (defvar my-greek/input-keymap (make-sparse-keymap))
 (global-set-key (kbd "H-\\") my-greek/input-keymap)
+(define-key my-greek/input-keymap (kbd "H-\\") #'insert-char)
 
 (defun my-greek/krazy-self-insert ()
   "Krazy thing that looks up its own keybinding in the greek input keymap and inserts its own description."

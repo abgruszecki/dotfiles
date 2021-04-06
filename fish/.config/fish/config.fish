@@ -1,3 +1,6 @@
+set EDITOR vim
+export EDITOR
+
 alias g git
 
 alias annihilate "rm -r"
