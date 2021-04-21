@@ -340,9 +340,41 @@ If USE-STACK, include the parent paths as well."
   (interactive)
   (let ((fs (org-agenda-files)))
     ;; allows checking which file is which
-    (org-roam-db-query [:select * :from tags :where (in file $v1)]
-                       (apply #'vector fs)))
-  )
+    (concat
+     "CATEGORY={"
+     (s-join "\\|"
+             (->> (org-roam-db-query [:select * :from tags :where (in file $v1)]
+                                     (apply #'vector fs))
+               (seq-filter (lambda (el)
+                             (seq-contains-p (cadr el) "@zasób")))
+               (seq-map (lambda (el)
+                          (concat "\\(^" (my-org/test2 (car el)) "$\\)")))))
+     "}")))
+
+(defun my-org-roam/jump-to-agenda-file ()
+  (interactive)
+  (let* ((fs (org-agenda-files))
+         (q (org-roam-db-query [:select * :from titles :where (in file $v1)]
+                               (apply #'vector fs)))
+         (titled (seq-map (lambda (el) (cons (cadr el) (car el))) q))
+         (picked (helm :sources (list (helm-build-sync-source
+                                          "Agenda files"
+                                        :candidates titled)))))
+    (my-perspective/switch-to-para)
+    (find-file picked)))
+
+;; (setq attempt2 (caar (my-org/test)))
+
+(defun my-org/test2 (file)
+  (interactive)
+  (with-current-buffer (find-file-noselect file)
+    (let ((kw (org-collect-keywords '("category"))))
+      (and kw (cadar kw)))))
+
+(defun bespoke-org/capture-finalize-and-jump ()
+  (interactive)
+  (org-capture-put :jump-to-captured t)
+  (org-capture-finalize))
 
 ;;; org-super-agenda
 
@@ -363,6 +395,53 @@ If USE-STACK, include the parent paths as well."
                    :discard (:anything t))
             )))
     (org-agenda nil "t")))
+
+(defun my-super-agenda/bespoke-main (&optional nokeys)
+  (interactive)
+  (let* (; (attempt (my-org/test))
+         )
+    (org-agenda nil (if nokeys nil "t")))
+  )
+
+;;; yequake
+
+(defun bespoke-yequake/org-capture (&optional goto keys)
+  "Copied from `yequake-org-capture'.
+Call `org-capture' in a Yequake frame.
+Adds a function to `org-capture-after-finalize-hook' that closes
+the recently toggled Yequake frame and removes itself from the
+hook.
+
+Note: if another Yequake frame is toggled before the capture is
+finalized, when the capture is finalized, the wrong Yequake frame
+will be toggled."
+  (let* ((remove-hook-fn (lambda ()
+                           (remove-hook 'org-capture-after-finalize-hook #'yequake-retoggle))))
+    ;; (add-hook 'org-capture-after-finalize-hook remove-hook-fn)
+    ;; (add-hook 'org-capture-after-finalize-hook #'yequake-retoggle)
+    ;; MAYBE: Propose an `org-capture-switch-buffer-fn' variable that could be rebound here.
+
+    ;; NOTE: We override `org-switch-to-buffer-other-window' because
+    ;; it always uses `switch-to-buffer-other-window', and we want to
+    ;; display the template menu and capture buffer in the existing
+    ;; window rather than splitting the frame.
+    (cl-letf* (((symbol-function #'org-switch-to-buffer-other-window)
+                (symbol-function #'switch-to-buffer)))
+      (condition-case nil
+          (progn
+            (org-capture goto keys)
+            ;; Be sure to return the "CAPTURE-" buffer, which is the current
+            ;; buffer at this point.
+            (current-buffer))
+        ((error quit)
+         ;; Capture aborted: remove the hook and hide the capture frame.
+         ;; (remove-hook 'org-capture-after-finalize-hook #'yequake-retoggle)
+         (yequake-retoggle))))))
+
+(defun bespoke-yequake/org-agenda ()
+  (my-super-agenda/bespoke-main)
+  (spacemacs/toggle-maximize-buffer)
+  (current-buffer))
 
 ;;; projectile
 
@@ -400,13 +479,13 @@ If USE-STACK, include the parent paths as well."
 (defvar my-perspective//para-persp "para")
 (defun my-perspective/switch-to-para (&optional prefix interactive-p)
   (interactive "P\np")
-  (when (consp prefix)
-    (setf frame-title-format "Dotty roam"
-          my-perspective//para-persp "dotty-roam"
-          org-roam-directory "~/workspace/dotty-wiki"
-          org-roam-db-directory "~/.cache/org-roam/org-roam-dotty-wiki.db"
-          ))
-  (org-roam-mode 1)
+  ;; (when (consp prefix)
+  ;;   (setf frame-title-format "Dotty roam"
+  ;;         my-perspective//para-persp "dotty-roam"
+  ;;         org-roam-directory "~/workspace/dotty-wiki"
+  ;;         org-roam-db-directory "~/.cache/org-roam/org-roam-dotty-wiki.db"
+  ;;         ))
+  ;; (org-roam-mode 1)
   (unless (persp-with-name-exists-p my-perspective//para-persp)
     (persp-load-state-from-file my-perspective//para-persp))
   (if (and interactive-p
@@ -485,6 +564,18 @@ If USE-STACK, include the parent paths as well."
   (add-to-list 'my-perspective/known-dynamic name nil #'string=)
   (persp-copy name)
   name)
+
+(defun my-eyebrowse/toggle-magit ()
+  (interactive)
+  (if (eql -1 (eyebrowse--get 'current-slot))
+      (eyebrowse-last-window-config)
+    (let ((root (projectile-project-root))
+          (init-needed? (not (eyebrowse--window-config-present-p -1))))
+      (eyebrowse-switch-to-window-config -1)
+      (when (and init-needed? root)
+        (when (purpose-window-purpose-dedicated-p)
+          (purpose-set-window-purpose-dedicated-p (selected-window) nil))
+        (dired root)))))
 
 (defun my/fixup-whitespace (&rest a)
   (when (or

@@ -1,0 +1,2 @@
+#!/usr/bin/env bash
+rofi -e "$(emacsclient -e '(format "[%s] %s" (org-duration-from-minutes (org-clock-get-clocked-time)) org-clock-heading)')"
