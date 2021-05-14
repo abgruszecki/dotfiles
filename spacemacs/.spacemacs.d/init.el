@@ -100,6 +100,7 @@ This function should only modify configuration layer settings."
      org-noter
      org-noter-pdftools
 		 org-super-agenda
+     general
      yequake
      edit-server
      )
@@ -231,6 +232,12 @@ It should only modify the values of Spacemacs settings."
 
    ;; True if the home buffer should respond to resize events. (default t)
    dotspacemacs-startup-buffer-responsive t
+
+   ;; Show numbers before the startup list lines. (default t)
+   dotspacemacs-show-startup-list-numbers t
+
+   ;; The minimum delay in seconds between number key presses. (default 0.4)
+   dotspacemacs-startup-buffer-multi-digit-delay 0.4
 
    ;; Default major mode for a new empty buffer. Possible values are mode
    ;; names such as `text-mode'; and `nil' to use Fundamental mode.
@@ -410,6 +417,10 @@ It should only modify the values of Spacemacs settings."
    ;; scrolling overrides the default behavior of Emacs which recenters point
    ;; when it reaches the top or bottom of the screen. (default t)
    dotspacemacs-smooth-scrolling t
+
+   ;; Show the scroll bar while scrolling. The auto hide time can be configured
+   ;; by setting this variable to a number. (default t)
+   dotspacemacs-scroll-bar-while-scrolling nil
 
    ;; Control line numbers activation.
    ;; If set to `t', `relative' or `visual' then line numbers are enabled in all
@@ -659,8 +670,10 @@ indent yanked text (with universal arg don't indent)."
     (defvar-local yas-arg/dotty-current-printer nil)
 
     (defvar dotty-sbt/known-options)
-    (setq dotty-sbt/known-options '("-Yescape-analysis"
+    (setq dotty-sbt/known-options '("-Ydebug-error"
+                                    "-Yescape-analysis"
                                     "-Yshow-suppressed-errors"
+                                    "-Yno-deep-subtypes"
                                     "-Ythrough-tasty"
                                     "-Xprint:typer"
                                     "-Xprint:all"
@@ -723,7 +736,8 @@ indent yanked text (with universal arg don't indent)."
 
   (progn ;; org-mode
     (setq org-todo-keywords '((sequence "TODO(t)" "DONE(d)")
-                              (sequence "TASK(s)" "DONE(d)")
+                              (sequence "STEP(s)" "DONE(d)")
+                              (sequence "TASK(k)" "DONE(d)")
                               (sequence "OPEN(o)" "CLSD(c)")
                               (sequence "EVNT(e)" "PAST(p)"))
           org-reverse-note-order t
@@ -871,53 +885,52 @@ indent yanked text (with universal arg don't indent)."
       (comint-interrupt-subjob)))
 
   ;;; keybindings
-
-  (defvar hyperspace-map (make-sparse-keymap))
-
-  (define-key key-translation-map
-    (kbd "H-,") (kbd dotspacemacs-major-mode-emacs-leader-key))
-
-  (global-set-key (kbd "H-SPC") hyperspace-map)
+  (use-package general)
 
   (defun bespoke-hack/test ()
     (interactive)
     (push (cons 'no-record ?\s) unread-command-events))
 
-  (define-key hyperspace-map
-    (kbd "SPC") #'bespoke-hack/test)
+  (define-key key-translation-map
+    (kbd "H-,") (kbd dotspacemacs-major-mode-emacs-leader-key))
 
-  (define-key hyperspace-map
-    (kbd "ESC") #'yequake-retoggle)
+  (general-define-key
+   :prefix "H-SPC"
+   "SPC" #'bespoke-hack/test
+   "TAB" #'eyebrowse-last-window-config
+   "ESC" #'yequake-retoggle
+   "<f1>" #'my-eyebrowse/toggle-magit)
 
-  (define-key hyperspace-map
-    (kbd "<f1>") #'my-eyebrowse/toggle-magit)
+  (general-define-key
+   "H-0" #'eyebrowse-switch-to-window-config-0
+   "H-1" #'eyebrowse-switch-to-window-config-1
+   "H-2" #'eyebrowse-switch-to-window-config-2
+   "H-3" #'eyebrowse-switch-to-window-config-3
+   "H-4" #'eyebrowse-switch-to-window-config-4
 
-  (global-set-key (kbd "H-0") #'eyebrowse-switch-to-window-config-0)
-  (global-set-key (kbd "H-1") #'eyebrowse-switch-to-window-config-1)
-  (global-set-key (kbd "H-2") #'eyebrowse-switch-to-window-config-2)
-  (global-set-key (kbd "H-3") #'eyebrowse-switch-to-window-config-3)
-  (global-set-key (kbd "H-4") #'eyebrowse-switch-to-window-config-4)
+   "<f1>" #'spacemacs/persp-switch-to-1
+   "<f2>" #'my-perspective/switch-to-para
+   "<f3>" #'my-perspective/switch-to-bespoke
+   "<f4>" #'my-perspective/switch-to-dotty
 
-  (global-set-key (kbd "<C-tab>") #'spacemacs/alternate-window)
+   "<f5>" #'my-perspective/switch-to-dynamic
+   "<f6>" #'my-perspective/switch-to-dynamic
+   "<f7>" #'my-perspective/switch-to-dynamic
+   "<f8>" #'my-perspective/switch-to-dynamic
 
-  (global-set-key (kbd "<f1>") #'spacemacs/persp-switch-to-1)
-  (global-set-key (kbd "<f2>") #'my-perspective/switch-to-para)
-  (global-set-key (kbd "<f3>") #'my-perspective/switch-to-bespoke)
-  (global-set-key (kbd "<f4>") #'my-perspective/switch-to-dotty)
+   "<f12>" #'org-capture
+   "<C-f12>" (lambda () (interactive)
+               (my-perspective/switch-to-para)
+               (org-agenda))
 
-  (global-set-key (kbd "<f5>") #'my-perspective/switch-to-dynamic)
-  (global-set-key (kbd "<f6>") #'my-perspective/switch-to-dynamic)
-  (global-set-key (kbd "<f7>") #'my-perspective/switch-to-dynamic)
-  (global-set-key (kbd "<f8>") #'my-perspective/switch-to-dynamic)
+   "<C-tab>" #'spacemacs/alternate-window
 
-  (global-set-key (kbd "<f12>") #'org-capture)
-  (global-set-key (kbd "<C-f12>") (lambda () (interactive)
-                                    (my-perspective/switch-to-para)
-                                    (org-agenda)))
+   "<H-tab>" #'eyebrowse-last-window-config
+   "<H-escape>" #'my-eyebrowse/toggle-magit)
 
-  (global-set-key (kbd "<H-tab>") #'eyebrowse-last-window-config)
-  (global-set-key (kbd "<H-escape>") #'my-eyebrowse/toggle-magit)
-
+  (general-define-key
+   :keymaps 'emacs-lisp-mode-map
+   "H-." #'lisp-state-toggle-lisp-state)
 
   (evil-define-key 'normal 'global
     "[-" 'my/backwards-jump-to-outdent
@@ -967,54 +980,65 @@ indent yanked text (with universal arg don't indent)."
     "C-," #'bespoke-org/capture-finalize-and-jump)
 
   ;; NOTE to avoid stupid functions for setting values of custom settings, find a good way of setting them here
-  (setq yequake-frames '(("Scratch"
-                          (buffer-fns "*scratch*")
-                          (width . 1.0)
-                          (height . 1.0)
-                          (left . 0)
-                          (top . 0)
-                          (frame-parameters
-                           (skip-taskbar . t)
-                           (sticky . t)
-                           (undecorated . t)))
-                         ("org-capture"
-                          (buffer-fns my-perspective/switch-to-para
-                                      bespoke-yequake/org-capture)
-                          (width . 1.0)
-                          (height . 1.0)
-                          (left . 0)
-                          (top . 0)
-                          (frame-parameters
-                           (skip-taskbar . t)
-                           (sticky . t)
-                           (undecorated . t))
-                          )
-                         ("org-agenda"
-                          (buffer-fns my-perspective/switch-to-para
-                                      bespoke-yequake/org-agenda)
-                          (width . 1.0)
-                          (height . 1.0)
-                          (left . 0)
-                          (top . 0)
-                          (frame-parameters
-                           (skip-taskbar . t)
-                           (sticky . t)
-                           (undecorated . t))
-                          )
-                         ))
+  (setq yequake-frames
+        '(("Scratch" . ((buffer-fns "*scratch*")
+                        (width . 1.0)
+                        (height . 1.0)
+                        (left . 0)
+                        (top . 0)
+                        (frame-parameters
+                         (skip-taskbar . t)
+                         (sticky . t)
+                         (undecorated . t))))
+          ("org-capture" . ((buffer-fns my-perspective/switch-to-para
+                                        bespoke-yequake/org-capture)
+                            (width . 1.0)
+                            (height . 1.0)
+                            (left . 0)
+                            (top . 0)
+                            (frame-parameters
+                             (skip-taskbar . t)
+                             (sticky . t)
+                             (undecorated . t)))
+           )
+          ("org-agenda" . ((buffer-fns my-perspective/switch-to-para
+                                       bespoke-yequake/org-agenda)
+                           (width . 1.0)
+                           (height . 1.0)
+                           (left . 0)
+                           (top . 0)
+                           (frame-parameters
+                            (skip-taskbar . t)
+                            (sticky . t)
+                            (undecorated . t))
+                           ))))
+  (setq orb-templates
+    '(("r" "ref" plain
+       (function org-roam-capture--get-point)
+       ""
+       :file-name "${citekey}"
+       :head "#+title: ${title}\n#+roam_key: ${ref}\n#+roam_tags: @zasób @pracka\n"
+       :unnarrowed t))
+    )
 
-  (setq org-use-property-inheritance '(:r))
-  (setq org-use-property-inheritance '("ROAM_TAGS"))
-  (defvar attempt "CATEGORY=\"Chwycone\"")
-  (setq attempt "CATEGORY={\\(^Chwycone$\\)\\|\\(^Dotty$\\)}")
   (setq attempt "ROAM_TAGS={@zasób}")
   (org-add-agenda-custom-command '("z" "Rzeczy uchwycone" tags-todo attempt))
   (org-add-agenda-custom-command '("x" "Dziennik" agenda "" ((org-agenda-start-with-log-mode t))))
 
+
+  ;; Add an action to Helms listing buffers
+  ;; (setf (alist-get "Remove from perspective" helm-type-buffer-actions nil t #'string=) nil)
+  (eval-after-load 'helm
+    '(nconc helm-type-buffer-actions
+            '(("Remove from perspective" . (lambda (_) (persp-remove-buffer (helm-marked-candidates)))))))
+
   )
 
 (defun dotspacemacs/emacs-custom-settings ()
-  ""
+  "Emacs custom settings.
+This is an auto-generated function, do not modify its content directly, use
+Emacs customize menu instead.
+This function is called at the very end of Spacemacs initialization."
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -1024,11 +1048,8 @@ indent yanked text (with universal arg don't indent)."
  '(evil-want-Y-yank-to-eol nil)
  '(evil-want-change-word-to-end nil)
  '(org-capture-templates
-   '(("h" "Log here" entry
-      (function values)
-      "* %U\n %?"
-      :prepend t
-      )
+   '(("h" "Log here" entry #'values "* %U
+ %?" :prepend t)
      ("z" "Roam ZTK note" entry
       (file+olp buffer-file-name "ZTK" "Niezorganizowane")
       "* #? %?
@@ -1082,7 +1103,7 @@ indent yanked text (with universal arg don't indent)."
       (file+headline my/current-project-TODOs-file "TODOs")
       #'my/org-template/project-todo-capture)))
  '(package-selected-packages
-   '(smooth-scroll ox-gfm ox-hugo ob-async csv-mode insert-shebang flycheck-bashate fish-mode company-shell edit-server yequake proof-general company-coq company-math math-symbol-lists merlin-eldoc stickyfunc-enhance helm-gtags helm-cscope xcscope ggtags counsel-gtags counsel swiper org-pdftools org-noter-pdftools org-noter org-roam-bibtex dap-mode posframe bui sbt-mode tide typescript-mode kotlin-mode flycheck-kotlin tern org-roam pdf-tools org-journal origami yapfify yaml-mode xterm-color vterm utop tuareg caml terminal-here shell-pop seeing-is-believing rvm ruby-tools ruby-test-mode ruby-refactor ruby-hash-syntax rubocopfmt rubocop rspec-mode robe rjsx-mode rbenv rake pytest pyenv-mode py-isort pippel pipenv pyvenv pip-requirements ocp-indent ob-elixir mvn multi-term minitest meghanada maven-test-mode lsp-python-ms lsp-java live-py-mode importmagic epc ctable concurrent deferred helm-pydoc groovy-mode groovy-imports pcache gradle-mode git-gutter-fringe+ fringe-helper git-gutter+ flycheck-ocaml merlin flycheck-mix flycheck-credo eshell-z eshell-prompt-extras esh-help emojify emoji-cheat-sheet-plus dune cython-mode company-emoji company-anaconda chruby bundler inf-ruby browse-at-remote blacken auto-complete-rst anaconda-mode pythonic alchemist elixir-mode smeargle orgit magit-gitflow magit-popup helm-gitignore gitignore-mode gitconfig-mode gitattributes-mode git-timemachine git-messenger git-link evil-magit git-commit with-editor web-mode tagedit slim-mode scss-mode sass-mode pug-mode less-css-mode helm-css-scss haml-mode emmet-mode ox-reveal web-beautify livid-mode skewer-mode simple-httpd json-mode json-snatcher json-reformat js2-refactor yasnippet multiple-cursors js2-mode js-doc coffee-mode scala-mode mmm-mode markdown-toc markdown-mode gh-md org-projectile org-category-capture org-present org-pomodoro alert log4e gntp org-mime org-download lv htmlize gnuplot racket-mode faceup slime-company company slime ws-butler winum which-key volatile-highlights vi-tilde-fringe uuidgen use-package toc-org spaceline powerline restart-emacs request rainbow-delimiters popwin persp-mode pcre2el paradox spinner org-plus-contrib org-bullets open-junk-file neotree move-text macrostep lorem-ipsum linum-relative link-hint indent-guide hydra hungry-delete hl-todo highlight-parentheses highlight-numbers parent-mode highlight-indentation helm-themes helm-swoop helm-projectile helm-mode-manager helm-make projectile pkg-info epl helm-flx helm-descbinds helm-ag google-translate golden-ratio flx-ido flx fill-column-indicator fancy-battery eyebrowse expand-region exec-path-from-shell evil-visualstar evil-visual-mark-mode evil-unimpaired evil-tutor evil-surround evil-search-highlight-persist highlight evil-numbers evil-nerd-commenter evil-mc evil-matchit evil-lisp-state smartparens evil-indent-plus evil-iedit-state iedit evil-exchange evil-escape evil-ediff evil-args evil-anzu anzu evil goto-chg undo-tree eval-sexp-fu elisp-slime-nav dumb-jump f dash s diminish define-word column-enforce-mode clean-aindent-mode bind-map bind-key auto-highlight-symbol auto-compile packed aggressive-indent adaptive-wrap ace-window ace-link ace-jump-helm-line helm avy helm-core popup async))
+   '(general smooth-scroll ox-gfm ox-hugo ob-async csv-mode insert-shebang flycheck-bashate fish-mode company-shell edit-server yequake proof-general company-coq company-math math-symbol-lists merlin-eldoc stickyfunc-enhance helm-gtags helm-cscope xcscope ggtags counsel-gtags counsel swiper org-pdftools org-noter-pdftools org-noter org-roam-bibtex dap-mode posframe bui sbt-mode tide typescript-mode kotlin-mode flycheck-kotlin tern org-roam pdf-tools org-journal origami yapfify yaml-mode xterm-color vterm utop tuareg caml terminal-here shell-pop seeing-is-believing rvm ruby-tools ruby-test-mode ruby-refactor ruby-hash-syntax rubocopfmt rubocop rspec-mode robe rjsx-mode rbenv rake pytest pyenv-mode py-isort pippel pipenv pyvenv pip-requirements ocp-indent ob-elixir mvn multi-term minitest meghanada maven-test-mode lsp-python-ms lsp-java live-py-mode importmagic epc ctable concurrent deferred helm-pydoc groovy-mode groovy-imports pcache gradle-mode git-gutter-fringe+ fringe-helper git-gutter+ flycheck-ocaml merlin flycheck-mix flycheck-credo eshell-z eshell-prompt-extras esh-help emojify emoji-cheat-sheet-plus dune cython-mode company-emoji company-anaconda chruby bundler inf-ruby browse-at-remote blacken auto-complete-rst anaconda-mode pythonic alchemist elixir-mode smeargle orgit magit-gitflow magit-popup helm-gitignore gitignore-mode gitconfig-mode gitattributes-mode git-timemachine git-messenger git-link evil-magit git-commit with-editor web-mode tagedit slim-mode scss-mode sass-mode pug-mode less-css-mode helm-css-scss haml-mode emmet-mode ox-reveal web-beautify livid-mode skewer-mode simple-httpd json-mode json-snatcher json-reformat js2-refactor yasnippet multiple-cursors js2-mode js-doc coffee-mode scala-mode mmm-mode markdown-toc markdown-mode gh-md org-projectile org-category-capture org-present org-pomodoro alert log4e gntp org-mime org-download lv htmlize gnuplot racket-mode faceup slime-company company slime ws-butler winum which-key volatile-highlights vi-tilde-fringe uuidgen use-package toc-org spaceline powerline restart-emacs request rainbow-delimiters popwin persp-mode pcre2el paradox spinner org-plus-contrib org-bullets open-junk-file neotree move-text macrostep lorem-ipsum linum-relative link-hint indent-guide hydra hungry-delete hl-todo highlight-parentheses highlight-numbers parent-mode highlight-indentation helm-themes helm-swoop helm-projectile helm-mode-manager helm-make projectile pkg-info epl helm-flx helm-descbinds helm-ag google-translate golden-ratio flx-ido flx fill-column-indicator fancy-battery eyebrowse expand-region exec-path-from-shell evil-visualstar evil-visual-mark-mode evil-unimpaired evil-tutor evil-surround evil-search-highlight-persist highlight evil-numbers evil-nerd-commenter evil-mc evil-matchit evil-lisp-state smartparens evil-indent-plus evil-iedit-state iedit evil-exchange evil-escape evil-ediff evil-args evil-anzu anzu evil goto-chg undo-tree eval-sexp-fu elisp-slime-nav dumb-jump f dash s diminish define-word column-enforce-mode clean-aindent-mode bind-map bind-key auto-highlight-symbol auto-compile packed aggressive-indent adaptive-wrap ace-window ace-link ace-jump-helm-line helm avy helm-core popup async))
  '(safe-local-variable-values
    '((org-roam-db-directory . "~/.cache/org-roam/org-roam-dotty-wiki.db")
      (org-roam-directory . "~/workspace/dotty-wiki")
@@ -1099,6 +1120,3 @@ indent yanked text (with universal arg don't indent)."
  ;; If there is more than one, they won't work right.
  )
 )
-
-
-

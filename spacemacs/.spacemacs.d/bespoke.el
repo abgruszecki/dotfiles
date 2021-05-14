@@ -1,5 +1,17 @@
 ;;; My functions
 
+(defun my/make-lb ()
+  (cons nil nil))
+
+(defun my/lb-append (lb elt)
+  (setf (cdr lb) (nconc (cdr lb) (list elt)))
+  (unless (car lb)
+    (setf (car lb) (cdr lb)))
+  (setf (cdr lb) (last (cdr lb)))
+  )
+
+
+
 (defun my//org-roam--get-headlines (&optional file with-marker use-stack)
   "Return all outline headings for the current buffer.
 If FILE, return outline headings for passed FILE instead.
@@ -323,6 +335,16 @@ If USE-STACK, include the parent paths as well."
                                            "Bespoke")))))
       (insert " " picked))))
 
+(defun my-org//list-code-block-strings ()
+  (let ((lb (my/make-lb)))
+    (save-excursion
+      (goto-char (point-min))
+      (while (let ((case-fold-search t))
+               (re-search-forward (rx bol (* " ") "#+begin_src") nil t))
+        (skip-chars-forward " ")
+        (my/lb-append lb (substring-no-properties (buffer-substring (point) (point-at-eol))))))
+    (delete-duplicates (car lb) :test #'string=)))
+
 (defun my-org/insert-code-block ()
   (interactive)
   (org-insert-structure-template "src")
@@ -331,7 +353,13 @@ If USE-STACK, include the parent paths as well."
                                        :candidates (list "scala"
                                                          "coq"
                                                          "elisp"
+                                                         "bash"
+                                                         "haskell"
+                                                         "python"
                                                          "text"))
+                                     (helm-build-sync-source
+                                         "This buffer"
+                                       :candidates (my-org//list-code-block-strings))
                                      (helm-build-dummy-source
                                          "Bespoke")))))
     (insert picked)))
