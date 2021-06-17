@@ -1,0 +1,32 @@
+#!/usr/bin/env python3
+import os
+
+# the rofi-bibbrowser config is a python file that is loaded
+# before the main function is called and after all the functions
+# have been defined. So here, you can overwrite arbitrary
+# variables and functions
+
+rofi_command = [ 'rofi' , '-dmenu']
+rofi_command += [ '-lines', '10', '-i' ]
+
+yank_key = 'Control+y'
+edit_bib_key = 'Control+i'
+yank_file_path_key = 'Control+x'
+
+bib_dirs = [
+    BibDir('~/.cache/zotero-export/PhD.bib'),
+    # E.g. do something like:
+    # BibDir('~/literature/refs.bib'),
+    # this will manage the given refs.bib file and lists
+    # all PDFs in ~/literature/
+]
+
+
+# old config: Do not use these!
+#
+# document_dir = '~/uni/literatur'
+# bibfile = document_dir + '/refs.bib'
+#
+# instead add something like
+#    BibDir(document_dir, bib=bibfile),
+# to the above bib_dirs array

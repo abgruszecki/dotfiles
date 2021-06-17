@@ -32,7 +32,8 @@ This function should only modify configuration layer settings."
 
    ;; List of configuration layers to load.
    dotspacemacs-configuration-layers
-   '(;; ----------------------------------------------------------------
+   '(
+     ;; ----------------------------------------------------------------
      ;; Example of useful layers you may want to use right away.
      ;; Uncomment some layer names and press `SPC f e R' (Vim style) or
      ;; `M-m f e R' (Emacs style) to install them.
@@ -50,7 +51,6 @@ This function should only modify configuration layer settings."
           org-enable-org-journal-support t
           org-enable-roam-support t)
      eww
-
      bibtex
      pdf
 
@@ -72,9 +72,11 @@ This function should only modify configuration layer settings."
      ipython-notebook
 
      csv
+     yaml
+
+     (latex :variables latex-backend 'company-auctex)
      markdown
      html
-     yaml
 
      (scala :variables
             scala-backend 'scala-metals
@@ -112,6 +114,9 @@ This function should only modify configuration layer settings."
    dotspacemacs-excluded-packages
    '(org-bullets
      evil-escape
+     yasnippet
+     auto-yasnippet
+     yasnippet-snippets
      )
    ;; Defines the behaviour of Spacemacs when installing packages.
    ;; Possible values are `used-only', `used-but-keep-unused' and `all'.
@@ -528,6 +533,9 @@ It should only modify the values of Spacemacs settings."
    ;; (default t)
    dotspacemacs-use-clean-aindent-mode t
 
+   ;; Accept SPC as y for prompts if non nil. (default nil)
+   dotspacemacs-use-SPC-as-y t
+
    ;; If non-nil shift your number row to match the entered keyboard layout
    ;; (only in insert state). Currently supported keyboard layouts are:
    ;; `qwerty-us', `qwertz-de' and `querty-ca-fr'.
@@ -659,11 +667,31 @@ indent yanked text (with universal arg don't indent)."
                 #'my-spacemacs//yank-ident-region))
 
   (progn ;; perspective
-    (setq persp-autokill-buffer-on-remove 'kill)
+    (setq persp-autokill-buffer-on-remove 'kill
+          persp-kill-foreign-buffer-behaviour 'kill)
+
     (add-to-list 'persp-filter-save-buffers-functions
                  #'(lambda (b)
                      (with-current-buffer b
                        (derived-mode-p 'magit-mode))))
+
+    (defun bespoke/trace-persp-add (oldfun buf persp)
+      (with-current-buffer (get-buffer-create "*persp-trace*")
+        (insert (format "[%s] Adding %s\n" (persp-name persp) buf)))
+      (funcall oldfun buf persp))
+
+    (advice-add 'persp--buffer-in-persps-add :around #'bespoke/trace-persp-add)
+
+    (defun bespoke/trace-kill-buffer (oldfun &optional buf)
+      (setq buf (or buf (current-buffer)))
+      (funcall oldfun buf)
+      (when (buffer-live-p buf)
+        (let ((msg (format "Undead buffer: %s" buf)))
+          (message msg)
+          (with-current-buffer (get-buffer-create "*persp-trace*")
+            (insert msg "\n")))))
+
+    (advice-add #'kill-buffer :around #'bespoke/trace-kill-buffer)
     )
 
   (progn ;; dotty
@@ -675,6 +703,7 @@ indent yanked text (with universal arg don't indent)."
                                     "-Yshow-suppressed-errors"
                                     "-Yno-deep-subtypes"
                                     "-Ythrough-tasty"
+                                    "-Ycheck:all"
                                     "-Xprint:typer"
                                     "-Xprint:all"
                                     "-Xprint:lambdaLift"
@@ -748,8 +777,10 @@ indent yanked text (with universal arg don't indent)."
           org-export-with-toc nil
           )
 
-    (add-to-list 'org-babel-load-languages '(ein . t))
+    (setf (alist-get 'system org-file-apps) "xdg-open %s"
+          (alist-get "\\.pdf\\'" org-file-apps nil nil #'string=) 'system)
 
+    (add-to-list 'org-babel-load-languages '(ein . t))
 
     (defvar my-org//todo-capture-template
       "* %(plist-get org-capture-plist :my-org//todo-item) %?
@@ -837,9 +868,15 @@ indent yanked text (with universal arg don't indent)."
             (:name "Clocked" :log clocked)
             (:name "Logged"  :log t)
 
+            (:discard (:todo ("PAST")))
+
             (:name "Wpisane"
                    :scheduled past
-                   :scheduled today)
+                   :scheduled today
+                   ;; :and (:property ("todo-type" (lambda (p) (eq p 'done)))
+                   ;;       :not (:not (:scheduled past) :not (:scheduled today))
+                   ;;       )
+                   )
             (:name "Chwycone (TODO)"
                    :and (:category "Chwycone" :todo ("TODO")))
             (:name "Chwycone (other)"
@@ -950,10 +987,10 @@ indent yanked text (with universal arg don't indent)."
     (kbd "<H-return>") (lookup-key spacemacs-org-mode-map "i")
     (kbd "H-,") (kbd "ESC SPC m"))
 
+  (spacemacs/set-leader-keys "o#" #'sbt/console)
   (spacemacs/set-leader-keys
     "gd" #'my/magit/kill-all-buffers
     "rh" #'my/help-resume
-    "o@" #'sbt/console
     "oc" #'my-sbt/abort
     "oa" #'my-super-agenda/go
     "ob" #'bespoke-org-ref/top-helm-bibtex
@@ -978,6 +1015,71 @@ indent yanked text (with universal arg don't indent)."
 
   (spacemacs/set-leader-keys-for-minor-mode 'org-capture-mode
     "C-," #'bespoke-org/capture-finalize-and-jump)
+
+  (setq org-capture-templates
+        '(("h" "Log here" entry #'values "* %U
+ %?" :prepend t)
+          ("z" "Roam ZTK note" entry
+           (file+olp buffer-file-name "ZTK" "Niezorganizowane")
+           "* #? %?
+  :PROPERTIES:%(org-cycle)
+  :ID:       %(org-id-new)
+  :ZTK:      ?
+  :END:" :unnarrowed t :no-save t)
+          ("r" "Roam reading list" entry
+           (file+headline "~/org/roam/do_przeczytania.org" "Notes")
+           "* %?
+  %u
+** Dlaczego?
+" :prepend t :empty-lines 1)
+          ("l" "Log research" entry
+           (file+headline "~/org/research-log.org" "Log")
+           "** %U %?
+  %a" :prepend t)
+          ("e" "Events")
+          ("ee" "Event NOW" entry
+           (file+olp "~/org/roam/captured.org" "Wydarzenia")
+           "*** EVNT %?\nSCHEDULED: %T"
+           :clock-in t
+           :prepend t)
+          ("e1" "Dotty weekly item" entry
+           (file+olp "~/org/roam/captured.org" "Wydarzenia" "Dotty weekly")
+           "*** %?")
+          ("c" "Todo item")
+          ("c1" "Todo item (TODO)" entry
+           (file+headline "~/org/roam/captured.org" "TODOs")
+           #'my-org//todo-capture-template :my-org//todo-item "TODO" :prepend t :jump-to-captured nil)
+          ("c2" "Todo item (TASK)" entry
+           (file+headline "~/org/roam/captured.org" "Zadania")
+           #'my-org//todo-capture-template :my-org//todo-item "TASK" :prepend t)
+          ("c3" "Todo item (OPEN)" entry
+           (file+headline "~/org/roam/captured.org" "Problemy")
+           #'my-org//todo-capture-template :my-org//todo-item "OPEN" :prepend t)
+          ("C" "Immediate todo item")
+          ("C1" "Immediate todo item (TODO)" entry
+           (file+headline buffer-file-name "TODOs")
+           #'my-org//todo-capture-template :my-org//todo-item "TODO" :prepend t)
+          ("C2" "Immediate todo item (TASK)" entry
+           (file+headline buffer-file-name "Zadania")
+           #'my-org//todo-capture-template :my-org//todo-item "TASK" :prepend t)
+          ("C3" "Immediate todo item (OPEN)" entry
+           (file+headline buffer-file-name "Problemy")
+           #'my-org//todo-capture-template :my-org//todo-item "OPEN" :prepend t)
+          ("n" "Roam note" entry #'my-org/move-to-notes "* %?
+%a")
+          ("g" "Note" entry
+           (file+headline "~/org/roam/captured.org" "Notes")
+           "* " :prepend t)
+          ("C" "Roam capture note (HERE)" entry
+           (file+headline buffer-file-name "TODOs")
+           "* ")
+          ("t" "Project TODO" entry
+           (file+headline my/current-project-TODOs-file "TODOs")
+           #'my/org-template/project-todo-capture)))
+  (defun bespoke/org-clock-out-switch-to-state (state)
+    (message "State: %s" state)
+    (if (string= state "EVNT") "PAST" state))
+  (setq org-clock-out-switch-to-state #'bespoke/org-clock-out-switch-to-state)
 
   ;; NOTE to avoid stupid functions for setting values of custom settings, find a good way of setting them here
   (setq yequake-frames
@@ -1047,63 +1149,8 @@ This function is called at the very end of Spacemacs initialization."
  '(aw-scope 'frame)
  '(evil-want-Y-yank-to-eol nil)
  '(evil-want-change-word-to-end nil)
- '(org-capture-templates
-   '(("h" "Log here" entry #'values "* %U
- %?" :prepend t)
-     ("z" "Roam ZTK note" entry
-      (file+olp buffer-file-name "ZTK" "Niezorganizowane")
-      "* #? %?
-  :PROPERTIES:%(org-cycle)
-  :ID:       %(org-id-new)
-  :ZTK:      ?
-  :END:" :unnarrowed t :no-save t)
-     ("r" "Roam reading list" entry
-      (file+headline "~/org/roam/do_przeczytania.org" "Notes")
-      "* %?
-  %u
-** Dlaczego?
-" :prepend t :empty-lines 1)
-     ("l" "Log research" entry
-      (file+headline "~/org/research-log.org" "Log")
-      "** %U %?
-  %a" :prepend t)
-     ("e" "Events")
-     ("e1" "Dotty weekly item" entry
-      (file+olp "~/org/roam/captured.org" "Wydarzenia" "Dotty weekly")
-      "*** %?")
-     ("c" "Todo item")
-     ("c1" "Todo item (TODO)" entry
-      (file+headline "~/org/roam/captured.org" "TODOs")
-      #'my-org//todo-capture-template :my-org//todo-item "TODO" :prepend t :jump-to-captured nil)
-     ("c2" "Todo item (TASK)" entry
-      (file+headline "~/org/roam/captured.org" "Zadania")
-      #'my-org//todo-capture-template :my-org//todo-item "TASK" :prepend t)
-     ("c3" "Todo item (OPEN)" entry
-      (file+headline "~/org/roam/captured.org" "Problemy")
-      #'my-org//todo-capture-template :my-org//todo-item "OPEN" :prepend t)
-     ("C" "Immediate todo item")
-     ("C1" "Immediate todo item (TODO)" entry
-      (file+headline buffer-file-name "TODOs")
-      #'my-org//todo-capture-template :my-org//todo-item "TODO" :prepend t)
-     ("C2" "Immediate todo item (TASK)" entry
-      (file+headline buffer-file-name "Zadania")
-      #'my-org//todo-capture-template :my-org//todo-item "TASK" :prepend t)
-     ("C3" "Immediate todo item (OPEN)" entry
-      (file+headline buffer-file-name "Problemy")
-      #'my-org//todo-capture-template :my-org//todo-item "OPEN" :prepend t)
-     ("n" "Roam note" entry #'my-org/move-to-notes "* %?
-%a")
-     ("g" "Note" entry
-      (file+headline "~/org/roam/captured.org" "Notes")
-      "* " :prepend t)
-     ("C" "Roam capture note (HERE)" entry
-      (file+headline buffer-file-name "TODOs")
-      "* ")
-     ("t" "Project TODO" entry
-      (file+headline my/current-project-TODOs-file "TODOs")
-      #'my/org-template/project-todo-capture)))
  '(package-selected-packages
-   '(general smooth-scroll ox-gfm ox-hugo ob-async csv-mode insert-shebang flycheck-bashate fish-mode company-shell edit-server yequake proof-general company-coq company-math math-symbol-lists merlin-eldoc stickyfunc-enhance helm-gtags helm-cscope xcscope ggtags counsel-gtags counsel swiper org-pdftools org-noter-pdftools org-noter org-roam-bibtex dap-mode posframe bui sbt-mode tide typescript-mode kotlin-mode flycheck-kotlin tern org-roam pdf-tools org-journal origami yapfify yaml-mode xterm-color vterm utop tuareg caml terminal-here shell-pop seeing-is-believing rvm ruby-tools ruby-test-mode ruby-refactor ruby-hash-syntax rubocopfmt rubocop rspec-mode robe rjsx-mode rbenv rake pytest pyenv-mode py-isort pippel pipenv pyvenv pip-requirements ocp-indent ob-elixir mvn multi-term minitest meghanada maven-test-mode lsp-python-ms lsp-java live-py-mode importmagic epc ctable concurrent deferred helm-pydoc groovy-mode groovy-imports pcache gradle-mode git-gutter-fringe+ fringe-helper git-gutter+ flycheck-ocaml merlin flycheck-mix flycheck-credo eshell-z eshell-prompt-extras esh-help emojify emoji-cheat-sheet-plus dune cython-mode company-emoji company-anaconda chruby bundler inf-ruby browse-at-remote blacken auto-complete-rst anaconda-mode pythonic alchemist elixir-mode smeargle orgit magit-gitflow magit-popup helm-gitignore gitignore-mode gitconfig-mode gitattributes-mode git-timemachine git-messenger git-link evil-magit git-commit with-editor web-mode tagedit slim-mode scss-mode sass-mode pug-mode less-css-mode helm-css-scss haml-mode emmet-mode ox-reveal web-beautify livid-mode skewer-mode simple-httpd json-mode json-snatcher json-reformat js2-refactor yasnippet multiple-cursors js2-mode js-doc coffee-mode scala-mode mmm-mode markdown-toc markdown-mode gh-md org-projectile org-category-capture org-present org-pomodoro alert log4e gntp org-mime org-download lv htmlize gnuplot racket-mode faceup slime-company company slime ws-butler winum which-key volatile-highlights vi-tilde-fringe uuidgen use-package toc-org spaceline powerline restart-emacs request rainbow-delimiters popwin persp-mode pcre2el paradox spinner org-plus-contrib org-bullets open-junk-file neotree move-text macrostep lorem-ipsum linum-relative link-hint indent-guide hydra hungry-delete hl-todo highlight-parentheses highlight-numbers parent-mode highlight-indentation helm-themes helm-swoop helm-projectile helm-mode-manager helm-make projectile pkg-info epl helm-flx helm-descbinds helm-ag google-translate golden-ratio flx-ido flx fill-column-indicator fancy-battery eyebrowse expand-region exec-path-from-shell evil-visualstar evil-visual-mark-mode evil-unimpaired evil-tutor evil-surround evil-search-highlight-persist highlight evil-numbers evil-nerd-commenter evil-mc evil-matchit evil-lisp-state smartparens evil-indent-plus evil-iedit-state iedit evil-exchange evil-escape evil-ediff evil-args evil-anzu anzu evil goto-chg undo-tree eval-sexp-fu elisp-slime-nav dumb-jump f dash s diminish define-word column-enforce-mode clean-aindent-mode bind-map bind-key auto-highlight-symbol auto-compile packed aggressive-indent adaptive-wrap ace-window ace-link ace-jump-helm-line helm avy helm-core popup async))
+   '(lsp-latex company-reftex company-auctex auctex-latexmk general smooth-scroll ox-gfm ox-hugo ob-async csv-mode insert-shebang flycheck-bashate fish-mode company-shell edit-server yequake proof-general company-coq company-math math-symbol-lists merlin-eldoc stickyfunc-enhance helm-gtags helm-cscope xcscope ggtags counsel-gtags counsel swiper org-pdftools org-noter-pdftools org-noter org-roam-bibtex dap-mode posframe bui sbt-mode tide typescript-mode kotlin-mode flycheck-kotlin tern org-roam pdf-tools org-journal origami yapfify yaml-mode xterm-color vterm utop tuareg caml terminal-here shell-pop seeing-is-believing rvm ruby-tools ruby-test-mode ruby-refactor ruby-hash-syntax rubocopfmt rubocop rspec-mode robe rjsx-mode rbenv rake pytest pyenv-mode py-isort pippel pipenv pyvenv pip-requirements ocp-indent ob-elixir mvn multi-term minitest meghanada maven-test-mode lsp-python-ms lsp-java live-py-mode importmagic epc ctable concurrent deferred helm-pydoc groovy-mode groovy-imports pcache gradle-mode git-gutter-fringe+ fringe-helper git-gutter+ flycheck-ocaml merlin flycheck-mix flycheck-credo eshell-z eshell-prompt-extras esh-help emojify emoji-cheat-sheet-plus dune cython-mode company-emoji company-anaconda chruby bundler inf-ruby browse-at-remote blacken auto-complete-rst anaconda-mode pythonic alchemist elixir-mode smeargle orgit magit-gitflow magit-popup helm-gitignore gitignore-mode gitconfig-mode gitattributes-mode git-timemachine git-messenger git-link evil-magit git-commit with-editor web-mode tagedit slim-mode scss-mode sass-mode pug-mode less-css-mode helm-css-scss haml-mode emmet-mode ox-reveal web-beautify livid-mode skewer-mode simple-httpd json-mode json-snatcher json-reformat js2-refactor yasnippet multiple-cursors js2-mode js-doc coffee-mode scala-mode mmm-mode markdown-toc markdown-mode gh-md org-projectile org-category-capture org-present org-pomodoro alert log4e gntp org-mime org-download lv htmlize gnuplot racket-mode faceup slime-company company slime ws-butler winum which-key volatile-highlights vi-tilde-fringe uuidgen use-package toc-org spaceline powerline restart-emacs request rainbow-delimiters popwin persp-mode pcre2el paradox spinner org-plus-contrib org-bullets open-junk-file neotree move-text macrostep lorem-ipsum linum-relative link-hint indent-guide hydra hungry-delete hl-todo highlight-parentheses highlight-numbers parent-mode highlight-indentation helm-themes helm-swoop helm-projectile helm-mode-manager helm-make projectile pkg-info epl helm-flx helm-descbinds helm-ag google-translate golden-ratio flx-ido flx fill-column-indicator fancy-battery eyebrowse expand-region exec-path-from-shell evil-visualstar evil-visual-mark-mode evil-unimpaired evil-tutor evil-surround evil-search-highlight-persist highlight evil-numbers evil-nerd-commenter evil-mc evil-matchit evil-lisp-state smartparens evil-indent-plus evil-iedit-state iedit evil-exchange evil-escape evil-ediff evil-args evil-anzu anzu evil goto-chg undo-tree eval-sexp-fu elisp-slime-nav dumb-jump f dash s diminish define-word column-enforce-mode clean-aindent-mode bind-map bind-key auto-highlight-symbol auto-compile packed aggressive-indent adaptive-wrap ace-window ace-link ace-jump-helm-line helm avy helm-core popup async))
  '(safe-local-variable-values
    '((org-roam-db-directory . "~/.cache/org-roam/org-roam-dotty-wiki.db")
      (org-roam-directory . "~/workspace/dotty-wiki")

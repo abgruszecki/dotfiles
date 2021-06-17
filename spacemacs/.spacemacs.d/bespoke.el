@@ -411,8 +411,8 @@ If USE-STACK, include the parent paths as well."
   (let* ((work-categories (list "Dotty" "Doctool" "Students" "TA"))
          (org-super-agenda-groups
           `((:name "Scheduled"
-                   :scheduled past
-                   :scheduled today)
+                   (:scheduled past
+                                    :scheduled today))
             (:name "Work (TODO)"
                    :and (:category ,work-categories :todo ("TODO")))
             (:name "Work (TASK)"
@@ -541,6 +541,7 @@ will be toggled."
        "papers"
        "capture-calc"
        "eff-coeff"
+       "superf"
 
        "scala3doc"
 
@@ -605,6 +606,29 @@ will be toggled."
           (purpose-set-window-purpose-dedicated-p (selected-window) nil))
         (dired root)))))
 
+(defun my-eyebrowse/reset-magit (root)
+  (unless (eql -1 (eyebrowse--get 'current-slot))
+    (user-error "Incorrect workspace for this function!"))
+  (dired root)
+  (delete-other-windows))
+
+(defun my-magit/display-buffer-function (buffer)
+  (let ((root (projectile-project-root)))
+    (when (eq 'magit-status-mode (buffer-local-value 'major-mode buffer))
+      (when (not (eql -1 (eyebrowse--get 'current-slot)))
+        (my-eyebrowse/toggle-magit))
+      (my-eyebrowse/reset-magit root))
+    (magit-display-buffer-traditional buffer)))
+
+(defun my-magit/bury-buffer-function (&optional kill-buffer)
+  (let ((restore-eyebrowse (eq 'magit-status-mode major-mode)))
+    (quit-window kill-buffer (selected-window))
+    (when restore-eyebrowse
+      (eyebrowse-last-window-config))))
+
+(setq magit-display-buffer-function #'my-magit/display-buffer-function
+      magit-bury-buffer-function #'my-magit/bury-buffer-function)
+
 (defun my/fixup-whitespace (&rest a)
   (when (or
          (and (eq (char-before) ?\{)
@@ -643,3 +667,46 @@ will be toggled."
 (my-greek/define-key "|" "‣")
 (my-greek/define-key "1" "⩒")
 (my-greek/define-key "2" "≗")
+
+(defun bespoke/lambda-mode ()
+  "Lambda is go!"
+  (quail-define-package "lambda" "UTF-8" "λ" t nil nil nil t)
+  (quail-define-rules
+   ("[" "(")
+   ("]" ")")
+   (";[" "[")
+   (";]" "]")
+   (";0" "₀")
+   (";1" "₁")
+   (";2" "₂")
+   (";3" "₃")
+   (";4" "₄")
+   (";5" "₅")
+   (";6" "₆")
+   (";7" "₇")
+   (";8" "₈")
+   (";9" "₉")
+   (";a" "α")
+   (";b" "β")
+   (";d" "δ")
+   (";f" "θ")
+   (";z" "ϕ")
+   (";g" "γ")
+   (";s" "σ")
+   (";t" "τ")
+   (";l" "λ")
+   (";D" "Δ")
+   (";G" "Γ")
+   (";L" "Λ")
+   (";S" "Σ")
+   (";=" "≜")
+   (";->" "→")
+   (";;ts" "⊢")
+   (";;to" "↦")
+   (";;or" "∨")
+   (";;and" "∧")
+   (";;all" "∀")
+   (";;ex" "∃")
+   ))
+
+(bespoke/lambda-mode)

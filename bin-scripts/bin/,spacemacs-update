@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+cd ~/.emacs-profiles.d/spacemacs || exit
+git pull
