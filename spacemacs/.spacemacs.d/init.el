@@ -114,6 +114,7 @@ This function should only modify configuration layer settings."
    dotspacemacs-excluded-packages
    '(org-bullets
      evil-escape
+     auto-highlight-symbol
      yasnippet
      auto-yasnippet
      yasnippet-snippets
@@ -625,6 +626,12 @@ before packages are loaded."
 
   (load "~/.spacemacs.d/bespoke.el")
 
+  (load "~/.spacemacs.d/bespoke-perspective.el")
+  (load "~/.spacemacs.d/bespoke-org-mode.el")
+  (load "~/.spacemacs.d/bespoke-yequake.el")
+
+  (load "~/.spacemacs.d/bespoke-dotty.el")
+
   (org-roam-mode 1)
 
   ;;; configuration
@@ -666,92 +673,6 @@ indent yanked text (with universal arg don't indent)."
                 :override
                 #'my-spacemacs//yank-ident-region))
 
-  (progn ;; perspective
-    (setq persp-autokill-buffer-on-remove 'kill
-          persp-kill-foreign-buffer-behaviour 'kill)
-
-    (add-to-list 'persp-filter-save-buffers-functions
-                 #'(lambda (b)
-                     (with-current-buffer b
-                       (derived-mode-p 'magit-mode))))
-
-    (defun bespoke/trace-persp-add (oldfun buf persp)
-      (with-current-buffer (get-buffer-create "*persp-trace*")
-        (insert (format "[%s] Adding %s\n" (persp-name persp) buf)))
-      (funcall oldfun buf persp))
-
-    (advice-add 'persp--buffer-in-persps-add :around #'bespoke/trace-persp-add)
-
-    (defun bespoke/trace-kill-buffer (oldfun &optional buf)
-      (setq buf (or buf (current-buffer)))
-      (funcall oldfun buf)
-      (when (buffer-live-p buf)
-        (let ((msg (format "Undead buffer: %s" buf)))
-          (message msg)
-          (with-current-buffer (get-buffer-create "*persp-trace*")
-            (insert msg "\n")))))
-
-    (advice-add #'kill-buffer :around #'bespoke/trace-kill-buffer)
-    )
-
-  (progn ;; dotty
-    (defvar-local yas-arg/dotty-current-printer nil)
-
-    (defvar dotty-sbt/known-options)
-    (setq dotty-sbt/known-options '("-Ydebug-error"
-                                    "-Yescape-analysis"
-                                    "-Yshow-suppressed-errors"
-                                    "-Yno-deep-subtypes"
-                                    "-Ythrough-tasty"
-                                    "-Ycheck:all"
-                                    "-Xprint:typer"
-                                    "-Xprint:all"
-                                    "-Xprint:lambdaLift"
-                                    "-Xprompt"
-                                    "-uniqid"))
-
-    (defvar dotty-sbt//arglist-prefix "-color:never -d out")
-    (defvar dotty-sbt//set-arguments nil)
-    ;; (setq dotty-sbt//set-arguments '("-Yescape-analysis"))
-
-    (defun dotty-sbt//apply-set-arguments ()
-      (let ((argstring (with-temp-buffer
-                         (insert dotty-sbt//arglist-prefix)
-                         (cl-loop for opt in dotty-sbt//set-arguments
-                                  do (progn
-                                       (insert " ")
-                                       (insert opt)))
-                         (buffer-string))))
-        (setq sbt/compile-arguments argstring)
-        (when (bound-and-true-p helm-alive-p)
-          (helm-set-pattern "")
-          (helm-update))))
-
-    (defun dotty-sbt/helm-setopt-toggle-option (candidate)
-      (interactive)
-      (setq dotty-sbt//set-arguments
-            (if (-contains? dotty-sbt//set-arguments candidate)
-                (-remove-item candidate dotty-sbt//set-arguments)
-              (cons candidate dotty-sbt//set-arguments)))
-      (dotty-sbt//apply-set-arguments))
-
-    (defun dotty-sbt/helm-pick-opts ()
-      (interactive)
-      (helm :sources (helm-build-sync-source
-                         "Dotty options"
-                       :header-name (lambda (n)
-                                      (format "%s (current: `%s`)" n sbt/compile-arguments))
-                       :candidates dotty-sbt/known-options
-                       :action #'dotty-sbt/helm-setopt-toggle-option
-                       :persistent-action #'dotty-sbt/helm-setopt-toggle-option
-                       )
-            :buffer "*helm Dotty options*"))
-
-    (defun my-dotty//configure ()
-      (dotty/set-keys)
-      (setq sbt/test-command "testCompilation .eff.")
-      (dotty-sbt//apply-set-arguments))
-    (eval-after-load 'dotty #'my-dotty//configure))
 
   (progn ;; proof-general
     (defun my-pg//make-undo-great-again ()
@@ -761,131 +682,6 @@ indent yanked text (with universal arg don't indent)."
     (spacemacs/set-leader-keys-for-major-mode 'coq-mode
       "r" #'proof-retract-current-goal
       )
-    )
-
-  (progn ;; org-mode
-    (setq org-todo-keywords '((sequence "TODO(t)" "DONE(d)")
-                              (sequence "STEP(s)" "DONE(d)")
-                              (sequence "TASK(k)" "DONE(d)")
-                              (sequence "OPEN(o)" "CLSD(c)")
-                              (sequence "EVNT(e)" "PAST(p)"))
-          org-reverse-note-order t
-          org-agenda-files "~/.cache/emacs-org-mode/agenda"
-          org-refile-targets '((org-agenda-files . (:level . 1)))
-          org-outline-path-complete-in-steps nil
-          org-refile-use-outline-path t
-          org-export-with-toc nil
-          )
-
-    (setf (alist-get 'system org-file-apps) "xdg-open %s"
-          (alist-get "\\.pdf\\'" org-file-apps nil nil #'string=) 'system)
-
-    (add-to-list 'org-babel-load-languages '(ein . t))
-
-    (defvar my-org//todo-capture-template
-      "* %(plist-get org-capture-plist :my-org//todo-item) %?
-  :PROPERTIES:
-  :CREATED: %u
-  :END:
-")
-
-    (defun my-org//todo-capture-template ()
-      my-org//todo-capture-template)
-
-    (defun my-org//advice-after-refile-save-org-buffers (&rest r)
-      (org-save-all-org-buffers))
-
-    (advice-add #'org-refile :after #'my-org//advice-after-refile-save-org-buffers)
-
-    (defun my-org/move-to-notes ()
-      (interactive)
-      (org-roam-find-file)
-      (goto-char (org-element-property :begin
-                                       (cl-find-if (lambda (el) (and (org-ml-is-type 'headline el)
-                                                                     (string-equal "Notes" (org-ml-get-property :title el))))
-                                                   (org-element-parse-buffer 'headline)))))
-
-    (defun my-org/archive-repeating-meeting ()
-      (interactive)
-      ;; make current date inactive
-      (-let [stamp (->> (org-ml-parse-this-headline)
-                        (org-ml-get-property :title)
-                        (car))]
-        (unless (eq 'timestamp (org-ml-get-type stamp))
-          (user-error "Headline at point doesn't have a timestamp"))
-        (org-ml-update (lambda (stamp)
-                         (org-ml-timestamp-set-active nil stamp))
-                       stamp))
-      ;; refile the meeting
-      (if-let ((target (let ((org-refile-targets '((nil . (:tag . "past")))))
-                         (cl-find-if (lambda (it)
-                                       (> (nth 3 it) (point)))
-                                     (org-refile-get-targets)))))
-          (org-refile nil nil target "Make it part of the past")
-        (user-error "Could not find a target to refile to"))
-      )
-
-    (defun my-org/duplicate-repeating-meeting ()
-      (interactive)
-      (save-excursion
-        (-let [line (buffer-substring (line-beginning-position)
-                                      (line-end-position))]
-          (forward-line -1)
-          (insert line)))
-      ;; move next date into the future
-      (save-excursion
-        (forward-line -1)
-        (-let [stamp (->> (org-ml-parse-this-headline)
-                          (org-ml-get-property :title)
-                          (car))]
-          (unless (eq 'timestamp (org-ml-get-type stamp))
-            (user-error "Headline at point doesn't have a timestamp"))
-          (let ((shift-value (org-ml-get-property :repeater-value stamp))
-                (shift-unit (org-ml-get-property :repeater-unit stamp)))
-            (unless (and shift-value shift-unit)
-              (user-error "Timestamp doesn't have a repeater"))
-            (org-ml-update (lambda (stamp)
-                             (org-ml-timestamp-shift shift-value shift-unit stamp))
-                           stamp))))))
-
-  (progn ;; org-ref
-    ;; NOTE: bibliography is supposed to be exported from Zotero with better-bibtex
-    (setq org-ref-default-bibliography '("~/.cache/zotero-export/PhD.bib")
-          org-ref-pdf-directory "~/zotero-pdf/"
-          org-ref-bibliography-notes "~/org/bibliography.org"
-          org-ref-show-citation-on-enter nil)
-    (setq reftex-default-bibliography org-ref-default-bibliography)
-    (setq bibtex-completion-library-path org-ref-pdf-directory)
-   )
-
-  (progn ;; org-journal
-    (setq org-journal-dir "~/org/journal"
-          org-journal-file-type 'weekly))
-
-  (progn ;; org-super-agenda
-    (setq org-super-agenda-groups
-          '((:name "Closed"  :log closed)
-            (:name "Clocked" :log clocked)
-            (:name "Logged"  :log t)
-
-            (:discard (:todo ("PAST")))
-
-            (:name "Wpisane"
-                   :scheduled past
-                   :scheduled today
-                   ;; :and (:property ("todo-type" (lambda (p) (eq p 'done)))
-                   ;;       :not (:not (:scheduled past) :not (:scheduled today))
-                   ;;       )
-                   )
-            (:name "Chwycone (TODO)"
-                   :and (:category "Chwycone" :todo ("TODO")))
-            (:name "Chwycone (other)"
-                   :category "Chwycone")
-            (:name "TODOs" :todo ("TODO"))
-            (:name "Zadania" :todo ("TASK"))
-            (:name "Problemy" :todo ("OPEN"))
-            (:name "Inne")
-             ))
     )
 
   (progn ;; shell
@@ -993,140 +789,10 @@ indent yanked text (with universal arg don't indent)."
     "rh" #'my/help-resume
     "oc" #'my-sbt/abort
     "oa" #'my-super-agenda/go
-    "ob" #'bespoke-org-ref/top-helm-bibtex
-    "oje" #'my-org/jump-to-events
-    "oja" #'my-org-roam/jump-to-agenda-file
-    )
-
-  (spacemacs/set-leader-keys-for-major-mode 'org-mode
-    "i <f2>" #'org-roam-insert
-    "i `" #'my-org/insert-code-block
-    "oa" #'org-archive-to-archive-sibling
-    "oi" #'my/org/set-ztk-id
-    "os" #'my-org/sort-todos
-    "oc" #'my-org/set-created
-    "o1" #'my-org/duplicate-repeating-meeting
-    "o2" #'my-org/archive-repeating-meeting
-    "C-'" #'dotty/edit-scala3-trace
-    )
+    "ob" #'bespoke-org-ref/top-helm-bibtex)
 
   (spacemacs/set-leader-keys-for-major-mode 'lisp-mode
     "," #'lisp-state-toggle-lisp-state)
-
-  (spacemacs/set-leader-keys-for-minor-mode 'org-capture-mode
-    "C-," #'bespoke-org/capture-finalize-and-jump)
-
-  (setq org-capture-templates
-        '(("h" "Log here" entry #'values "* %U
- %?" :prepend t)
-          ("z" "Roam ZTK note" entry
-           (file+olp buffer-file-name "ZTK" "Niezorganizowane")
-           "* #? %?
-  :PROPERTIES:%(org-cycle)
-  :ID:       %(org-id-new)
-  :ZTK:      ?
-  :END:" :unnarrowed t :no-save t)
-          ("r" "Roam reading list" entry
-           (file+headline "~/org/roam/do_przeczytania.org" "Notes")
-           "* %?
-  %u
-** Dlaczego?
-" :prepend t :empty-lines 1)
-          ("l" "Log research" entry
-           (file+headline "~/org/research-log.org" "Log")
-           "** %U %?
-  %a" :prepend t)
-          ("e" "Events")
-          ("ee" "Event NOW" entry
-           (file+olp "~/org/roam/captured.org" "Wydarzenia")
-           "*** EVNT %?\nSCHEDULED: %T"
-           :clock-in t
-           :prepend t)
-          ("e1" "Dotty weekly item" entry
-           (file+olp "~/org/roam/captured.org" "Wydarzenia" "Dotty weekly")
-           "*** %?")
-          ("c" "Todo item")
-          ("c1" "Todo item (TODO)" entry
-           (file+headline "~/org/roam/captured.org" "TODOs")
-           #'my-org//todo-capture-template :my-org//todo-item "TODO" :prepend t :jump-to-captured nil)
-          ("c2" "Todo item (TASK)" entry
-           (file+headline "~/org/roam/captured.org" "Zadania")
-           #'my-org//todo-capture-template :my-org//todo-item "TASK" :prepend t)
-          ("c3" "Todo item (OPEN)" entry
-           (file+headline "~/org/roam/captured.org" "Problemy")
-           #'my-org//todo-capture-template :my-org//todo-item "OPEN" :prepend t)
-          ("C" "Immediate todo item")
-          ("C1" "Immediate todo item (TODO)" entry
-           (file+headline buffer-file-name "TODOs")
-           #'my-org//todo-capture-template :my-org//todo-item "TODO" :prepend t)
-          ("C2" "Immediate todo item (TASK)" entry
-           (file+headline buffer-file-name "Zadania")
-           #'my-org//todo-capture-template :my-org//todo-item "TASK" :prepend t)
-          ("C3" "Immediate todo item (OPEN)" entry
-           (file+headline buffer-file-name "Problemy")
-           #'my-org//todo-capture-template :my-org//todo-item "OPEN" :prepend t)
-          ("n" "Roam note" entry #'my-org/move-to-notes "* %?
-%a")
-          ("g" "Note" entry
-           (file+headline "~/org/roam/captured.org" "Notes")
-           "* " :prepend t)
-          ("C" "Roam capture note (HERE)" entry
-           (file+headline buffer-file-name "TODOs")
-           "* ")
-          ("t" "Project TODO" entry
-           (file+headline my/current-project-TODOs-file "TODOs")
-           #'my/org-template/project-todo-capture)))
-  (defun bespoke/org-clock-out-switch-to-state (state)
-    (message "State: %s" state)
-    (if (string= state "EVNT") "PAST" state))
-  (setq org-clock-out-switch-to-state #'bespoke/org-clock-out-switch-to-state)
-
-  ;; NOTE to avoid stupid functions for setting values of custom settings, find a good way of setting them here
-  (setq yequake-frames
-        '(("Scratch" . ((buffer-fns "*scratch*")
-                        (width . 1.0)
-                        (height . 1.0)
-                        (left . 0)
-                        (top . 0)
-                        (frame-parameters
-                         (skip-taskbar . t)
-                         (sticky . t)
-                         (undecorated . t))))
-          ("org-capture" . ((buffer-fns my-perspective/switch-to-para
-                                        bespoke-yequake/org-capture)
-                            (width . 1.0)
-                            (height . 1.0)
-                            (left . 0)
-                            (top . 0)
-                            (frame-parameters
-                             (skip-taskbar . t)
-                             (sticky . t)
-                             (undecorated . t)))
-           )
-          ("org-agenda" . ((buffer-fns my-perspective/switch-to-para
-                                       bespoke-yequake/org-agenda)
-                           (width . 1.0)
-                           (height . 1.0)
-                           (left . 0)
-                           (top . 0)
-                           (frame-parameters
-                            (skip-taskbar . t)
-                            (sticky . t)
-                            (undecorated . t))
-                           ))))
-  (setq orb-templates
-    '(("r" "ref" plain
-       (function org-roam-capture--get-point)
-       ""
-       :file-name "${citekey}"
-       :head "#+title: ${title}\n#+roam_key: ${ref}\n#+roam_tags: @zasób @pracka\n"
-       :unnarrowed t))
-    )
-
-  (setq attempt "ROAM_TAGS={@zasób}")
-  (org-add-agenda-custom-command '("z" "Rzeczy uchwycone" tags-todo attempt))
-  (org-add-agenda-custom-command '("x" "Dziennik" agenda "" ((org-agenda-start-with-log-mode t))))
-
 
   ;; Add an action to Helms listing buffers
   ;; (setf (alist-get "Remove from perspective" helm-type-buffer-actions nil t #'string=) nil)

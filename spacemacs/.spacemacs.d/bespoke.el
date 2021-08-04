@@ -212,6 +212,46 @@ If USE-STACK, include the parent paths as well."
 
 ;;; org-mode
 
+(defun my-org/change-event-timestamps (&optional start?)
+  (interactive "P")
+  (unless (org-at-heading-p)
+    (user-error "Not at a heading!"))
+  (unless (s-prefix? "PAST" (org-get-heading))
+    (user-error "The heading isn't PAST"))
+  (save-excursion
+    (let ((pt (point))
+          clk)
+     (setf clk (progn
+                 (org-clock-find-position t)
+                 (org-element-at-point)))
+     (unless (eq 'clock (car clk))
+       ;; TODO should we assume the journal is malformed? And fix it? Maybe have an auxiliary function for that?
+       (user-error "No clock entry!"))
+     (unless (eq 'closed (org-element-property :status clk))
+       (user-error "The clock is running!"))
+     (save-excursion
+       (forward-line)
+       (unless (eq 'drawer (car (org-element-at-point)))
+         (user-error "There are more than one clock entries!")))
+
+     (goto-char (+ (if start? 0 -1) (org-element-property (if start? :begin :end) (org-element-property :value clk))))
+     (org-time-stamp-inactive)          ; Modify the time stamp interactively
+     (org-clock-update-time-maybe)
+
+     (setf clk (org-element-at-point))
+     (let* ((duration (org-element-property :raw-value (org-element-property :value clk)))
+            (stamp (if start?
+                       (substring duration 1 (string-match (rx "]--") duration))
+                     (substring duration (+ 3 (string-match (rx "--[") duration)) -1))))
+       (goto-char pt)
+       (if start?
+           (org-add-planning-info 'scheduled stamp)
+         (org-add-planning-info 'closed stamp)
+         )
+       )
+     ))
+)
+
 (defun my/org/set-ztk-id ()
   (interactive)
   (let* ((h (or (om-parse-this-headline) (error "Not looking at a headline!")))
@@ -690,6 +730,7 @@ will be toggled."
    (";b" "β")
    (";d" "δ")
    (";f" "θ")
+   (";p" "ρ")
    (";z" "ϕ")
    (";g" "γ")
    (";s" "σ")
