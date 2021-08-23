@@ -632,7 +632,8 @@ before packages are loaded."
 
   (load "~/.spacemacs.d/bespoke-dotty.el")
 
-  (org-roam-mode 1)
+  (setq org-roam-v2-ack t)
+  (org-roam-setup)
 
   ;;; configuration
 

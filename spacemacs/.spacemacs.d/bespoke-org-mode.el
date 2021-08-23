@@ -208,7 +208,6 @@
   )
 
 (spacemacs/set-leader-keys-for-major-mode 'org-mode
-  "i <f2>" #'org-roam-insert
   "i `" #'my-org/insert-code-block
   "oa" #'org-archive-to-archive-sibling
   "o'" #'my-org/change-event-timestamps ; TODO - change to DWIM

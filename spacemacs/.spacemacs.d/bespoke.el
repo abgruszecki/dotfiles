@@ -559,7 +559,7 @@ will be toggled."
   (if (and interactive-p
            (not prefix)
            (string= my-perspective//para-persp (spacemacs//current-layout-name)))
-      (call-interactively #'org-roam-find-file)
+      (call-interactively #'org-roam-node-find)
     (persp-switch my-perspective//para-persp)
     (if (numberp prefix)
         (eyebrowse-switch-to-window-config prefix)
