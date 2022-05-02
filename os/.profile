@@ -28,9 +28,10 @@ fi
 
 if [ -e /home/gruszecki/.nix-profile/etc/profile.d/nix.sh ]; then . /home/gruszecki/.nix-profile/etc/profile.d/nix.sh; fi # added by Nix installer
 
-PATH=/home/gruszecki/.local/bin:$PATH
+PATH=~/.local/bin:$PATH
+PATH=~/.cargo/bin:$PATH
 PATH=$PATH:~/pkg/git-fuzzy/bin
-PATH="$PATH:/home/gruszecki/.local/share/coursier/bin"
+PATH=$PATH:/home/gruszecki/.local/share/coursier/bin
 PATH=$PATH:~/opt/coursier/bin
 PATH=$PATH:~/opt/metals-emacs/bin
 
@@ -41,4 +42,7 @@ export PAGER=less
 __PROFILE_SOURCED=yes
 
 # opam configuration
-test -r /home/gruszecki/.opam/opam-init/init.sh && . /home/gruszecki/.opam/opam-init/init.sh > /dev/null 2> /dev/null || true
+if test -r ~/.opam/opam-init/init.sh 
+then source ~/.opam/opam-init/init.sh > /dev/null 2> /dev/null
+else true
+fi

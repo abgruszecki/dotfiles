@@ -1,5 +1,7 @@
 ;; -*- mode: emacs-lisp; lexical-binding: t -*-
 
+(spacemacs|disable-company org-mode)
+
 (setq org-todo-keywords '((sequence "TODO(t)" "DONE(d)")
                           (sequence "STEP(s)" "DONE(d)")
                           (sequence "TASK(k)" "DONE(d)")
@@ -11,6 +13,9 @@
       org-outline-path-complete-in-steps nil
       org-refile-use-outline-path t
       org-export-with-toc nil
+      org-id-link-to-org-use-id 'create-if-interactive-and-no-custom-id
+      org-hide-block-startup t
+      org-startup-folded "fold"
       )
 
 (setf (alist-get 'system org-file-apps) "xdg-open %s"
@@ -20,12 +25,13 @@
 
 (progn ;; org-ref
   ;; NOTE: bibliography is supposed to be exported from Zotero with better-bibtex
-  (setq org-ref-default-bibliography '("~/.cache/zotero-export/PhD.bib")
-        org-ref-pdf-directory "~/zotero-pdf/"
-        org-ref-bibliography-notes "~/org/bibliography.org"
+  (setq bibtex-completion-bibliography '("~/.cache/zotero-export/PhD.bib")
+        bibtex-completion-library-path "~/zotero-pdf/"
+        bibtex-completion-notes-path "~/org/roam/"
+        bibtex-completion-pdf-open-function
+        (lambda (fpath)
+          (call-process "open" nil 0 nil fpath))
         org-ref-show-citation-on-enter nil)
-  (setq reftex-default-bibliography org-ref-default-bibliography)
-  (setq bibtex-completion-library-path org-ref-pdf-directory)
   )
 
 (progn ;; org-journal
@@ -117,15 +123,6 @@
           ("t" "Project TODO" entry
            (file+headline my/current-project-TODOs-file "TODOs")
            #'my/org-template/project-todo-capture)))
-
-(setq orb-templates
-      '(("r" "ref" plain
-         (function org-roam-capture--get-point)
-         ""
-         :file-name "${citekey}"
-         :head "#+title: ${title}\n#+roam_key: ${ref}\n#+roam_tags: @zasób @pracka\n"
-         :unnarrowed t))
-      )
 
 (setq attempt "ROAM_TAGS={@zasób}")
 (org-add-agenda-custom-command '("z" "Rzeczy uchwycone" tags-todo attempt))

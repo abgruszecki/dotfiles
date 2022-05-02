@@ -1,4 +1,8 @@
-;;; My functions
+;; -*- mode: emacs-lisp; lexical-binding: t;  read-symbol-shorthands: (("my-p/" . "my-perspective/")) -*-
+
+;;; My function
+
+(require 'persist)
 
 (defun my/make-lb ()
   (cons nil nil))
@@ -9,8 +13,6 @@
     (setf (car lb) (cdr lb)))
   (setf (cdr lb) (last (cdr lb)))
   )
-
-
 
 (defun my//org-roam--get-headlines (&optional file with-marker use-stack)
   "Return all outline headings for the current buffer.
@@ -523,117 +525,6 @@ will be toggled."
                               (projectile-project-buffer-p (current-buffer)
                                                            project-root))))))
 
-;;; perspective
-
-(defvar my-perspective//loaded-all nil)
-(defun my-perspective//load-all ()
-  (unless my-perspective//loaded-all
-    (persp-load-state-from-file "bespoke")
-    (persp-load-state-from-file "para")
-    (persp-load-state-from-file "dotty")
-    (setq my-perspective//loaded-all t)))
-
-(defun my-perspective/switch-to-bespoke ()
-  (interactive)
-  (unless (persp-with-name-exists-p "bespoke")
-    (persp-load-state-from-file "bespoke"))
-  (if (eq major-mode 'help-mode)
-      (progn
-        (pupo/close-window)
-        (persp-switch "bespoke")
-        (my/help-resume)))
-  (persp-switch "bespoke"))
-
-(defvar my-perspective//para-persp "para")
-(defun my-perspective/switch-to-para (&optional prefix interactive-p)
-  (interactive "P\np")
-  ;; (when (consp prefix)
-  ;;   (setf frame-title-format "Dotty roam"
-  ;;         my-perspective//para-persp "dotty-roam"
-  ;;         org-roam-directory "~/workspace/dotty-wiki"
-  ;;         org-roam-db-directory "~/.cache/org-roam/org-roam-dotty-wiki.db"
-  ;;         ))
-  ;; (org-roam-mode 1)
-  (unless (persp-with-name-exists-p my-perspective//para-persp)
-    (persp-load-state-from-file my-perspective//para-persp))
-  (if (and interactive-p
-           (not prefix)
-           (string= my-perspective//para-persp (spacemacs//current-layout-name)))
-      (call-interactively #'org-roam-node-find)
-    (persp-switch my-perspective//para-persp)
-    (if (numberp prefix)
-        (eyebrowse-switch-to-window-config prefix)
-      (eyebrowse-switch-to-window-config-1)
-      )
-    ))
-
-(defun my-perspective/switch-to-dotty ()
-  (interactive)
-  (let ((p-name "dotty"))
-    (unless (persp-with-name-exists-p p-name)
-      (persp-load-state-from-file p-name))
-    (persp-switch p-name)))
-
-(defvar my-perspective//current-dynamic-bindings nil)
-(defvar my-perspective/known-dynamic nil)
-(setq my-perspective/known-dynamic
-      (list
-       "papers"
-       "capture-calc"
-       "eff-coeff"
-       "superf"
-
-       "scala3doc"
-
-       "fos"
-       "fos-coq"
-       "parprog"
-
-       "wynajem"
-       ))
-
-(defun my-perspective/switch-to-dynamic (force-pick &optional force-key)
-  (interactive "P")
-  (let* ((k (or force-key
-                (elt (this-command-keys-vector) 0)))
-         (entry (alist-get k my-perspective//current-dynamic-bindings)))
-    (when (or force-pick (not entry))
-      (-if-let (picked (helm :sources
-                             `(,(helm-build-sync-source "Perspective name"
-                                  :candidates my-perspective/known-dynamic)
-                               ,(helm-build-dummy-source "Create perspective"
-                                  :action
-                                  '(("Create new perspective" .
-                                     my-perspective//create-persp-with-home-buffer)
-                                    ("Create new perspective with buffers from current project" .
-                                     my-perspective//create-persp-with-current-project-buffers)
-                                    ("Create new perspective with buffers from current perspective" .
-                                     my-perspective//persp-copy))
-                                  ))
-                             ))
-          (setf (alist-get k my-perspective//current-dynamic-bindings) picked
-                entry picked)
-        (user-error "No perspective picked."))
-      )
-    (unless (persp-with-name-exists-p entry)
-      (persp-load-state-from-file entry))
-    (persp-switch entry)))
-
-(defun my-perspective//create-persp-with-home-buffer (name)
-  (add-to-list 'my-perspective/known-dynamic name nil #'string=)
-  (spacemacs//create-persp-with-home-buffer name)
-  name)
-
-(defun my-perspective//create-persp-with-current-project-buffers (name)
-  (add-to-list 'my-perspective/known-dynamic name nil #'string=)
-  (spacemacs//create-persp-with-current-project-buffers name)
-  name)
-
-(defun my-perspective//persp-copy (name)
-  (add-to-list 'my-perspective/known-dynamic name nil #'string=)
-  (persp-copy name)
-  name)
-
 (defun my-eyebrowse/toggle-magit ()
   (interactive)
   (if (eql -1 (eyebrowse--get 'current-slot))
@@ -730,15 +621,19 @@ will be toggled."
    (";b" "β")
    (";d" "δ")
    (";f" "θ")
-   (";p" "ρ")
-   (";z" "ϕ")
+   (";l" "λ")
    (";g" "γ")
+   (";m" "μ")
+   (";n" "ν")
+   (";p" "ψ")
+   (";r" "ρ")
    (";s" "σ")
    (";t" "τ")
-   (";l" "λ")
+   (";z" "ϕ")
    (";D" "Δ")
    (";G" "Γ")
    (";L" "Λ")
+   (";P" "Ψ")
    (";S" "Σ")
    (";=" "≜")
    (";->" "→")
@@ -748,6 +643,10 @@ will be toggled."
    (";;and" "∧")
    (";;all" "∀")
    (";;ex" "∃")
+   (";;box" "□")
+   (";;sc" "⊂")
+   (";;su" "∪")
+   (";;si" "∩")
    ))
 
 (bespoke/lambda-mode)

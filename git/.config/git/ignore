@@ -35,6 +35,10 @@ __pycache__
 .idea
 *.iml
 
+# Emacs
+
+.pdf-view-restore
+
 # Personal
 
 ,

@@ -240,79 +240,32 @@ complete -F _up up
 # done
 # __git_complete g __git_main
 
-bundle-mvn() {
-	local gitbranch;
-	if [[ $BUNDLE_WORKAREA == shared ]]
-	then
-		gitbranch=master
-	elif [[ -n $BUNDLE_WORKAREA ]]
-	then
-		gitbranch="feature_$BUNDLE_WORKAREA"
-	fi
-
-	local -a props;
-
-	if [[ -n $gitbranch ]]
-	then props+=("-DfinalName.escapedGitBranch=$gitbranch")
-	fi
-
-	if [[ -n $BUNDLE_BRANCH ]]
-	then props+=("-DfinalName.tsBranch=$BUNDLE_BRANCH")
-	fi
-
-	if [[ -n $BUNDLE_HOST ]]
-	then props+=("-Dwildfly.hostname=$BUNDLE_HOST")
-	fi
-
-	mvn "${props[@]}" "$@"
-}
-
-set-bundle() {
-	if [[ ! -d .bit-props ]]; then
-		echo ./.bit-props not found!
-		return 1
-	fi
-	local project=$(cat .bit-props/project-name)
-	local branch=$(git rev-parse --abbrev-ref HEAD)
-	local bundle="${project}_${branch//\//_}.war"
-
-	local server=${1:-vagrantbox}
-	if [[ $2 ]]; then
-		local wa=$2
-	else
-		local wa=${branch##.*/}
-	fi
-	local text="<app><bundle>$bundle</bundle></app>"
-	local file="/default/main/$project/WORKAREA/$wa/iwov-resources/ls-bundle.xml"
-
-	ssh "$server" "echo \"$text\" > \"$file\""
-}
-
-pull-wa() {
-	if [[ ! -d .bit-props ]]; then
-		echo ./.bit-props not found!
-		return 1
-	fi
-	local project=$(cat .bit-props/project-name)
-	local branch=$(git rev-parse --abbrev-ref HEAD)
-	local bundle="${project}_${branch//\//_}.war"
-
-	local server=${1:-vagrantbox}
-	if [[ $2 ]]; then
-		local wa=$2
-	else
-		local wa=${branch##.*/}
-	fi
-
-
-}
-
 [ -f "${XDG_CONFIG_HOME:-$HOME/.config}"/fzf/fzf.bash ] && source "${XDG_CONFIG_HOME:-$HOME/.config}"/fzf/fzf.bash
 
 source ~/pkg/forgit/forgit.sh
 
-export PATH=/home/gruszecki/.local/bin:$PATH
-export PATH=$PATH:~/pkg/git-fuzzy/bin
-export PATH="$PATH:/home/gruszecki/.local/share/coursier/bin"
-export PATH=$PATH:~/opt/coursier/bin
-export PATH=$PATH:~/opt/metals-emacs/bin
+export OPATH=$PATH
+
+PATH=~/.local/bin:$PATH
+PATH=~/.cargo/bin:$PATH
+PATH=$PATH:~/pkg/git-fuzzy/bin
+PATH=$PATH:~/.local/share/coursier/bin
+PATH=$PATH:~/opt/coursier/bin
+PATH=$PATH:~/opt/metals-emacs/bin
+
+export PATH
+
+# >>> conda initialize >>>
+# !! Contents within this block are managed by 'conda init' !!
+__conda_setup="$('/home/gruszecki/anaconda3/bin/conda' 'shell.bash' 'hook' 2> /dev/null)"
+if [ $? -eq 0 ]; then
+    eval "$__conda_setup"
+else
+    if [ -f "/home/gruszecki/anaconda3/etc/profile.d/conda.sh" ]; then
+        . "/home/gruszecki/anaconda3/etc/profile.d/conda.sh"
+    else
+        export PATH="/home/gruszecki/anaconda3/bin:$PATH"
+    fi
+fi
+unset __conda_setup
+# <<< conda initialize <<<

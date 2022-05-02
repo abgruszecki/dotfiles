@@ -69,3 +69,5 @@ function fish_right_prompt
         echo $duration
     end
 end
+
+source ~/anaconda3/etc/fish/conf.d/conda.fish

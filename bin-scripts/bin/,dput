@@ -1,3 +1,6 @@
 #!/usr/bin/env bash
 
-mv "$(xclip -o -sel clip)" "$1"
+SRC=$(xclip -o -sel clip) 
+TGT=$1
+printf 'mv %q %q\n' "$SRC" "$TGT"
+mv "$SRC" "$TGT"

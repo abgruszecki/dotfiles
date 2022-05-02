@@ -21,3 +21,5 @@ function store-file {
 }
 
 list-files | pick-file | store-file
+
+printf 'Clipped: %q\n' "$(xclip -o -sel clip)"

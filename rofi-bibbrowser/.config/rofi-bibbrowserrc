@@ -14,7 +14,7 @@ edit_bib_key = 'Control+i'
 yank_file_path_key = 'Control+x'
 
 bib_dirs = [
-    BibDir('~/.cache/zotero-export/PhD.bib'),
+    BibDir('~/zotero-pdf', bib='~/.cache/zotero-export/PhD.bib'),
     # E.g. do something like:
     # BibDir('~/literature/refs.bib'),
     # this will manage the given refs.bib file and lists
