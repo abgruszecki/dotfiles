@@ -46,3 +46,8 @@ if test -r ~/.opam/opam-init/init.sh
 then source ~/.opam/opam-init/init.sh > /dev/null 2> /dev/null
 else true
 fi
+
+# >>> JVM installed by coursier >>>
+export JAVA_HOME="/home/gruszecki/.cache/coursier/arc/https/github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.4.1%252B1/OpenJDK17U-jdk_x64_linux_hotspot_17.0.4.1_1.tar.gz/jdk-17.0.4.1+1"
+export PATH="$PATH:/home/gruszecki/.cache/coursier/arc/https/github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.4.1%252B1/OpenJDK17U-jdk_x64_linux_hotspot_17.0.4.1_1.tar.gz/jdk-17.0.4.1+1/bin"
+# <<< JVM installed by coursier <<<

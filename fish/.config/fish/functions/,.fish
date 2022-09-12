@@ -22,11 +22,12 @@ function __comma_print_methods
 end
 
 function __comma_no_command
-    set -l tok_ln (commandline -p -o)
-    set -l ln (commandline -p)
+    set -g tok_ln (commandline -p -o)
+    set -g ln (commandline -p)
     # No command if second arg is empty, or if we're writing the second arg
     # (i.e. there's no third arg and entire commandline doesn't end in space)
-    test -z $tok_ln[2] || test -z $tok_ln[3] && string match -r '.*[^ ]$' $ln > /dev/null
+    test -z $tok_ln[2]
+    or test -z $tok_ln[3] && string match -r '.*[^ ]$' $ln > /dev/null
 end
 
 function ,

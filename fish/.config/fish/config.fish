@@ -25,6 +25,11 @@ end
 
 complete -x -k -c up -a '(string split -n / $PWD)'
 
+function tere
+    set --local result (~/.cargo/bin/tere $argv)
+    [ -n "$result" ] && cd -- "$result"
+end
+
 ### VTERM
 
 function vterm_printf;
