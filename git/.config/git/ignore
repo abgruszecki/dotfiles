@@ -38,6 +38,7 @@ __pycache__
 # Emacs
 
 .pdf-view-restore
+.auctex.d
 
 # Personal
 

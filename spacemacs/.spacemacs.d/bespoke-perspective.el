@@ -1,5 +1,7 @@
 ;; -*- mode: emacs-lisp; lexical-binding: t; -*-
 
+(require 'cl-lib)
+
 (setq persp-autokill-buffer-on-remove 'kill
       persp-kill-foreign-buffer-behaviour 'kill
       persp-auto-save-persps-to-their-file-before-kill 'persp-file)
@@ -186,9 +188,11 @@
   (funcall oldfun buf persp))
 (advice-add 'persp--buffer-in-persps-add :around #'bespoke/trace-persp-add)
 
-(defun bespoke/trace-kill-buffer (oldfun &optional buf)
+(defvar /silence-kill-tracer nil)
+(cl-defun bespoke/trace-kill-buffer (oldfun &optional buf)
   (setq buf (or buf (current-buffer)))
   (funcall oldfun buf)
+  (if /silence-kill-tracer (cl-return-from bespoke/trace-kill-buffer))
   (when (buffer-live-p buf)
     (let* ((persps (--map (persp-name it) (persp--buffer-in-persps buf)))
             (msg (format "Undead buffer: %s (in persps: %s)" buf persps)))
@@ -212,22 +216,52 @@
 
 (defun bespoke/annex-shared-buffers ()
   (interactive)
-  (-let* ((bufs (->> (buffer-list)
-                     (-map ($ (cons $1 (-map #'persp-name (persp--buffer-in-persps $1)))))
-                     (-filter ($ (> (length (cdr $1)) 1)))))
-         (selected (helm :sources (helm-build-sync-source "Buffers"
-                                    :candidates (--map (cons (format "%-80s %s" (buffer-name (car it)) (cdr it))
-                                                             (car it))
-                                                       bufs)
-                                    :action (lambda (marked)
-                                              (setf marked (helm-marked-candidates))
-                                              marked))
-                         :buffer "*HELM Persp annex shared buffers*")))
-    ;; (message "Selected following buffers: %s" selected)
-    (cl-loop for buf in selected
-             do (cl-loop for p in (persp--buffer-in-persps buf)
-                         do (when (not (eq p (get-current-persp)))
-                              (persp-remove-buffer buf p))))))
+  (-let* ((project-root (projectile-project-root))
+          (bufs-alist (->> (buffer-list)
+                           (-map ($ (list :buf $1
+                                          :persps (-map #'persp-name (persp--buffer-in-persps $1))
+                                          :foreign? (with-current-buffer $1
+                                                      (and (buffer-file-name)
+                                                           (not (s-starts-with? project-root (buffer-file-name)))))
+                                          )))
+                           (-filter ($ (> (length (plist-get $1 :persps)) 1)))
+                           (-group-by ($ (if (-contains? (plist-get $1 :persps) (persp-name (get-current-persp)))
+                                             'in
+                                           'out)))))
+          (bufs-in (alist-get 'in bufs-alist))
+          (bufs-out (alist-get 'out bufs-alist))
+          ;; (.. (message "alist: %s" bufs-alist))
+          ;; (.. (message "Found %s and %s bufs" (length bufs-in) (length bufs-out)))
+          (show-buf ($ (cons (format "%-80s %s%s"
+                                     (buffer-name (plist-get $1 :buf))
+                                     (if (plist-get $1 :foreign?) "(foreign) " "")
+                                     (plist-get $1 :persps)
+                                     )
+                             (plist-get $1 :buf))))
+          ((action . selected)
+           (helm :buffer "*HELM Multi-persp buffers*"
+                 :sources
+                 `(,(helm-build-sync-source "Buffers inside perspective"
+                      :candidates (-map show-buf bufs-in)
+                      :action `(("annex" . ,($ (cons 'annex (helm-marked-candidates))))
+                                ("kill" . ,($ (cons 'kill (helm-marked-candidates))))
+                                ))
+                   ,(helm-build-sync-source "Buffers outside perspective"
+                      :candidates (-map show-buf bufs-out)
+                      :action `(;;("annex" . ,($ (cons 'annex (helm-marked-candidates))))
+                                ("ignore" . ,($ (cons 'ignore (helm-marked-candidates))))
+                                )))
+                 )))
+    ;; (message "Selected (to %s) following buffers: %s" action selected)
+    (case action
+      ('annex (cl-loop for buf in selected
+                           do (cl-loop for p in (persp--buffer-in-persps buf)
+                                       do (when (not (eq p (get-current-persp)))
+                                            (persp-remove-buffer buf p)))))
+      ('kill (let ((/silence-kill-tracer t))
+               (cl-loop for buf in selected
+                        do (kill-buffer buf)))))
+    ))
 
 ;; Local Variables:
 ;; read-symbol-shorthands: (("/" . "my-perspective/"))

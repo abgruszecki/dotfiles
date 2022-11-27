@@ -54,7 +54,9 @@ This function should only modify configuration layer settings."
      bibtex
      pdf
 
-     lsp
+     (lsp :variables
+          lsp-lens-enable nil
+          lsp-ui-sideline-enable nil)
      (tree-sitter :variables
                   tree-sitter-syntax-highlight-enable nil)
      git
@@ -78,7 +80,8 @@ This function should only modify configuration layer settings."
      csv
      yaml
 
-     (latex :variables
+     (latex :packages (not company-math)
+            :variables
             latex-backend 'company-auctex
             latex-enable-auto-fill nil)
      markdown
@@ -434,6 +437,11 @@ It should only modify the values of Spacemacs settings."
    ;; Transparency can be toggled through `toggle-transparency'. (default 90)
    dotspacemacs-inactive-transparency 90
 
+   ;; A value from the range (0..100), in increasing opacity, which describes the
+   ;; transparency level of a frame background when it's active or selected. Transparency
+   ;; can be toggled through `toggle-background-transparency'. (default 90)
+   dotspacemacs-background-transparency 90
+
    ;; If non-nil show the titles of transient states. (default t)
    dotspacemacs-show-transient-state-title t
 
@@ -604,26 +612,6 @@ configuration.
 It is mostly for variables that should be set before packages are loaded.
 If you are unsure, try setting them in `dotspacemacs/user-config' first."
 
-  ;; Fix for https://github.com/syl20bnr/spacemacs/issues/15366
-  ;; (defun spacemacs-buffer//insert-recent-files (list-size)
-  ;;   (unless recentf-mode (recentf-mode))
-  ;;   (setq spacemacs-buffer//recent-files-list
-  ;;         (let ((agenda-files (mapcar #'expand-file-name (org-agenda-files))))
-  ;;           (cl-delete-if (lambda (x)
-  ;;                           (or (when (and (bound-and-true-p org-directory) (file-exists-p org-directory))
-  ;;                                 (member x (directory-files org-directory t)))
-  ;;                               (member x agenda-files)))
-  ;;                         recentf-list)))
-  ;;   (setq spacemacs-buffer//recent-files-list
-  ;;         (spacemacs//subseq spacemacs-buffer//recent-files-list 0 list-size))
-  ;;   (when (spacemacs-buffer//insert-file-list
-  ;;         (spacemacs-buffer||propertize-heading
-  ;;           (all-the-icons-octicon "history" :face 'font-lock-keyword-face :v-adjust -0.05)
-  ;;           "Recent Files:" "r")
-  ;;         spacemacs-buffer//recent-files-list)
-  ;;     (spacemacs-buffer||add-shortcut "r" "Recent Files:"))
-  ;;   (insert spacemacs-buffer-list-separator))
-
   ;; Part of the fix for https://github.com/Somelauw/evil-org-mode/issues/93
   (fset 'evil-redirect-digit-argument 'ignore) ;; before evil-org loaded
 
@@ -708,6 +696,8 @@ before packages are loaded."
 
   (load "~/.spacemacs.d/bespoke-dotty.el")
 
+  (load "~/.spacemacs.d/bespoke-projects.el")
+
   (setq org-roam-v2-ack t)
   (org-roam-setup)
 
@@ -777,7 +767,7 @@ indent yanked text (with universal arg don't indent)."
     (setq lsp-signature-auto-activate nil
           lsp-prefer-flymake nil
 
-        ;;; lsp-ui
+          ;; lsp-ui
           lsp-ui-doc-enable nil
           lsp-ui-flycheck-enable t
           lsp-ui-flycheck-live-reporting nil)
@@ -790,6 +780,22 @@ indent yanked text (with universal arg don't indent)."
       (interactive "p")
       (let ((my-lsp//forced t))
         (lsp arg)))
+    )
+
+  (progn ;; lsp-latex
+    (setq lsp-latex-build-executable "latexrun"
+          lsp-latex-build-args '("%f")
+          lsp-latex-build-on-save t
+          lsp-latex-build-aux-directory "latex.out")
+    )
+
+  (defun bespoke/disable-latex-checkers ()
+    (setq flycheck-disabled-checkers (list* 'tex-chktex 'tex-lacheck flycheck-disabled-checkers)))
+  (progn
+    (add-hook 'latex-mode-hook #'bespoke/disable-latex-checkers))
+
+  (progn ;; auctex
+    (setq TeX-auto-local ".auctex.d")
     )
 
   (progn ;; flycheck
@@ -812,12 +818,15 @@ indent yanked text (with universal arg don't indent)."
   (define-key key-translation-map
     (kbd "H-,") (kbd dotspacemacs-major-mode-emacs-leader-key))
 
-  (general-define-key
-   :prefix "H-SPC"
-   "SPC" #'bespoke-hack/test
-   "TAB" #'eyebrowse-last-window-config
-   "ESC" #'yequake-retoggle
-   "<f1>" #'my-eyebrowse/toggle-magit)
+  (define-key key-translation-map
+    (kbd "H-SPC") (kbd dotspacemacs-emacs-leader-key))
+
+  ;; (general-define-key
+  ;;  :prefix "H-SPC"
+  ;;  "SPC" #'bespoke-hack/test
+  ;;  "TAB" #'eyebrowse-last-window-config
+  ;;  "ESC" #'yequake-retoggle
+  ;;  "<f1>" #'my-eyebrowse/toggle-magit)
 
   (general-define-key
    "H-0" #'eyebrowse-switch-to-window-config-0
@@ -847,6 +856,10 @@ indent yanked text (with universal arg don't indent)."
    "<H-escape>" #'my-eyebrowse/toggle-magit)
 
   (general-define-key
+   :prefix "H-<f9>"
+   "l" #'my-lsp)
+
+  (general-define-key
    :keymaps 'emacs-lisp-mode-map
    "H-." #'lisp-state-toggle-lisp-state)
 
@@ -866,7 +879,12 @@ indent yanked text (with universal arg don't indent)."
 
   (evil-define-key '(normal insert) org-mode-map
     (kbd "<H-return>") (lookup-key spacemacs-org-mode-map "i")
-    (kbd "H-,") (kbd "ESC SPC m"))
+    ;; (kbd "H-,") (kbd "ESC SPC m")
+    )
+
+  (spacemacs/set-leader-keys
+    "b H-a" #'bespoke/annex-shared-buffers
+    )
 
   (spacemacs/set-leader-keys "o#" #'sbt/console)
   (spacemacs/set-leader-keys
@@ -874,7 +892,8 @@ indent yanked text (with universal arg don't indent)."
     "rh" #'my/help-resume
     "oc" #'my-sbt/abort
     "oa" #'my-super-agenda/go
-    "ob" #'bespoke-org-ref/top-helm-bibtex)
+    "ob" #'bespoke-org-ref/top-helm-bibtex
+    "o C-l" #'my-lsp)
 
   (spacemacs/set-leader-keys-for-major-mode 'lisp-mode
     "," #'lisp-state-toggle-lisp-state)
@@ -901,7 +920,9 @@ This function is called at the very end of Spacemacs initialization."
  '(package-selected-packages
    '(lister persist helm-cider clojure-snippets cider-eval-sexp-fu cider sesman parseedn clojure-mode parseclj raku-mode flycheck-raku tree-sitter-langs tree-sitter tsc lsp-latex company-reftex company-auctex auctex-latexmk general smooth-scroll ox-gfm ox-hugo ob-async csv-mode insert-shebang flycheck-bashate fish-mode company-shell edit-server yequake proof-general company-coq company-math math-symbol-lists merlin-eldoc stickyfunc-enhance helm-gtags helm-cscope xcscope ggtags counsel-gtags counsel swiper org-pdftools org-noter-pdftools org-noter org-roam-bibtex dap-mode posframe bui sbt-mode tide typescript-mode kotlin-mode flycheck-kotlin tern org-roam pdf-tools org-journal origami yapfify yaml-mode xterm-color vterm utop tuareg caml terminal-here shell-pop seeing-is-believing rvm ruby-tools ruby-test-mode ruby-refactor ruby-hash-syntax rubocopfmt rubocop rspec-mode robe rjsx-mode rbenv rake pytest pyenv-mode py-isort pippel pipenv pyvenv pip-requirements ocp-indent ob-elixir mvn multi-term minitest meghanada maven-test-mode lsp-python-ms lsp-java live-py-mode importmagic epc ctable concurrent deferred helm-pydoc groovy-mode groovy-imports pcache gradle-mode git-gutter-fringe+ fringe-helper git-gutter+ flycheck-ocaml merlin flycheck-mix flycheck-credo eshell-z eshell-prompt-extras esh-help emojify emoji-cheat-sheet-plus dune cython-mode company-emoji company-anaconda chruby bundler inf-ruby browse-at-remote blacken auto-complete-rst anaconda-mode pythonic alchemist elixir-mode smeargle orgit magit-gitflow magit-popup helm-gitignore gitignore-mode gitconfig-mode gitattributes-mode git-timemachine git-messenger git-link evil-magit git-commit with-editor web-mode tagedit slim-mode scss-mode sass-mode pug-mode less-css-mode helm-css-scss haml-mode emmet-mode ox-reveal web-beautify livid-mode skewer-mode simple-httpd json-mode json-snatcher json-reformat js2-refactor yasnippet multiple-cursors js2-mode js-doc coffee-mode scala-mode mmm-mode markdown-toc markdown-mode gh-md org-projectile org-category-capture org-present org-pomodoro alert log4e gntp org-mime org-download lv htmlize gnuplot racket-mode faceup slime-company company slime ws-butler winum which-key volatile-highlights vi-tilde-fringe uuidgen use-package toc-org spaceline powerline restart-emacs request rainbow-delimiters popwin persp-mode pcre2el paradox spinner org-plus-contrib org-bullets open-junk-file neotree move-text macrostep lorem-ipsum linum-relative link-hint indent-guide hydra hungry-delete hl-todo highlight-parentheses highlight-numbers parent-mode highlight-indentation helm-themes helm-swoop helm-projectile helm-mode-manager helm-make projectile pkg-info epl helm-flx helm-descbinds helm-ag google-translate golden-ratio flx-ido flx fill-column-indicator fancy-battery eyebrowse expand-region exec-path-from-shell evil-visualstar evil-visual-mark-mode evil-unimpaired evil-tutor evil-surround evil-search-highlight-persist highlight evil-numbers evil-nerd-commenter evil-mc evil-matchit evil-lisp-state smartparens evil-indent-plus evil-iedit-state iedit evil-exchange evil-escape evil-ediff evil-args evil-anzu anzu evil goto-chg undo-tree eval-sexp-fu elisp-slime-nav dumb-jump f dash s diminish define-word column-enforce-mode clean-aindent-mode bind-map bind-key auto-highlight-symbol auto-compile packed aggressive-indent adaptive-wrap ace-window ace-link ace-jump-helm-line helm avy helm-core popup async))
  '(safe-local-variable-values
-   '((org-roam-db-directory . "~/.cache/org-roam/org-roam-dotty-wiki.db")
+   '((bespoke/project-class quote dotty)
+     (eval bespoke/set-dotty-project-vars)
+     (org-roam-db-directory . "~/.cache/org-roam/org-roam-dotty-wiki.db")
      (org-roam-directory . "~/workspace/dotty-wiki")
      (org-roam-db-directory "~/.cache/org-roam/org-roam-dotty-wiki.db")
      (org-roam-directory "~/workspace/dotty-wiki")
