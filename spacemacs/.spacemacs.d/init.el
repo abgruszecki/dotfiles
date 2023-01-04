@@ -113,6 +113,7 @@ This function should only modify configuration layer settings."
      lister
      org-noter
      org-noter-pdftools
+     org-ql ov peg transient ts ;; org-ql and dependencies
 		 org-super-agenda
      persist
      general
@@ -419,12 +420,12 @@ It should only modify the values of Spacemacs settings."
 
    ;; If non-nil the frame is maximized when Emacs starts up.
    ;; Takes effect only if `dotspacemacs-fullscreen-at-startup' is nil.
-   ;; (default nil) (Emacs 24.4+ only)
+   ;; (default t) (Emacs 24.4+ only)
    dotspacemacs-maximized-at-startup t
 
    ;; If non-nil the frame is undecorated when Emacs starts up. Combine this
-   ;; variable with `dotspacemacs-maximized-at-startup' in OSX to obtain
-   ;; borderless fullscreen. (default nil)
+   ;; variable with `dotspacemacs-maximized-at-startup' to obtain fullscreen
+   ;; without external boxes. Also disables the internal border. (default nil)
    dotspacemacs-undecorated-at-startup nil
 
    ;; A value from the range (0..100), in increasing opacity, which describes
@@ -643,8 +644,6 @@ If you are unsure, try setting them in `dotspacemacs/user-config' first."
     (push 'coq-mode undo-tree-incompatible-major-modes)
     )
 
-  (setq which-key-enable-extended-define-key t)
-
   ;; (setq debug-on-message ".*libgccjit\\.so.*")
   ;; (setq byte-compile-debug t)
   )
@@ -667,11 +666,13 @@ before packages are loaded."
   (use-package dollar)
   (use-package persist
     :config
-    (setq persist--directory-location "~/.spacemacs.d/private/persist"))
+    (setq persist--directory-location "~/.spacemacs.d/persist"))
   (use-package lister)
   (use-package lister-mode)
 
-  (use-package smartparens) ;; sometimes the smartparens self-insert hook inexplicably doesn't get inserted, manually using it fixes that
+  ;; sometimes the smartparens self-insert hook inexplicably doesn't get inserted
+  ;; manually using the package fixes that
+  (use-package smartparens)
   (use-package org-ml) ;; can't use :defer, since org-mode is loaded by default
 	(use-package org-super-agenda
     :config
@@ -688,18 +689,19 @@ before packages are loaded."
 
   (add-hook 'xref-backend-functions #'dumb-jump-xref-activate)
 
-  (load "~/.spacemacs.d/bespoke.el")
-
-  (load "~/.spacemacs.d/bespoke-perspective.el")
-  (load "~/.spacemacs.d/bespoke-org-mode.el")
-  (load "~/.spacemacs.d/bespoke-yequake.el")
-
-  (load "~/.spacemacs.d/bespoke-dotty.el")
-
-  (load "~/.spacemacs.d/bespoke-projects.el")
+  ;; NOTE: this does not seem necessary,
+  ;; since Emacs automatically recompiles .el files as they are saved
+  ;; (byte-recompile-directory "~/.spacemacs.d/" 0)
+  (load "~/.spacemacs.d/bespoke")
+  (load "~/.spacemacs.d/bespoke-yequake")
+  (load "~/.spacemacs.d/bespoke-perspective")
+  (load "~/.spacemacs.d/bespoke-org-mode")
+  (load "~/.spacemacs.d/bespoke-org-ql")
+  (load "~/.spacemacs.d/bespoke-dotty")
+  (load "~/.spacemacs.d/bespoke-projects")
 
   (setq org-roam-v2-ack t)
-  (org-roam-setup)
+  (org-roam-db-autosync-enable)
 
   ;;; configuration
 
@@ -792,7 +794,7 @@ indent yanked text (with universal arg don't indent)."
   (defun bespoke/disable-latex-checkers ()
     (setq flycheck-disabled-checkers (list* 'tex-chktex 'tex-lacheck flycheck-disabled-checkers)))
   (progn
-    (add-hook 'latex-mode-hook #'bespoke/disable-latex-checkers))
+    (add-hook 'LaTeX-mode-hook #'bespoke/disable-latex-checkers))
 
   (progn ;; auctex
     (setq TeX-auto-local ".auctex.d")
@@ -918,7 +920,7 @@ This function is called at the very end of Spacemacs initialization."
  '(evil-want-Y-yank-to-eol nil)
  '(evil-want-change-word-to-end nil)
  '(package-selected-packages
-   '(lister persist helm-cider clojure-snippets cider-eval-sexp-fu cider sesman parseedn clojure-mode parseclj raku-mode flycheck-raku tree-sitter-langs tree-sitter tsc lsp-latex company-reftex company-auctex auctex-latexmk general smooth-scroll ox-gfm ox-hugo ob-async csv-mode insert-shebang flycheck-bashate fish-mode company-shell edit-server yequake proof-general company-coq company-math math-symbol-lists merlin-eldoc stickyfunc-enhance helm-gtags helm-cscope xcscope ggtags counsel-gtags counsel swiper org-pdftools org-noter-pdftools org-noter org-roam-bibtex dap-mode posframe bui sbt-mode tide typescript-mode kotlin-mode flycheck-kotlin tern org-roam pdf-tools org-journal origami yapfify yaml-mode xterm-color vterm utop tuareg caml terminal-here shell-pop seeing-is-believing rvm ruby-tools ruby-test-mode ruby-refactor ruby-hash-syntax rubocopfmt rubocop rspec-mode robe rjsx-mode rbenv rake pytest pyenv-mode py-isort pippel pipenv pyvenv pip-requirements ocp-indent ob-elixir mvn multi-term minitest meghanada maven-test-mode lsp-python-ms lsp-java live-py-mode importmagic epc ctable concurrent deferred helm-pydoc groovy-mode groovy-imports pcache gradle-mode git-gutter-fringe+ fringe-helper git-gutter+ flycheck-ocaml merlin flycheck-mix flycheck-credo eshell-z eshell-prompt-extras esh-help emojify emoji-cheat-sheet-plus dune cython-mode company-emoji company-anaconda chruby bundler inf-ruby browse-at-remote blacken auto-complete-rst anaconda-mode pythonic alchemist elixir-mode smeargle orgit magit-gitflow magit-popup helm-gitignore gitignore-mode gitconfig-mode gitattributes-mode git-timemachine git-messenger git-link evil-magit git-commit with-editor web-mode tagedit slim-mode scss-mode sass-mode pug-mode less-css-mode helm-css-scss haml-mode emmet-mode ox-reveal web-beautify livid-mode skewer-mode simple-httpd json-mode json-snatcher json-reformat js2-refactor yasnippet multiple-cursors js2-mode js-doc coffee-mode scala-mode mmm-mode markdown-toc markdown-mode gh-md org-projectile org-category-capture org-present org-pomodoro alert log4e gntp org-mime org-download lv htmlize gnuplot racket-mode faceup slime-company company slime ws-butler winum which-key volatile-highlights vi-tilde-fringe uuidgen use-package toc-org spaceline powerline restart-emacs request rainbow-delimiters popwin persp-mode pcre2el paradox spinner org-plus-contrib org-bullets open-junk-file neotree move-text macrostep lorem-ipsum linum-relative link-hint indent-guide hydra hungry-delete hl-todo highlight-parentheses highlight-numbers parent-mode highlight-indentation helm-themes helm-swoop helm-projectile helm-mode-manager helm-make projectile pkg-info epl helm-flx helm-descbinds helm-ag google-translate golden-ratio flx-ido flx fill-column-indicator fancy-battery eyebrowse expand-region exec-path-from-shell evil-visualstar evil-visual-mark-mode evil-unimpaired evil-tutor evil-surround evil-search-highlight-persist highlight evil-numbers evil-nerd-commenter evil-mc evil-matchit evil-lisp-state smartparens evil-indent-plus evil-iedit-state iedit evil-exchange evil-escape evil-ediff evil-args evil-anzu anzu evil goto-chg undo-tree eval-sexp-fu elisp-slime-nav dumb-jump f dash s diminish define-word column-enforce-mode clean-aindent-mode bind-map bind-key auto-highlight-symbol auto-compile packed aggressive-indent adaptive-wrap ace-window ace-link ace-jump-helm-line helm avy helm-core popup async))
+   '(org-ql lister persist helm-cider clojure-snippets cider-eval-sexp-fu cider sesman parseedn clojure-mode parseclj raku-mode flycheck-raku tree-sitter-langs tree-sitter tsc lsp-latex company-reftex company-auctex auctex-latexmk general smooth-scroll ox-gfm ox-hugo ob-async csv-mode insert-shebang flycheck-bashate fish-mode company-shell edit-server yequake proof-general company-coq company-math math-symbol-lists merlin-eldoc stickyfunc-enhance helm-gtags helm-cscope xcscope ggtags counsel-gtags counsel swiper org-pdftools org-noter-pdftools org-noter org-roam-bibtex dap-mode posframe bui sbt-mode tide typescript-mode kotlin-mode flycheck-kotlin tern org-roam pdf-tools org-journal origami yapfify yaml-mode xterm-color vterm utop tuareg caml terminal-here shell-pop seeing-is-believing rvm ruby-tools ruby-test-mode ruby-refactor ruby-hash-syntax rubocopfmt rubocop rspec-mode robe rjsx-mode rbenv rake pytest pyenv-mode py-isort pippel pipenv pyvenv pip-requirements ocp-indent ob-elixir mvn multi-term minitest meghanada maven-test-mode lsp-python-ms lsp-java live-py-mode importmagic epc ctable concurrent deferred helm-pydoc groovy-mode groovy-imports pcache gradle-mode git-gutter-fringe+ fringe-helper git-gutter+ flycheck-ocaml merlin flycheck-mix flycheck-credo eshell-z eshell-prompt-extras esh-help emojify emoji-cheat-sheet-plus dune cython-mode company-emoji company-anaconda chruby bundler inf-ruby browse-at-remote blacken auto-complete-rst anaconda-mode pythonic alchemist elixir-mode smeargle orgit magit-gitflow magit-popup helm-gitignore gitignore-mode gitconfig-mode gitattributes-mode git-timemachine git-messenger git-link evil-magit git-commit with-editor web-mode tagedit slim-mode scss-mode sass-mode pug-mode less-css-mode helm-css-scss haml-mode emmet-mode ox-reveal web-beautify livid-mode skewer-mode simple-httpd json-mode json-snatcher json-reformat js2-refactor yasnippet multiple-cursors js2-mode js-doc coffee-mode scala-mode mmm-mode markdown-toc markdown-mode gh-md org-projectile org-category-capture org-present org-pomodoro alert log4e gntp org-mime org-download lv htmlize gnuplot racket-mode faceup slime-company company slime ws-butler winum which-key volatile-highlights vi-tilde-fringe uuidgen use-package toc-org spaceline powerline restart-emacs request rainbow-delimiters popwin persp-mode pcre2el paradox spinner org-plus-contrib org-bullets open-junk-file neotree move-text macrostep lorem-ipsum linum-relative link-hint indent-guide hydra hungry-delete hl-todo highlight-parentheses highlight-numbers parent-mode highlight-indentation helm-themes helm-swoop helm-projectile helm-mode-manager helm-make projectile pkg-info epl helm-flx helm-descbinds helm-ag google-translate golden-ratio flx-ido flx fill-column-indicator fancy-battery eyebrowse expand-region exec-path-from-shell evil-visualstar evil-visual-mark-mode evil-unimpaired evil-tutor evil-surround evil-search-highlight-persist highlight evil-numbers evil-nerd-commenter evil-mc evil-matchit evil-lisp-state smartparens evil-indent-plus evil-iedit-state iedit evil-exchange evil-escape evil-ediff evil-args evil-anzu anzu evil goto-chg undo-tree eval-sexp-fu elisp-slime-nav dumb-jump f dash s diminish define-word column-enforce-mode clean-aindent-mode bind-map bind-key auto-highlight-symbol auto-compile packed aggressive-indent adaptive-wrap ace-window ace-link ace-jump-helm-line helm avy helm-core popup async))
  '(safe-local-variable-values
    '((bespoke/project-class quote dotty)
      (eval bespoke/set-dotty-project-vars)

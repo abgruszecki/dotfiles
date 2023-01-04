@@ -197,6 +197,7 @@ If USE-STACK, include the parent paths as well."
     (unless (looking-at "\n")
       (indent-for-tab-command))))
 
+
 ;;; yasnippet
 
 (defun my-yas/expand-dotty-println-it ()
@@ -206,20 +207,22 @@ If USE-STACK, include the parent paths as well."
                       (point-at-eol)
                       `((yas-arg/it ,(buffer-substring (mark) (point))))))
 
+
 ;;; magit
 
 (defun my/magit/kill-all-buffers ()
   (interactive)
   (mapc #'kill-buffer (magit-mode-get-buffers)))
 
+
 ;;; org-mode
 
 (defun my-org/change-event-timestamps (&optional start?)
-  (interactive "P")
+  (interactive "p")
   (unless (org-at-heading-p)
-    (user-error "Not at a heading!"))
-  (unless (s-prefix? "PAST" (org-get-heading))
-    (user-error "The heading isn't PAST"))
+    (user-error "not at a heading!"))
+  (unless (s-prefix? "past" (org-get-heading))
+    (user-error "the heading isn't past"))
   (save-excursion
     (let ((pt (point))
           clk)
@@ -227,17 +230,17 @@ If USE-STACK, include the parent paths as well."
                  (org-clock-find-position t)
                  (org-element-at-point)))
      (unless (eq 'clock (car clk))
-       ;; TODO should we assume the journal is malformed? And fix it? Maybe have an auxiliary function for that?
-       (user-error "No clock entry!"))
+       ;; todo should we assume the journal is malformed? and fix it? maybe have an auxiliary function for that?
+       (user-error "no clock entry!"))
      (unless (eq 'closed (org-element-property :status clk))
-       (user-error "The clock is running!"))
+       (user-error "the clock is running!"))
      (save-excursion
        (forward-line)
        (unless (eq 'drawer (car (org-element-at-point)))
-         (user-error "There are more than one clock entries!")))
+         (user-error "there are more than one clock entries!")))
 
      (goto-char (+ (if start? 0 -1) (org-element-property (if start? :begin :end) (org-element-property :value clk))))
-     (org-time-stamp-inactive)          ; Modify the time stamp interactively
+     (org-time-stamp-inactive)          ; modify the time stamp interactively
      (org-clock-update-time-maybe)
 
      (setf clk (org-element-at-point))
@@ -256,21 +259,21 @@ If USE-STACK, include the parent paths as well."
 
 (defun my/org/set-ztk-id ()
   (interactive)
-  (let* ((h (or (om-parse-this-headline) (error "Not looking at a headline!")))
+  (let* ((h (or (om-parse-this-headline) (error "not looking at a headline!")))
          (s (om-get-property :raw-value h))
          (id (cadr (or (s-match "^#\\([^ ]+\\)" s)
-                       (error "Headline doesn't have a ZTK id!")))))
-    (org-set-property "CUSTOM_ID" id)))
+                       (error "headline doesn't have a ztk id!")))))
+    (org-set-property "custom_id" id)))
 
 (defun my/org/sort-todos ()
   (interactive)
-  "Sort todo items, /my/ way."
+  "sort todo items, /my/ way."
   (unless (org-at-heading-p)
-      (error "Not at a heading!"))
+      (error "not at a heading!"))
   (dolist (sort-type '(?p ?o)) (org-sort-entries nil sort-type))
   (org-cycle)
   (org-cycle)
-  (org-unlogged-message "Sorted TODOs!"))
+  (org-unlogged-message "sorted todos!"))
 
 (defun my-org//jump-to-headline (headline)
   (re-search-forward
@@ -283,7 +286,7 @@ If USE-STACK, include the parent paths as well."
   (interactive)
   (my-perspective/switch-to-para)
   (find-file "~/org/roam/captured.org")
-  (my-org//jump-to-headline "Wydarzenia")
+  (my-org//jump-to-headline "wydarzenia")
   (outline-hide-sublevels 1)
   (outline-show-children)
   )
@@ -291,14 +294,14 @@ If USE-STACK, include the parent paths as well."
 (defun my-org/sort-todos ()
   (interactive)
   (unless (my-org//up-top-heading)
-    (user-error "Not under a top-level heading!"))
+    (user-error "not under a top-level heading!"))
   (org-sort-entries nil ?f #'org-element-at-point #'my-org//compare-todo-headings)
   (outline-hide-subtree)
   (outline-show-children))
 
 (defun my-org//trace-compare-todo-headings (self fst snd)
   (let ((res (funcall self fst snd)))
-    (message "Comparing %s / %s : %s"
+    (message "comparing %s / %s : %s"
              (org-element-property :title fst)
              (org-element-property :title snd)
              res
@@ -367,14 +370,14 @@ If USE-STACK, include the parent paths as well."
   (save-excursion
     (back-to-indentation)
     (unless (looking-at (rx "#+begin_src"))
-      (user-error "Not at a code block!"))
+      (user-error "not at a code block!"))
     (goto-char (match-end 0))
     (delete-region (point) (line-end-position))
     (let ((picked (helm :sources (list (helm-build-sync-source
-                                           "Well-known"
+                                           "well-known"
                                            :candidates (list "scala" "coq"))
                                        (helm-build-dummy-source
-                                           "Bespoke")))))
+                                           "bespoke")))))
       (insert " " picked))))
 
 (defun my-org//list-code-block-strings ()
@@ -391,7 +394,7 @@ If USE-STACK, include the parent paths as well."
   (interactive)
   (org-insert-structure-template "src")
   (let ((picked (helm :sources (list (helm-build-sync-source
-                                         "Well-known"
+                                         "well-known"
                                        :candidates (list "scala"
                                                          "coq"
                                                          "elisp"
@@ -400,10 +403,10 @@ If USE-STACK, include the parent paths as well."
                                                          "python"
                                                          "text"))
                                      (helm-build-sync-source
-                                         "This buffer"
+                                         "this buffer"
                                        :candidates (my-org//list-code-block-strings))
                                      (helm-build-dummy-source
-                                         "Bespoke")))))
+                                         "bespoke")))))
     (insert picked)))
 
 (defun my-org/test ()
@@ -411,7 +414,7 @@ If USE-STACK, include the parent paths as well."
   (let ((fs (org-agenda-files)))
     ;; allows checking which file is which
     (concat
-     "CATEGORY={"
+     "category={"
      (s-join "\\|"
              (->> (org-roam-db-query [:select * :from tags :where (in file $v1)]
                                      (apply #'vector fs))
@@ -428,7 +431,7 @@ If USE-STACK, include the parent paths as well."
                                (apply #'vector fs)))
          (titled (seq-map (lambda (el) (cons (cadr el) (car el))) q))
          (picked (helm :sources (list (helm-build-sync-source
-                                          "Agenda files"
+                                          "agenda files"
                                         :candidates titled)))))
     (my-perspective/switch-to-para)
     (find-file picked)))
@@ -446,22 +449,23 @@ If USE-STACK, include the parent paths as well."
   (org-capture-put :jump-to-captured t)
   (org-capture-finalize))
 
+
 ;;; org-super-agenda
 
 (defun my-super-agenda/go ()
   (interactive)
-  (let* ((work-categories (list "Dotty" "Doctool" "Students" "TA"))
+  (let* ((work-categories (list "dotty" "doctool" "students" "ta"))
          (org-super-agenda-groups
-          `((:name "Scheduled"
+          `((:name "scheduled"
                    (:scheduled past
                                     :scheduled today))
-            (:name "Work (TODO)"
-                   :and (:category ,work-categories :todo ("TODO")))
-            (:name "Work (TASK)"
-                   :and (:category ,work-categories :todo ("TASK")))
-            (:name "Work (Problems)"
-                   :and (:category ,work-categories :todo ("OPEN")))
-            (:name "Empty"
+            (:name "work (todo)"
+                   :and (:category ,work-categories :todo ("todo")))
+            (:name "work (task)"
+                   :and (:category ,work-categories :todo ("task")))
+            (:name "work (problems)"
+                   :and (:category ,work-categories :todo ("open")))
+            (:name "empty"
                    :discard (:anything t))
             )))
     (org-agenda nil "t")))
@@ -473,51 +477,12 @@ If USE-STACK, include the parent paths as well."
     (org-agenda nil (if nokeys nil "t")))
   )
 
-;;; yequake
-
-(defun bespoke-yequake/org-capture (&optional goto keys)
-  "Copied from `yequake-org-capture'.
-Call `org-capture' in a Yequake frame.
-Adds a function to `org-capture-after-finalize-hook' that closes
-the recently toggled Yequake frame and removes itself from the
-hook.
-
-Note: if another Yequake frame is toggled before the capture is
-finalized, when the capture is finalized, the wrong Yequake frame
-will be toggled."
-  (let* ((remove-hook-fn (lambda ()
-                           (remove-hook 'org-capture-after-finalize-hook #'yequake-retoggle))))
-    ;; (add-hook 'org-capture-after-finalize-hook remove-hook-fn)
-    ;; (add-hook 'org-capture-after-finalize-hook #'yequake-retoggle)
-    ;; MAYBE: Propose an `org-capture-switch-buffer-fn' variable that could be rebound here.
-
-    ;; NOTE: We override `org-switch-to-buffer-other-window' because
-    ;; it always uses `switch-to-buffer-other-window', and we want to
-    ;; display the template menu and capture buffer in the existing
-    ;; window rather than splitting the frame.
-    (cl-letf* (((symbol-function #'org-switch-to-buffer-other-window)
-                (symbol-function #'switch-to-buffer)))
-      (condition-case nil
-          (progn
-            (org-capture goto keys)
-            ;; Be sure to return the "CAPTURE-" buffer, which is the current
-            ;; buffer at this point.
-            (current-buffer))
-        ((error quit)
-         ;; Capture aborted: remove the hook and hide the capture frame.
-         ;; (remove-hook 'org-capture-after-finalize-hook #'yequake-retoggle)
-         (yequake-retoggle))))))
-
-(defun bespoke-yequake/org-agenda ()
-  (my-super-agenda/bespoke-main)
-  (spacemacs/toggle-maximize-buffer)
-  (current-buffer))
-
+
 ;;; projectile
 
 (defun my-projectile/save-project-files (&optional ask)
-  "Save files in current project."
-  (interactive "P")
+  "save files in current project."
+  (interactive "p")
   (-let [project-root (projectile-project-root)]
     (save-some-buffers (not ask)
                        (lambda ()
@@ -539,7 +504,7 @@ will be toggled."
 
 (defun my-eyebrowse/reset-magit (root)
   (unless (eql -1 (eyebrowse--get 'current-slot))
-    (user-error "Incorrect workspace for this function!"))
+    (user-error "incorrect workspace for this function!"))
   (dired root)
   (delete-other-windows))
 
@@ -569,14 +534,15 @@ will be toggled."
     (insert ?\s)))
 (advice-add #'evil-join :after #'my/fixup-whitespace)
 
-;;; input method
+
+;;; my-greek
 
 (defvar my-greek/input-keymap (make-sparse-keymap))
 (global-set-key (kbd "H-\\") my-greek/input-keymap)
 (define-key my-greek/input-keymap (kbd "H-\\") #'insert-char)
 
 (defun my-greek/krazy-self-insert ()
-  "Krazy thing that looks up its own keybinding in the greek input keymap and inserts its own description."
+  "krazy thing that looks up its own keybinding in the greek input keymap and inserts its own description."
   (interactive)
   (let* ((keys (this-command-keys-vector))
          (last-key (elt keys (1- (length keys))))
@@ -586,27 +552,26 @@ will be toggled."
 (defmacro my-greek/define-key (key input)
   `(define-key my-greek/input-keymap (kbd ,key) (cons ,input #'my-greek/krazy-self-insert)))
 
-;; Reminder: these depend on `which-key-enable-extended-define-key'
-(define-key my-greek/input-keymap (kbd "H-a") (cons "∀" #'my-greek/krazy-self-insert))
+;; reminder: these depend on `which-key-enable-extended-define-key'
+(define-key my-greek/input-keymap (kbd "h-a") (cons "∀" #'my-greek/krazy-self-insert))
 (my-greek/define-key "a" "α")
 (my-greek/define-key "b" "β")
 (my-greek/define-key "d" "δ")
-(my-greek/define-key "D" "Δ")
-(my-greek/define-key "G" "Γ")
+(my-greek/define-key "d" "δ")
+(my-greek/define-key "g" "γ")
 (my-greek/define-key "l" "λ")
-(my-greek/define-key "L" "Λ")
+(my-greek/define-key "l" "λ")
 (my-greek/define-key "|" "‣")
 (my-greek/define-key "1" "⩒")
 (my-greek/define-key "2" "≗")
 
 (defun bespoke/lambda-mode ()
-  "Lambda is go!"
-  (quail-define-package "lambda" "UTF-8" "λ" t nil nil nil t)
+  "lambda is go!"
+  (quail-define-package "lambda" "utf-8" "λ" t nil nil nil t)
   (quail-define-rules
-   ("[" "(")
-   ("]" ")")
-   (";[" "[")
-   (";]" "]")
+   (";[]" "□")
+   ;; (";[" "[")
+   ;; (";]" "]")
    (";0" "₀")
    (";1" "₁")
    (";2" "₂")
@@ -631,7 +596,7 @@ will be toggled."
    (";s" "σ")
    (";t" "τ")
    (";z" "ϕ")
-   (";D" "Δ")
+   (";D" "δ")
    (";G" "Γ")
    (";L" "Λ")
    (";P" "Ψ")
@@ -655,3 +620,19 @@ will be toggled."
    ))
 
 (bespoke/lambda-mode)
+
+
+;;; bespoke tab-line-mode
+
+(defun bsp-tab-line-mode ()
+  "Toggle `tab-line-mode' in current buffer and all others sharing a major mode with it."
+  (interactive)
+  (let* ((current-mode major-mode)
+         (sym-current-mode-hooks (intern (concat (symbol-name current-mode) "-hook"))))
+    (if (-contains? (symbol-value sym-current-mode-hooks) #'tab-line-mode)
+        (remove-hook sym-current-mode-hooks #'tab-line-mode)
+      (add-hook sym-current-mode-hooks #'tab-line-mode))
+    (-each (buffer-list) ($ (with-current-buffer $1
+                              (tab-line-mode 'toggle))))
+    )
+  )

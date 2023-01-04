@@ -21,6 +21,8 @@
 (setf (alist-get 'system org-file-apps) "xdg-open %s"
       (alist-get "\\.pdf\\'" org-file-apps nil nil #'string=) 'system)
 
+(setf (alist-get 'file org-link-frame-setup) 'find-file)
+
 (add-to-list 'org-babel-load-languages '(ein . t))
 
 (progn ;; org-ref

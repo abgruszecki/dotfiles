@@ -1,6 +1,9 @@
 ;; -*- mode: emacs-lisp; lexical-binding: t; -*-
 
 (require 'cl-lib)
+(require 'helm)
+(require 'helm-source)
+(require 'dollar)
 
 (setq persp-autokill-buffer-on-remove 'kill
       persp-kill-foreign-buffer-behaviour 'kill
@@ -11,21 +14,27 @@
                   (with-current-buffer b
                     (derived-mode-p 'magit-mode))))
 
+(defun /load-persp-from-file (fname)
+  "`persp-load-state-from-file' adds buffers to the current perspective, which is not something I want.
+To fix this, `my-perspective/load-persp-from-file' temporarily switches to the nil perspective while loading a perspective from a file."
+  (-let [saved-current-persp (get-current-persp)]
+    (persp-switch persp-nil-name)
+    (persp-load-state-from-file fname)
+    (persp-switch (safe-persp-name saved-current-persp))))
+
 (defvar //loaded-all nil)
 (defun //load-all ()
   (unless //loaded-all
-    (persp-load-state-from-file "bespoke")
-    (persp-load-state-from-file "para")
-    (persp-load-state-from-file "dotty")
+    (/load-persp-from-file "bespoke")
+    (/load-persp-from-file "para")
+    (/load-persp-from-file "dotty")
     (setq //loaded-all t)))
 
 (defun /bespoke-switcher ()
   (let ((standalone-bespokes
-         (->>
-          (directory-files dotspacemacs-directory t ".*\.el$")
-          (--filter (not (equal (file-name-nondirectory it) "init.el")))
-          (--map (cons (file-name-nondirectory it) it))
-          ))
+         (->> (directory-files dotspacemacs-directory t ".*\.el$")
+              (--filter (not (equal (file-name-nondirectory it) "init.el")))
+              (--map (cons (file-name-nondirectory it) it))))
         (package-bespokes
          (->> (directory-files spacemacs-private-directory t)
               (--filter (and (file-directory-p it)
@@ -50,7 +59,7 @@
   (interactive "P\np")
   (require 'helm)
   (unless (persp-with-name-exists-p //bespoke-persp)
-    (persp-load-state-from-file //bespoke-persp))
+     (/load-persp-from-file //bespoke-persp))
   (if (eq major-mode 'help-mode)
       (progn
         (pupo/close-window)
@@ -75,7 +84,7 @@
   ;;         ))
   ;; (org-roam-mode 1)
   (unless (persp-with-name-exists-p //para-persp)
-    (persp-load-state-from-file //para-persp))
+    (/load-persp-from-file //para-persp))
   (if (and interactive-p
            (not prefix)
            (string= //para-persp (spacemacs//current-layout-name)))
@@ -87,23 +96,22 @@
       )
     ))
 
+(defconst //dotty-persp "dotty")
 (defun /switch-to-dotty ()
   (interactive)
   (let ((p-name "dotty"))
-    (unless (persp-with-name-exists-p p-name)
-      (persp-load-state-from-file p-name))
-    (persp-switch p-name)))
+    (unless (persp-with-name-exists-p //dotty-persp)
+      (/load-persp-from-file //dotty-persp))
+    (persp-switch //dotty-persp)))
 
 (defvar //current-dynamic-bindings nil)
-(persist-defvar
- /known-dynamic
- '( "papers" "capture-calc" "eff-coeff" "superf" "idot"
-    "scala3doc"
-    "fos" "fos-coq" "parprog"
-    "wynajem"
-    )
- "Known dynamic perspectives."
- )
+(persist-defvar /known-dynamic '("papers" "capture-calc" "eff-coeff" "superf" "idot"
+                                 "scala3doc"
+                                 "fos" "fos-coq" "parprog"
+                                 "wynajem"
+                                 )
+  "Known dynamic perspectives.")
+(persist-load '/known-dynamic)
 
 (defvar-local bespoke-listemode/local-variable nil
   "Variable being edited in current lister buffer.")
@@ -141,7 +149,6 @@
 
 (defun /switch-to-dynamic (force-pick &optional force-key)
   (interactive "P")
-  (require 'helm) ;; apparently this helps with correctly loading Helm ?!?
   (let* ((k (or force-key
                 (elt (this-command-keys-vector) 0)))
          (entry (alist-get k //current-dynamic-bindings)))
@@ -164,7 +171,7 @@
         (user-error "No perspective picked."))
       )
     (unless (persp-with-name-exists-p entry)
-      (persp-load-state-from-file entry))
+      (/load-persp-from-file entry))
     (persp-switch entry)))
 
 (defun //create-persp-with-home-buffer (name)
@@ -203,6 +210,7 @@
 (advice-add #'kill-buffer :around #'bespoke/trace-kill-buffer)
 
 ;; TODO: hierarchy.el offers a neat way of browsing hierarchies like this one
+;; TODO: or maybe use magit-section?
 (defun bespoke/show-shared-buffers ()
   (interactive)
   (-let [bufs (->> (buffer-list)
@@ -253,7 +261,7 @@
                                 )))
                  )))
     ;; (message "Selected (to %s) following buffers: %s" action selected)
-    (case action
+    (cl-case action
       ('annex (cl-loop for buf in selected
                            do (cl-loop for p in (persp--buffer-in-persps buf)
                                        do (when (not (eq p (get-current-persp)))
@@ -262,6 +270,20 @@
                (cl-loop for buf in selected
                         do (kill-buffer buf)))))
     ))
+
+(defun /buffer-foreign? (project-root buf)
+  (with-current-buffer buf
+    (and (buffer-file-name)
+         (not (s-starts-with? project-root (buffer-file-name))))))
+
+(defun /check-for-foreign-buffers ()
+  (interactive)
+  (if-let (project-root (persp-parameter '/project))
+      (let ((foreign-buffer-num (->> (safe-persp-buffers (get-current-persp))
+                                     (-count ($ (/buffer-foreign? project-root $1))))))
+        (unless (= foreign-buffer-num 0)
+          (message "Hey chief! Current perspective has %s foreign buffers." foreign-buffer-num)))
+    (message "Current perspective is not associated with a project.")))
 
 ;; Local Variables:
 ;; read-symbol-shorthands: (("/" . "my-perspective/"))
