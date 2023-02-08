@@ -44,6 +44,15 @@ This function should only modify configuration layer settings."
      ;; syntax-checking
      ;; version-control
      ;; origami
+
+     ;; This layer seems like it uses a package (`evil-mc') with a lot of issues.
+     ;; Creating new cursors erases all registers (including macros).
+     ;; Some commands apparently might be incompatible.
+     ;; iedit seems to do the same job better?
+     ;; But the freedom to set multiple cursors anywhere might be worth it.
+     ;; -------------------------------------------------------------------------
+     multiple-cursors
+
      helm
      (org :variables
           org-enable-github-support t
@@ -53,6 +62,7 @@ This function should only modify configuration layer settings."
      eww
      bibtex
      pdf
+
 
      (lsp :variables
           lsp-lens-enable nil
@@ -118,7 +128,6 @@ This function should only modify configuration layer settings."
      persist
      general
      yequake
-     edit-server
      )
 
    ;; A list of packages that cannot be updated.
@@ -672,7 +681,15 @@ before packages are loaded."
 
   ;; sometimes the smartparens self-insert hook inexplicably doesn't get inserted
   ;; manually using the package fixes that
-  (use-package smartparens)
+  (use-package smartparens
+    :config
+    (progn
+      ;; disable pairing ' and ` in minibuffer (most often I'm entering Lisp there)
+      (sp-local-pair '(minibuffer-mode minibuffer-inactive-mode) "'" nil :actions nil)
+      (sp-local-pair '(minibuffer-mode minibuffer-inactive-mode) "`" nil :actions nil))
+    )
+
+
   (use-package org-ml) ;; can't use :defer, since org-mode is loaded by default
 	(use-package org-super-agenda
     :config
@@ -735,8 +752,7 @@ indent yanked text (with universal arg don't indent)."
                                  (member major-mode spacemacs-yank-indent-modes)))))
             (when (and enable (equal '(4) prefix))
               (setq args (cons 1 (cdr args))))
-            (prog1
-                (apply yank-func args)
+            (prog1 (apply yank-func args)
               (when (and enable (not (equal '(4) prefix)))
                 (let ((transient-mark-mode nil)
                       (save-undo buffer-undo-list))
@@ -782,6 +798,11 @@ indent yanked text (with universal arg don't indent)."
       (interactive "p")
       (let ((my-lsp//forced t))
         (lsp arg)))
+    )
+
+  (progn ;; latex
+    (cl-pushnew 'latex-mode spacemacs-indent-sensitive-modes)
+    (add-hook 'LaTeX-mode-hook ($ (electric-indent-local-mode 0)))
     )
 
   (progn ;; lsp-latex

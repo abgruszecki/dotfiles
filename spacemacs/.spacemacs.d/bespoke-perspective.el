@@ -105,10 +105,9 @@ To fix this, `my-perspective/load-persp-from-file' temporarily switches to the n
     (persp-switch //dotty-persp)))
 
 (defvar //current-dynamic-bindings nil)
-(persist-defvar /known-dynamic '("papers" "capture-calc" "eff-coeff" "superf" "idot"
-                                 "scala3doc"
+(persist-defvar /known-dynamic '("papers"
+                                 "capture-calc" "eff-coeff" "superf" "cdot"
                                  "fos" "fos-coq" "parprog"
-                                 "wynajem"
                                  )
   "Known dynamic perspectives.")
 (persist-load '/known-dynamic)
