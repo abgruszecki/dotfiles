@@ -76,3 +76,5 @@ function fish_right_prompt
 end
 
 source ~/anaconda3/etc/fish/conf.d/conda.fish
+
+set -q GHCUP_INSTALL_BASE_PREFIX[1]; or set GHCUP_INSTALL_BASE_PREFIX $HOME ; set -gx PATH $HOME/.cabal/bin $PATH /home/gruszecki/.ghcup/bin # ghcup-env

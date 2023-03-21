@@ -1,4 +1,7 @@
 [Desktop Entry]
 Type=Application
 Name=Capslock
-Exec=/home/gruszecki/dotfiles/capslock.sh
+Exec=/home/gruszecki/bin/,f-caps
+StartupNotify=false
+Terminal=true
+X-GNOME-Autostart-enabled=true

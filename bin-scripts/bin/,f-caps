@@ -8,7 +8,7 @@ display = X11.XOpenDisplay(None);
 X11.XkbLockModifiers(display, c_uint(0x0100), c_uint(2), c_uint(0));
 X11.XCloseDisplay(display)
 '
+# NOTE: the call to XkbLockModifiers now causes a SIGSEGV. Don't know why.
 
 xmodmap ~/dotfiles/capslock.d/xmodmaprc
-
 xcape -t 500 -e "Hyper_L=Escape"

@@ -44,13 +44,13 @@ This function should only modify configuration layer settings."
      ;; syntax-checking
      ;; version-control
      ;; origami
+     ;; -------------------------------------------------------------------------
 
      ;; This layer seems like it uses a package (`evil-mc') with a lot of issues.
      ;; Creating new cursors erases all registers (including macros).
      ;; Some commands apparently might be incompatible.
      ;; iedit seems to do the same job better?
      ;; But the freedom to set multiple cursors anywhere might be worth it.
-     ;; -------------------------------------------------------------------------
      multiple-cursors
 
      helm
@@ -686,9 +686,12 @@ before packages are loaded."
     (progn
       ;; disable pairing ' and ` in minibuffer (most often I'm entering Lisp there)
       (sp-local-pair '(minibuffer-mode minibuffer-inactive-mode) "'" nil :actions nil)
-      (sp-local-pair '(minibuffer-mode minibuffer-inactive-mode) "`" nil :actions nil))
-    )
+      (sp-local-pair '(minibuffer-mode minibuffer-inactive-mode) "`" nil :actions nil)
 
+      (sp-with-modes '(tex-mode plain-tex-mode latex-mode LaTeX-mode)
+        (sp-local-pair "$" nil :actions nil)
+        )
+      ))
 
   (use-package org-ml) ;; can't use :defer, since org-mode is loaded by default
 	(use-package org-super-agenda
@@ -716,6 +719,7 @@ before packages are loaded."
   (load "~/.spacemacs.d/bespoke-org-ql")
   (load "~/.spacemacs.d/bespoke-dotty")
   (load "~/.spacemacs.d/bespoke-projects")
+  (load "~/.spacemacs.d/bespoke-latex-mode")
 
   (setq org-roam-v2-ack t)
   (org-roam-db-autosync-enable)
@@ -802,8 +806,9 @@ indent yanked text (with universal arg don't indent)."
 
   (progn ;; latex
     (cl-pushnew 'latex-mode spacemacs-indent-sensitive-modes)
-    (add-hook 'LaTeX-mode-hook ($ (electric-indent-local-mode 0)))
-    )
+    (defun bespoke/inhibit-local-electric-indent ()
+      (setq-local electric-indent-inhibit t))
+    (add-hook 'LaTeX-mode-hook #'bespoke/inhibit-local-electric-indent))
 
   (progn ;; lsp-latex
     (setq lsp-latex-build-executable "latexrun"
@@ -941,7 +946,7 @@ This function is called at the very end of Spacemacs initialization."
  '(evil-want-Y-yank-to-eol nil)
  '(evil-want-change-word-to-end nil)
  '(package-selected-packages
-   '(org-ql lister persist helm-cider clojure-snippets cider-eval-sexp-fu cider sesman parseedn clojure-mode parseclj raku-mode flycheck-raku tree-sitter-langs tree-sitter tsc lsp-latex company-reftex company-auctex auctex-latexmk general smooth-scroll ox-gfm ox-hugo ob-async csv-mode insert-shebang flycheck-bashate fish-mode company-shell edit-server yequake proof-general company-coq company-math math-symbol-lists merlin-eldoc stickyfunc-enhance helm-gtags helm-cscope xcscope ggtags counsel-gtags counsel swiper org-pdftools org-noter-pdftools org-noter org-roam-bibtex dap-mode posframe bui sbt-mode tide typescript-mode kotlin-mode flycheck-kotlin tern org-roam pdf-tools org-journal origami yapfify yaml-mode xterm-color vterm utop tuareg caml terminal-here shell-pop seeing-is-believing rvm ruby-tools ruby-test-mode ruby-refactor ruby-hash-syntax rubocopfmt rubocop rspec-mode robe rjsx-mode rbenv rake pytest pyenv-mode py-isort pippel pipenv pyvenv pip-requirements ocp-indent ob-elixir mvn multi-term minitest meghanada maven-test-mode lsp-python-ms lsp-java live-py-mode importmagic epc ctable concurrent deferred helm-pydoc groovy-mode groovy-imports pcache gradle-mode git-gutter-fringe+ fringe-helper git-gutter+ flycheck-ocaml merlin flycheck-mix flycheck-credo eshell-z eshell-prompt-extras esh-help emojify emoji-cheat-sheet-plus dune cython-mode company-emoji company-anaconda chruby bundler inf-ruby browse-at-remote blacken auto-complete-rst anaconda-mode pythonic alchemist elixir-mode smeargle orgit magit-gitflow magit-popup helm-gitignore gitignore-mode gitconfig-mode gitattributes-mode git-timemachine git-messenger git-link evil-magit git-commit with-editor web-mode tagedit slim-mode scss-mode sass-mode pug-mode less-css-mode helm-css-scss haml-mode emmet-mode ox-reveal web-beautify livid-mode skewer-mode simple-httpd json-mode json-snatcher json-reformat js2-refactor yasnippet multiple-cursors js2-mode js-doc coffee-mode scala-mode mmm-mode markdown-toc markdown-mode gh-md org-projectile org-category-capture org-present org-pomodoro alert log4e gntp org-mime org-download lv htmlize gnuplot racket-mode faceup slime-company company slime ws-butler winum which-key volatile-highlights vi-tilde-fringe uuidgen use-package toc-org spaceline powerline restart-emacs request rainbow-delimiters popwin persp-mode pcre2el paradox spinner org-plus-contrib org-bullets open-junk-file neotree move-text macrostep lorem-ipsum linum-relative link-hint indent-guide hydra hungry-delete hl-todo highlight-parentheses highlight-numbers parent-mode highlight-indentation helm-themes helm-swoop helm-projectile helm-mode-manager helm-make projectile pkg-info epl helm-flx helm-descbinds helm-ag google-translate golden-ratio flx-ido flx fill-column-indicator fancy-battery eyebrowse expand-region exec-path-from-shell evil-visualstar evil-visual-mark-mode evil-unimpaired evil-tutor evil-surround evil-search-highlight-persist highlight evil-numbers evil-nerd-commenter evil-mc evil-matchit evil-lisp-state smartparens evil-indent-plus evil-iedit-state iedit evil-exchange evil-escape evil-ediff evil-args evil-anzu anzu evil goto-chg undo-tree eval-sexp-fu elisp-slime-nav dumb-jump f dash s diminish define-word column-enforce-mode clean-aindent-mode bind-map bind-key auto-highlight-symbol auto-compile packed aggressive-indent adaptive-wrap ace-window ace-link ace-jump-helm-line helm avy helm-core popup async))
+   '(cdlatex org-ql lister persist helm-cider clojure-snippets cider-eval-sexp-fu cider sesman parseedn clojure-mode parseclj raku-mode flycheck-raku tree-sitter-langs tree-sitter tsc lsp-latex company-reftex company-auctex auctex-latexmk general smooth-scroll ox-gfm ox-hugo ob-async csv-mode insert-shebang flycheck-bashate fish-mode company-shell edit-server yequake proof-general company-coq company-math math-symbol-lists merlin-eldoc stickyfunc-enhance helm-gtags helm-cscope xcscope ggtags counsel-gtags counsel swiper org-pdftools org-noter-pdftools org-noter org-roam-bibtex dap-mode posframe bui sbt-mode tide typescript-mode kotlin-mode flycheck-kotlin tern org-roam pdf-tools org-journal origami yapfify yaml-mode xterm-color vterm utop tuareg caml terminal-here shell-pop seeing-is-believing rvm ruby-tools ruby-test-mode ruby-refactor ruby-hash-syntax rubocopfmt rubocop rspec-mode robe rjsx-mode rbenv rake pytest pyenv-mode py-isort pippel pipenv pyvenv pip-requirements ocp-indent ob-elixir mvn multi-term minitest meghanada maven-test-mode lsp-python-ms lsp-java live-py-mode importmagic epc ctable concurrent deferred helm-pydoc groovy-mode groovy-imports pcache gradle-mode git-gutter-fringe+ fringe-helper git-gutter+ flycheck-ocaml merlin flycheck-mix flycheck-credo eshell-z eshell-prompt-extras esh-help emojify emoji-cheat-sheet-plus dune cython-mode company-emoji company-anaconda chruby bundler inf-ruby browse-at-remote blacken auto-complete-rst anaconda-mode pythonic alchemist elixir-mode smeargle orgit magit-gitflow magit-popup helm-gitignore gitignore-mode gitconfig-mode gitattributes-mode git-timemachine git-messenger git-link evil-magit git-commit with-editor web-mode tagedit slim-mode scss-mode sass-mode pug-mode less-css-mode helm-css-scss haml-mode emmet-mode ox-reveal web-beautify livid-mode skewer-mode simple-httpd json-mode json-snatcher json-reformat js2-refactor yasnippet multiple-cursors js2-mode js-doc coffee-mode scala-mode mmm-mode markdown-toc markdown-mode gh-md org-projectile org-category-capture org-present org-pomodoro alert log4e gntp org-mime org-download lv htmlize gnuplot racket-mode faceup slime-company company slime ws-butler winum which-key volatile-highlights vi-tilde-fringe uuidgen use-package toc-org spaceline powerline restart-emacs request rainbow-delimiters popwin persp-mode pcre2el paradox spinner org-plus-contrib org-bullets open-junk-file neotree move-text macrostep lorem-ipsum linum-relative link-hint indent-guide hydra hungry-delete hl-todo highlight-parentheses highlight-numbers parent-mode highlight-indentation helm-themes helm-swoop helm-projectile helm-mode-manager helm-make projectile pkg-info epl helm-flx helm-descbinds helm-ag google-translate golden-ratio flx-ido flx fill-column-indicator fancy-battery eyebrowse expand-region exec-path-from-shell evil-visualstar evil-visual-mark-mode evil-unimpaired evil-tutor evil-surround evil-search-highlight-persist highlight evil-numbers evil-nerd-commenter evil-mc evil-matchit evil-lisp-state smartparens evil-indent-plus evil-iedit-state iedit evil-exchange evil-escape evil-ediff evil-args evil-anzu anzu evil goto-chg undo-tree eval-sexp-fu elisp-slime-nav dumb-jump f dash s diminish define-word column-enforce-mode clean-aindent-mode bind-map bind-key auto-highlight-symbol auto-compile packed aggressive-indent adaptive-wrap ace-window ace-link ace-jump-helm-line helm avy helm-core popup async))
  '(safe-local-variable-values
    '((bespoke/project-class quote dotty)
      (eval bespoke/set-dotty-project-vars)
