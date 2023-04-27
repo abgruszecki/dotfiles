@@ -31,12 +31,15 @@
  :keymaps 'LaTeX-mode-map
  "TAB" #'bsp/cdlatex-jump)
 
-(defun bsp-latex//set-prettify-symbols-alist ()
+;; See https://www.gnu.org/software/emacs/manual/html_node/elisp/Face-Attributes.html
+;; If I could use text properties, then adding an underline to prettified text seems good.
+(defun bsp-latex//configure-prettify-symbols-mode ()
   (dolist (p `(("\\al" . ?α)
                ("\\be" . ?β)
                ("\\ga" . ?γ)
                ("\\de" . ?δ)
                ("\\lam" . ?λ)
+               ("\\tha" . ?θ)
                ("\\ty" . ?τ)
                ("\\tz" . ?σ)
 
@@ -51,14 +54,30 @@
 
                ("\\fa" . ?∀)
                ("\\ex" . ?∃)
+
+               ("\\CCtx" . ?Ξ)
+               ("\\CDtx" . ?Σ)
+               ("\\VCtx" . ?V)
+               ("\\VDtx" . ?W)
+               ("\\SCtx" . ?Δ)
+
+               ("\\Pos" . ?+)
+               ("\\Neg" . ?-)
+               ;; Unfortunately this doesn't seem to work...
+               ;; ("\\Neg" . ,(propertize "-" 'face '(:foreground "green")))
                ))
-    (add-to-list 'prettify-symbols-alist p nil #'equal)
     (assoc-delete-all "--" prettify-symbols-alist)
+    (assoc-delete-all "---" prettify-symbols-alist)
+    (setf (alist-get (car p) prettify-symbols-alist nil nil #'equal)
+          (cdr p))
+    ;; (add-to-list 'prettify-symbols-alist p nil #'equal)
     )
+  ;; TODO: set this only outside evil normal state? There are hooks for this.
+  (setf prettify-symbols-unprettify-at-point 'right-edge)
   )
 
 (add-hook 'LaTeX-mode-hook #'prettify-symbols-mode)
-(add-hook 'LaTeX-mode-hook #'bsp-latex//set-prettify-symbols-alist)
+(add-hook 'LaTeX-mode-hook #'bsp-latex//configure-prettify-symbols-mode)
 
 (defun bsp-latex//filter-tree (tree filter-fn)
   (->> tree

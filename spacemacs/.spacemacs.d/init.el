@@ -51,7 +51,7 @@ This function should only modify configuration layer settings."
      ;; Some commands apparently might be incompatible.
      ;; iedit seems to do the same job better?
      ;; But the freedom to set multiple cursors anywhere might be worth it.
-     multiple-cursors
+     ;; multiple-cursors
 
      helm
      (org :variables
@@ -808,7 +808,9 @@ indent yanked text (with universal arg don't indent)."
     (cl-pushnew 'latex-mode spacemacs-indent-sensitive-modes)
     (defun bespoke/inhibit-local-electric-indent ()
       (setq-local electric-indent-inhibit t))
-    (add-hook 'LaTeX-mode-hook #'bespoke/inhibit-local-electric-indent))
+    (add-hook 'LaTeX-mode-hook #'bespoke/inhibit-local-electric-indent)
+    (remove-hook 'LaTeX-mode-hook #'LaTeX-math-mode)
+    )
 
   (progn ;; lsp-latex
     (setq lsp-latex-build-executable "latexrun"
