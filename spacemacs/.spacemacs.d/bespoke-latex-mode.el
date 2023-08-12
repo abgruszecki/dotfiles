@@ -63,6 +63,8 @@
 
                ("\\Pos" . ?+)
                ("\\Neg" . ?-)
+
+               ("\\Vstore" . ?σ)
                ;; Unfortunately this doesn't seem to work...
                ;; ("\\Neg" . ,(propertize "-" 'face '(:foreground "green")))
                ))

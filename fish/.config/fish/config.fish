@@ -1,5 +1,4 @@
-set EDITOR vim
-export EDITOR
+set -x EDITOR vim
 
 alias g git
 
@@ -7,6 +6,8 @@ alias annihilate "rm -r"
 
 alias l ls
 alias ll "ls -l"
+
+,openai-init
 
 function mkcd -a dir
   mkdir $dir

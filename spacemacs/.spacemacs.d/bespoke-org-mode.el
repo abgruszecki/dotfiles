@@ -219,3 +219,26 @@
 
 (spacemacs/set-leader-keys-for-minor-mode 'org-capture-mode
   "C-," #'bespoke-org/capture-finalize-and-jump)
+
+(defun bsp/go ()
+  (interactive)
+  (let ((dir (file-name-as-directory (concat "~/org/attachments/" (file-name-base (buffer-file-name)) ".d")))
+        (target-id 1))
+    (unless (file-exists-p dir) (mkdir dir))
+    (message dir)
+    (cl-macrolet ((target-name ()
+                    '(concat dir (number-to-string target-id) ".png")))
+
+      (while (file-exists-p (target-name))
+        (cl-incf target-id))
+
+      ;; (message (target-name))
+      (shell-command (format "xclip -selection clipboard -t image/png -o > %s"
+                             (shell-quote-argument (expand-file-name (target-name))))
+
+                     )
+
+      (org-insert-link nil (target-name) nil)
+      (org-display-inline-images)
+
+      )))

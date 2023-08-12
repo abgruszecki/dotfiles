@@ -388,7 +388,7 @@ If USE-STACK, include the parent paths as well."
                (re-search-forward (rx bol (* " ") "#+begin_src") nil t))
         (skip-chars-forward " ")
         (my/lb-append lb (substring-no-properties (buffer-substring (point) (point-at-eol))))))
-    (delete-duplicates (car lb) :test #'string=)))
+    (cl-delete-duplicates (car lb) :test #'string=)))
 
 (defun my-org/insert-code-block ()
   (interactive)
@@ -627,6 +627,8 @@ If USE-STACK, include the parent paths as well."
    (";si" "∩")
    (";>>" "»")
    (";<<" "«")
+   (";oo" "∘")
+   (";oO" "●")
    ))
 
 (bespoke/lambda-mode)
@@ -643,6 +645,7 @@ If USE-STACK, include the parent paths as well."
         (remove-hook sym-current-mode-hooks #'tab-line-mode)
       (add-hook sym-current-mode-hooks #'tab-line-mode))
     (-each (buffer-list) ($ (with-current-buffer $1
-                              (tab-line-mode 'toggle))))
+                              (when (eq major-mode current-mode)
+                                (tab-line-mode 'toggle)))))
     )
   )

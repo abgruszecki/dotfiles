@@ -27,7 +27,7 @@ This function should only modify configuration layer settings."
    dotspacemacs-ask-for-lazy-installation t
 
    ;; List of additional paths where to look for configuration layers.
-   ;; Paths must have a trailing slash (i.e. `~/.mycontribs/')
+   ;; Paths must have a trailing slash (i.e. "~/.mycontribs/")
    dotspacemacs-configuration-layer-path '()
 
    ;; List of configuration layers to load.
@@ -62,7 +62,6 @@ This function should only modify configuration layer settings."
      eww
      bibtex
      pdf
-
 
      (lsp :variables
           lsp-lens-enable nil
@@ -709,6 +708,9 @@ before packages are loaded."
 
   (add-hook 'xref-backend-functions #'dumb-jump-xref-activate)
 
+  ;; configure `compile' to stop first error
+  (setq compilation-scroll-output 'first-error)
+
   ;; NOTE: this does not seem necessary,
   ;; since Emacs automatically recompiles .el files as they are saved
   ;; (byte-recompile-directory "~/.spacemacs.d/" 0)
@@ -771,6 +773,15 @@ indent yanked text (with universal arg don't indent)."
                 :override
                 #'my-spacemacs//yank-ident-region))
 
+  (progn ;; popwin
+    (setf (plist-get (alist-get 'compilation-mode popwin:special-display-config) :height)
+          0.15)
+    )
+
+  (progn ;; compile
+    (setq compilation-skip-threshold 2) ;; skip over everything but errors
+    )
+
   (progn ;; proof-general
     (defun my-pg//make-undo-great-again ()
       (setq-local evil-undo-function #'pg-protected-undo))
@@ -820,7 +831,7 @@ indent yanked text (with universal arg don't indent)."
     )
 
   (defun bespoke/disable-latex-checkers ()
-    (setq flycheck-disabled-checkers (list* 'tex-chktex 'tex-lacheck flycheck-disabled-checkers)))
+    (setq flycheck-disabled-checkers (cl-list* 'tex-chktex 'tex-lacheck flycheck-disabled-checkers)))
   (progn
     (add-hook 'LaTeX-mode-hook #'bespoke/disable-latex-checkers))
 
