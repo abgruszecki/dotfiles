@@ -72,6 +72,8 @@ This function should only modify configuration layer settings."
      (shell :variables
             shell-default-position 'bottom)
 
+     ;; agda
+
      shell-scripts
      emacs-lisp
      common-lisp
@@ -119,12 +121,15 @@ This function should only modify configuration layer settings."
    dotspacemacs-additional-packages
    '((om :location local)
 		 (dollar :location local)
+     chatgpt
+     eros
      lister
      org-noter
      org-noter-pdftools
      org-ql ov peg transient ts ;; org-ql and dependencies
 		 org-super-agenda
      persist
+     sqlite3
      general
      yequake
      )
@@ -621,6 +626,12 @@ configuration.
 It is mostly for variables that should be set before packages are loaded.
 If you are unsure, try setting them in `dotspacemacs/user-config' first."
 
+  ;; Should I just require some packages here, so that they are always available?
+  ;; (require 'dollar)
+
+  (add-to-list 'package-archives '("jcs-elpa" . "https://jcs-emacs.github.io/jcs-elpa/packages/") t)
+  (add-to-list 'package-archive-priorities '("jcs-elpa" . 0) t)
+
   ;; Part of the fix for https://github.com/Somelauw/evil-org-mode/issues/93
   (fset 'evil-redirect-digit-argument 'ignore) ;; before evil-org loaded
 
@@ -629,7 +640,21 @@ If you are unsure, try setting them in `dotspacemacs/user-config' first."
     :post-config
     (add-to-list 'evil-digit-bound-motions 'evil-org-beginning-of-line)
     (evil-define-key 'motion 'evil-org-mode
-      (kbd "0") 'evil-org-beginning-of-line))
+      (kbd "0") 'evil-org-beginning-of-line)
+
+    ;; These don't unbind the key properly.
+    ;; The bindings are preceded by the mode.
+    (define-key evil-org-mode-map (kbd "C-<return>") nil)
+    (define-key evil-org-mode-map (kbd "C-S-<return>") nil)
+    ;; This does properly unbind the keys.
+    (evil-define-key '(normal insert) evil-org-mode-map
+      (kbd "C-<return>") #'nil
+      (kbd "C-M-<return>") #'nil)
+
+    (evil-define-key '(normal insert) org-mode-map
+      (kbd "C-<return>") #'org-meta-return
+      (kbd "C-M-<return>") #'evil-org-org-insert-heading-respect-content-below)
+    )
 
   (spacemacs|use-package-add-hook racket-mode
     :post-config
@@ -652,6 +677,12 @@ If you are unsure, try setting them in `dotspacemacs/user-config' first."
     (push 'coq-mode undo-tree-incompatible-major-modes)
     )
 
+  (spacemacs|use-package-add-hook tex
+    :post-config
+    (evil-declare-motion #'LaTeX-find-matching-begin)
+    (evil-declare-motion #'LaTeX-find-matching-end)
+    )
+
   ;; (setq debug-on-message ".*libgccjit\\.so.*")
   ;; (setq byte-compile-debug t)
   )
@@ -671,7 +702,10 @@ configuration.
 Put your configuration code here, except for variables that should be set
 before packages are loaded."
 
-  (use-package dollar)
+  (use-package eros
+    :demand t
+    :config
+    (eros-mode 1))
   (use-package persist
     :config
     (setq persist--directory-location "~/.spacemacs.d/persist"))
@@ -708,6 +742,8 @@ before packages are loaded."
 
   (add-hook 'xref-backend-functions #'dumb-jump-xref-activate)
 
+  (use-package general)
+
   ;; configure `compile' to stop first error
   (setq compilation-scroll-output 'first-error)
 
@@ -727,6 +763,9 @@ before packages are loaded."
   (org-roam-db-autosync-enable)
 
   ;;; configuration
+
+  (load-file (let ((coding-system-for-read 'utf-8))
+               (shell-command-to-string "agda-mode locate")))
 
   ;; (setq TeX-view-program-list '(("Evince" "evince --page-index=%(outpage) %o")))
   (spacemacs|use-package-add-hook auctex
@@ -771,15 +810,71 @@ indent yanked text (with universal arg don't indent)."
 
     (advice-add #'spacemacs//yank-indent-region
                 :override
-                #'my-spacemacs//yank-ident-region))
+                #'my-spacemacs//yank-ident-region)
+
+    ;; redefine `spacemacs/zoom-frm-in'
+    ;; add support for setting the zoom degree with the prefix argument
+    (defun spacemacs/zoom-frm-in (prefix)
+      "zoom in frame, but keep the same pixel size"
+      (interactive "p")
+      (let ((frame-zoom-font-difference
+             (if (> prefix 0) prefix frame-zoom-font-difference)))
+        (spacemacs//zoom-frm-do 1)
+        (spacemacs//zoom-frm-powerline-reset)))
+
+    )
+
+  (progn ;; ace-window
+    (defun bsp/ace-window-always ()
+      "Like `ace-window', but always selects a window."
+      (interactive)
+      (let ((aw-dispatch-always t))
+        (call-interactively #'ace-window)))
+    (spacemacs/set-leader-keys "wW" #'bsp/ace-window-always)
+    )
+
+  (progn ;; compile
+    (setq compilation-skip-threshold 2) ;; skip over everything but errors
+    )
+
+  (progn ;; dired
+    (setq dired-auto-revert-buffer t))
 
   (progn ;; popwin
     (setf (plist-get (alist-get 'compilation-mode popwin:special-display-config) :height)
           0.15)
     )
 
-  (progn ;; compile
-    (setq compilation-skip-threshold 2) ;; skip over everything but errors
+  (progn ;; chatgpt
+    (setq openai-key (with-temp-buffer (insert-file-contents "~/.openai")
+                                       (s-trim (buffer-string)))))
+
+  (progn ;; evil
+    (setq evilnc-comment-text-object ";")
+    (define-key evil-inner-text-objects-map evilnc-comment-text-object #'evilnc-inner-commenter)
+    (define-key evil-outer-text-objects-map evilnc-comment-text-object #'evilnc-outer-commenter)
+
+    (evil-define-key 'normal 'global
+      (kbd "M-;") #'evilnc-comment-operator)
+
+    (evil-define-key 'visual 'global
+      "x" (lambda () (interactive)
+            (let ((expand-region-contract-fast-key "X"))
+              (er/expand-region 1)))
+      )
+    )
+
+  (progn ;; evil-tex
+    (dolist (fn '(evil-tex-go-back-section
+                  evil-tex-go-forward-section
+                  LaTeX-find-matching-begin
+                  LaTeX-find-matching-end
+                  ))
+      (evil-set-command-properties fn :jump t))
+
+    (evil-define-key 'motion LaTeX-mode-map
+      (kbd "[ M-[") #'LaTeX-find-matching-begin
+      (kbd "] M-]") #'LaTeX-find-matching-end)
     )
 
   (progn ;; proof-general
@@ -821,6 +916,21 @@ indent yanked text (with universal arg don't indent)."
       (setq-local electric-indent-inhibit t))
     (add-hook 'LaTeX-mode-hook #'bespoke/inhibit-local-electric-indent)
     (remove-hook 'LaTeX-mode-hook #'LaTeX-math-mode)
+
+    ;; TODO: move only to a line that starts with \begin or \end
+    ;; TODO: allow jumping to the next occurence (i.e. drop the current matching pair, find the next one)
+    ;; TODO: jump to the other occurence being edited if it's off-screen, then come back to origin
+    (defun bsp/wip-evil-iedit-latex-env ()
+      (interactive)
+      (evil-iedit-state/iedit-mode 1)
+      (save-excursion
+        (if (s-contains-p "\\begin" (thing-at-point 'line))
+            (iedit-expand-down-to-occurrence)
+          (iedit-expand-up-to-occurrence))))
+
+    (general-define-key
+     :keymaps 'LaTeX-mode-map
+     "H-'" #'bsp/wip-evil-iedit-latex-env)
     )
 
   (progn ;; lsp-latex
@@ -850,17 +960,16 @@ indent yanked text (with universal arg don't indent)."
       (comint-interrupt-subjob)))
 
   ;;; keybindings
-  (use-package general)
 
   (defun bespoke-hack/test ()
     (interactive)
     (push (cons 'no-record ?\s) unread-command-events))
 
   (define-key key-translation-map
-    (kbd "H-,") (kbd dotspacemacs-major-mode-emacs-leader-key))
+    (kbd "M-,") (kbd dotspacemacs-major-mode-emacs-leader-key))
 
-  (define-key key-translation-map
-    (kbd "H-SPC") (kbd dotspacemacs-emacs-leader-key))
+  ;; (define-key key-translation-map
+  ;;   (kbd "H-SPC") (kbd dotspacemacs-emacs-leader-key))
 
   ;; (general-define-key
   ;;  :prefix "H-SPC"
@@ -868,6 +977,9 @@ indent yanked text (with universal arg don't indent)."
   ;;  "TAB" #'eyebrowse-last-window-config
   ;;  "ESC" #'yequake-retoggle
   ;;  "<f1>" #'my-eyebrowse/toggle-magit)
+
+  ;; (general-define-key
+  ;;  "")
 
   (general-define-key
    "H-0" #'eyebrowse-switch-to-window-config-0
@@ -901,8 +1013,15 @@ indent yanked text (with universal arg don't indent)."
    "l" #'my-lsp)
 
   (general-define-key
+   :prefix "H-\\" ;; IDEA: the "hyper insert" key
+   "<tab>" #'helm-company)
+
+  (general-define-key
    :keymaps 'emacs-lisp-mode-map
    "H-." #'lisp-state-toggle-lisp-state)
+
+  (evil-define-key 'motion 'global
+    (kbd "<C-tab>") nil)
 
   (evil-define-key 'normal 'global
     "[-" 'my/backwards-jump-to-outdent
@@ -959,7 +1078,7 @@ This function is called at the very end of Spacemacs initialization."
  '(evil-want-Y-yank-to-eol nil)
  '(evil-want-change-word-to-end nil)
  '(package-selected-packages
-   '(cdlatex org-ql lister persist helm-cider clojure-snippets cider-eval-sexp-fu cider sesman parseedn clojure-mode parseclj raku-mode flycheck-raku tree-sitter-langs tree-sitter tsc lsp-latex company-reftex company-auctex auctex-latexmk general smooth-scroll ox-gfm ox-hugo ob-async csv-mode insert-shebang flycheck-bashate fish-mode company-shell edit-server yequake proof-general company-coq company-math math-symbol-lists merlin-eldoc stickyfunc-enhance helm-gtags helm-cscope xcscope ggtags counsel-gtags counsel swiper org-pdftools org-noter-pdftools org-noter org-roam-bibtex dap-mode posframe bui sbt-mode tide typescript-mode kotlin-mode flycheck-kotlin tern org-roam pdf-tools org-journal origami yapfify yaml-mode xterm-color vterm utop tuareg caml terminal-here shell-pop seeing-is-believing rvm ruby-tools ruby-test-mode ruby-refactor ruby-hash-syntax rubocopfmt rubocop rspec-mode robe rjsx-mode rbenv rake pytest pyenv-mode py-isort pippel pipenv pyvenv pip-requirements ocp-indent ob-elixir mvn multi-term minitest meghanada maven-test-mode lsp-python-ms lsp-java live-py-mode importmagic epc ctable concurrent deferred helm-pydoc groovy-mode groovy-imports pcache gradle-mode git-gutter-fringe+ fringe-helper git-gutter+ flycheck-ocaml merlin flycheck-mix flycheck-credo eshell-z eshell-prompt-extras esh-help emojify emoji-cheat-sheet-plus dune cython-mode company-emoji company-anaconda chruby bundler inf-ruby browse-at-remote blacken auto-complete-rst anaconda-mode pythonic alchemist elixir-mode smeargle orgit magit-gitflow magit-popup helm-gitignore gitignore-mode gitconfig-mode gitattributes-mode git-timemachine git-messenger git-link evil-magit git-commit with-editor web-mode tagedit slim-mode scss-mode sass-mode pug-mode less-css-mode helm-css-scss haml-mode emmet-mode ox-reveal web-beautify livid-mode skewer-mode simple-httpd json-mode json-snatcher json-reformat js2-refactor yasnippet multiple-cursors js2-mode js-doc coffee-mode scala-mode mmm-mode markdown-toc markdown-mode gh-md org-projectile org-category-capture org-present org-pomodoro alert log4e gntp org-mime org-download lv htmlize gnuplot racket-mode faceup slime-company company slime ws-butler winum which-key volatile-highlights vi-tilde-fringe uuidgen use-package toc-org spaceline powerline restart-emacs request rainbow-delimiters popwin persp-mode pcre2el paradox spinner org-plus-contrib org-bullets open-junk-file neotree move-text macrostep lorem-ipsum linum-relative link-hint indent-guide hydra hungry-delete hl-todo highlight-parentheses highlight-numbers parent-mode highlight-indentation helm-themes helm-swoop helm-projectile helm-mode-manager helm-make projectile pkg-info epl helm-flx helm-descbinds helm-ag google-translate golden-ratio flx-ido flx fill-column-indicator fancy-battery eyebrowse expand-region exec-path-from-shell evil-visualstar evil-visual-mark-mode evil-unimpaired evil-tutor evil-surround evil-search-highlight-persist highlight evil-numbers evil-nerd-commenter evil-mc evil-matchit evil-lisp-state smartparens evil-indent-plus evil-iedit-state iedit evil-exchange evil-escape evil-ediff evil-args evil-anzu anzu evil goto-chg undo-tree eval-sexp-fu elisp-slime-nav dumb-jump f dash s diminish define-word column-enforce-mode clean-aindent-mode bind-map bind-key auto-highlight-symbol auto-compile packed aggressive-indent adaptive-wrap ace-window ace-link ace-jump-helm-line helm avy helm-core popup async))
+   '(dogears eros chatgpt cdlatex org-ql lister persist helm-cider clojure-snippets cider-eval-sexp-fu cider sesman parseedn clojure-mode parseclj raku-mode flycheck-raku tree-sitter-langs tree-sitter tsc lsp-latex company-reftex company-auctex auctex-latexmk general smooth-scroll ox-gfm ox-hugo ob-async csv-mode insert-shebang flycheck-bashate fish-mode company-shell edit-server yequake proof-general company-coq company-math math-symbol-lists merlin-eldoc stickyfunc-enhance helm-gtags helm-cscope xcscope ggtags counsel-gtags counsel swiper org-pdftools org-noter-pdftools org-noter org-roam-bibtex dap-mode posframe bui sbt-mode tide typescript-mode kotlin-mode flycheck-kotlin tern org-roam pdf-tools org-journal origami yapfify yaml-mode xterm-color vterm utop tuareg caml terminal-here shell-pop seeing-is-believing rvm ruby-tools ruby-test-mode ruby-refactor ruby-hash-syntax rubocopfmt rubocop rspec-mode robe rjsx-mode rbenv rake pytest pyenv-mode py-isort pippel pipenv pyvenv pip-requirements ocp-indent ob-elixir mvn multi-term minitest meghanada maven-test-mode lsp-python-ms lsp-java live-py-mode importmagic epc ctable concurrent deferred helm-pydoc groovy-mode groovy-imports pcache gradle-mode git-gutter-fringe+ fringe-helper git-gutter+ flycheck-ocaml merlin flycheck-mix flycheck-credo eshell-z eshell-prompt-extras esh-help emojify emoji-cheat-sheet-plus dune cython-mode company-emoji company-anaconda chruby bundler inf-ruby browse-at-remote blacken auto-complete-rst anaconda-mode pythonic alchemist elixir-mode smeargle orgit magit-gitflow magit-popup helm-gitignore gitignore-mode gitconfig-mode gitattributes-mode git-timemachine git-messenger git-link evil-magit git-commit with-editor web-mode tagedit slim-mode scss-mode sass-mode pug-mode less-css-mode helm-css-scss haml-mode emmet-mode ox-reveal web-beautify livid-mode skewer-mode simple-httpd json-mode json-snatcher json-reformat js2-refactor yasnippet multiple-cursors js2-mode js-doc coffee-mode scala-mode mmm-mode markdown-toc markdown-mode gh-md org-projectile org-category-capture org-present org-pomodoro alert log4e gntp org-mime org-download lv htmlize gnuplot racket-mode faceup slime-company company slime ws-butler winum which-key volatile-highlights vi-tilde-fringe uuidgen use-package toc-org spaceline powerline restart-emacs request rainbow-delimiters popwin persp-mode pcre2el paradox spinner org-plus-contrib org-bullets open-junk-file neotree move-text macrostep lorem-ipsum linum-relative link-hint indent-guide hydra hungry-delete hl-todo highlight-parentheses highlight-numbers parent-mode highlight-indentation helm-themes helm-swoop helm-projectile helm-mode-manager helm-make projectile pkg-info epl helm-flx helm-descbinds helm-ag google-translate golden-ratio flx-ido flx fill-column-indicator fancy-battery eyebrowse expand-region exec-path-from-shell evil-visualstar evil-visual-mark-mode evil-unimpaired evil-tutor evil-surround evil-search-highlight-persist highlight evil-numbers evil-nerd-commenter evil-mc evil-matchit evil-lisp-state smartparens evil-indent-plus evil-iedit-state iedit evil-exchange evil-escape evil-ediff evil-args evil-anzu anzu evil goto-chg undo-tree eval-sexp-fu elisp-slime-nav dumb-jump f dash s diminish define-word column-enforce-mode clean-aindent-mode bind-map bind-key auto-highlight-symbol auto-compile packed aggressive-indent adaptive-wrap ace-window ace-link ace-jump-helm-line helm avy helm-core popup async))
  '(safe-local-variable-values
    '((bespoke/project-class quote dotty)
      (eval bespoke/set-dotty-project-vars)

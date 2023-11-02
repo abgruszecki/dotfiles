@@ -12,14 +12,15 @@
 (add-to-list 'persp-filter-save-buffers-functions
               #'(lambda (b)
                   (with-current-buffer b
-                    (derived-mode-p 'magit-mode))))
+                    (or (derived-mode-p 'magit-mode)
+                        (derived-mode-p 'compilation-mode)))))
 
 (defun /load-persp-from-file (fname)
   "`persp-load-state-from-file' adds buffers to the current perspective, which is not something I want.
 To fix this, `my-perspective/load-persp-from-file' temporarily switches to the nil perspective while loading a perspective from a file."
   (-let [saved-current-persp (get-current-persp)]
     (persp-switch persp-nil-name)
-    (persp-load-state-from-file fname)
+    (persp-load-state-from-file fname *persp-hash* ".*" t)
     (persp-switch (safe-persp-name saved-current-persp))))
 
 (defvar //loaded-all nil)
@@ -151,7 +152,10 @@ To fix this, `my-perspective/load-persp-from-file' temporarily switches to the n
   (let* ((k (or force-key
                 (elt (this-command-keys-vector) 0)))
          (entry (alist-get k //current-dynamic-bindings)))
-    (when (or force-pick (not entry))
+    (when (or force-pick
+              (not entry)
+              (not (persp-with-name-exists-p entry))
+              )
       (-if-let (picked (helm :sources
                              `(,(helm-build-sync-source "Perspective name"
                                   :candidates /known-dynamic)
@@ -173,19 +177,42 @@ To fix this, `my-perspective/load-persp-from-file' temporarily switches to the n
       (/load-persp-from-file entry))
     (persp-switch entry)))
 
+(defun /kill-dynamic (&optional name)
+  (interactive)
+  (unless name
+    (setf name (helm :sources
+                     `(,(helm-build-sync-source "Perspective to kill"
+                          :candidates /known-dynamic)))))
+  (unless name (user-error "No perspective picked."))
+  (persp-kill (list name))
+  (setf /known-dynamic (remove name /known-dynamic)))
+
 (defun //create-persp-with-home-buffer (name)
   (add-to-list '/known-dynamic name nil #'string=)
-  (spacemacs//create-persp-with-home-buffer name)
+  (spacemacs||switch-layout name
+    :init (progn (spacemacs/home)
+                 (set-persp-parameter 'persp-file (concat (file-name-as-directory spacemacs-layouts-directory)
+                                                          name))))
   name)
 
 (defun //create-persp-with-current-project-buffers (name)
   (add-to-list '/known-dynamic name nil #'string=)
-  (spacemacs//create-persp-with-current-project-buffers name)
+  (if-let ((project (projectile-project-p)))
+      (spacemacs||switch-layout name
+        :init
+        (progn (persp-add-buffer (projectile-project-buffers project)
+                                 (persp-get-by-name name) nil nil)
+               (set-persp-parameter 'persp-file (concat (file-name-as-directory spacemacs-layouts-directory)
+                                                        name))
+               ))
+    (message "Current buffer does not belong to a project"))
   name)
 
 (defun //persp-copy (name)
   (add-to-list '/known-dynamic name nil #'string=)
   (persp-copy name)
+  (set-persp-parameter 'persp-file (concat (file-name-as-directory spacemacs-layouts-directory)
+                                           name))
   name)
 
 (defun bespoke/trace-persp-add (oldfun buf persp)

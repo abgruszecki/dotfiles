@@ -1,0 +1,215 @@
+;;; $DOOMDIR/config.el -*- lexical-binding: t; -*-
+
+;; Place your private configuration here! Remember, you do not need to run 'doom
+;; sync' after modifying this file!
+
+(setq doom-leader-alt-key "M-m"
+      doom-localleader-key ","
+      doom-localleader-alt-key "M-,")
+
+(defun bsp/dwim-clear-screen (&optional arg)
+  (interactive "P")
+  (evil-ex-nohighlight)
+  (unless (eq arg 0)
+    (recenter-top-bottom arg)))
+
+;; Some functionality uses this to identify you, e.g. GPG configuration, email
+;; clients, file templates and snippets.
+(setq user-full-name "John Doe"
+      user-mail-address "john@doe.com")
+
+;; Doom exposes five (optional) variables for controlling fonts in Doom. Here
+;; are the three important ones:
+;;
+;; + `doom-font'
+;; + `doom-variable-pitch-font'
+;; + `doom-big-font' -- used for `doom-big-font-mode'; use this for
+;;   presentations or streaming.
+;;
+;; They all accept either a font-spec, font string ("Input Mono-12"), or xlfd
+;; font string. You generally only need these two:
+;; (setq doom-font (font-spec :family "monospace" :size 12 :weight 'semi-light)
+;;       doom-variable-pitch-font (font-spec :family "sans" :size 13))
+;; (setq doom-font '("FantasqueSansMono Nerd Font"
+;;                                :size 12.0
+;;                                :weight normal
+;;                                :width normal))
+;; (setq doom-variable-pitch-font doom-font)
+
+(setq doom-font (font-spec :font "FantasqueSansMono Nerd Font"
+                           :size 12.0
+                           ;; :spacing ?d
+                           :weight 'normal
+                           :width 'normal))
+;; (setq doom-symbol-font "Linux Libertine Display O")
+(setq doom-symbol-font "Julia Mono")
+
+;; There are two ways to load a theme. Both assume the theme is installed and
+;; available. You can either set `doom-theme' or manually load a theme with the
+;; `load-theme' function. This is the default:
+(setq doom-theme 'doom-one)
+
+;; If you use `org' and don't want your org files in the default location below,
+;; change `org-directory'. It must be set before org loads!
+(setq org-directory "~/org/")
+
+;; This determines the style of line numbers in effect. If set to `nil', line
+;; numbers are disabled. For relative line numbers, set this to `relative'.
+(setq display-line-numbers-type 'relative)
+
+;; Here are some additional functions/macros that could help you configure Doom:
+;;
+;; - `load!' for loading external *.el files relative to this one
+;; - `use-package!' for configuring packages
+;; - `after!' for running code after a package has loaded
+;; - `add-load-path!' for adding directories to the `load-path', relative to
+;;   this file. Emacs searches the `load-path' when you load packages with
+;;   `require' or `use-package'.
+;; - `map!' for binding new keys
+;;
+;; To get information about any of these functions/macros, move the cursor over
+;; the highlighted symbol at press 'K' (non-evil users must press 'C-c c k').
+;; This will open documentation for it, including demos of how they are used.
+;;
+;; You can also try 'gd' (or 'C-c c d') to jump to their definition and see how
+;; they are implemented.
+
+
+;; Emacs packages
+
+(setq! compilation-skip-threshold 2
+       compilation-scroll-output 'first-error)
+
+(defun ~other-window (count &optional all-frames interactive)
+  (interactive "p\ni\np")
+  (other-window count all-frames interactive))
+
+;; (map! :leader
+;;       "w <tab>" #'~other-window)
+
+(map! :n "C-." nil
+      "C-SPC" nil
+      "C-." #'embark-act
+      "C-," #'embark-dwim
+      "M-=" #'universal-argument
+      (:map embark-general-map
+       "C-SPC" #'embark-select
+       "C-S-SPC" #'mark ;; why would this be bound to C-SPC by default???
+       ))
+
+(map! :prefix "H-`"
+      "<tab>" #'~other-window
+      "H-<tab>" #'~other-window
+ )
+
+(map! ; "C-<tab>" alternate centaur tab
+      "C-`" #'~other-window
+      "C-<escape>" #'+popup/toggle)
+
+(map! "M-1" nil
+      "M-2" nil
+      "M-3" nil
+      "M-4" nil
+      "M-5" nil
+      "M-6" nil
+      "M-7" nil
+      "M-8" nil
+
+      "C-<f1>" #'+workspace/switch-to-0
+      "C-<f2>" #'+workspace/switch-to-1
+      "C-<f3>" #'+workspace/switch-to-2
+      "C-<f4>" #'+workspace/switch-to-3
+      "C-<f5>" #'+workspace/switch-to-4
+      "C-<f6>" #'+workspace/switch-to-5
+      "C-<f7>" #'+workspace/switch-to-6
+      "C-<f8>" #'+workspace/switch-to-7
+
+      (:prefix "H-`"
+               "<f1>" #'+workspace/switch-to-0
+               "<f2>" #'+workspace/switch-to-1
+               "<f3>" #'+workspace/switch-to-2
+               "<f4>" #'+workspace/switch-to-3
+               "<f5>" #'+workspace/switch-to-4
+               "<f6>" #'+workspace/switch-to-5
+               "<f7>" #'+workspace/switch-to-6
+               "<f8>" #'+workspace/switch-to-7
+               )
+      )
+
+(setq! pop-up-windows nil)
+
+;; Doom packages
+(setq! +evil-want-o/O-to-continue-comments nil)
+
+(load! "+window-select")
+(load! "+tex")
+(setq! +latex-indent-item-continuation-offset 'auto
+       TeX-electric-sub-and-superscript nil
+       )
+
+(after! centaur-tabs
+  (setq! centaur-tabs-adjust-buffer-order 'left)
+  (pushnew! centaur-tabs-excluded-prefixes "*doom" "*compilation"))
+
+(map! :textobj "B" #'evil-inner-curly #'evil-a-curly
+      :textobj "C-S-B" #'evil-textobj-anyblock-inner-block #'evil-textobj-anyblock-a-block
+ )
+
+;; tame evil-snipe
+(map! (:map evil-snipe-local-mode-map
+       :nv "s" nil
+       :nv "S" nil
+       ;; :v "s" nil
+       ;; :v "S" nil
+       :nvo "C-s" #'evil-snipe-s
+       :nvo "C-S-s" #'evil-snipe-S)
+      (:map evil-surround-mode-map
+       :v "s" #'evil-surround-region
+       :v "S" #'evil-Surround-region)
+      :n "s" #'evil-substitute
+      :n "S" #'evil-change-whole-line
+      )
+
+;; My packages
+
+(use-package! evil-lisp-state)
+(evil-lisp-state-leader "H-,")
+
+;; (use-package! emacsql)
+
+(use-package! org-roam
+  :after org
+  ;; :init (progn (setq org-roam-v2-ack t))
+  :commands (org-roam-node-find)
+  :config (progn
+            (setq org-roam-directory "~/org/roam"
+                  org-roam-db-location "~/.cache/org-roam/org-roam.db")
+
+            (org-roam-db-autosync-enable)
+            )
+  )
+
+(use-package! org-web-tools
+  :after org)
+
+;; text-obj-anyblock sometimes still does crazy things
+;; (setq evil-textobj-anyblock-blocks
+;;         '(("(" . ")")
+;;           ("{" . "}")
+;;           ("\\[" . "\\]")))
+
+;; NOTE Experiments.
+;; (load! "+exp/override-doom-leaders")
+
+(map! "<f2>" #'org-roam-node-find
+      "<f3>" #'+make/run
+      "<f4>" #'+make/run-last
+      )
+
+(map! (:localleader
+       :map (emacs-lisp-mode-map lisp-mode-map)
+       "," #'evil-lisp-state)
+      "C-l" #'evil-ex-nohighlight
+      "C-S-l" #'recenter-top-bottom
+      :nv "M-;" #'evilnc-comment-operator
+      )

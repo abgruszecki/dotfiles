@@ -1,2 +1,10 @@
 #!/usr/bin/env bash
-emacsclient -a '' -c "$@"
+# function spawn {
+#     if test -t 1; then
+#         "$@"
+#     else
+#         gnome-terminal -- "$@"
+#     fi
+# }
+# emacsclient -a false -e t || spawn emacs --daemon
+emacsclient -c "$@"

@@ -32,8 +32,8 @@ preserve() {
 
 ### START
 
-preserve ~/.emacs.d/private/bespoke-scala-mode/local/scala-mode
-preserve ~/.emacs.d/private/
+preserve ~/.config/spacemacs/private/bespoke-scala-mode/local/scala-mode
+preserve ~/.config/spacemacs/private/
 
 # preserve dotfiles last as they contain the self-preservation script
 preserve ~/dotfiles/

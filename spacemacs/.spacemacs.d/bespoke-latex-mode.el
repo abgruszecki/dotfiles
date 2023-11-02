@@ -27,9 +27,8 @@
               ;; stop after closing bracket, unless ^_[{( follow
               (throw 'stop t))))))))
 
-(general-define-key
- :keymaps 'LaTeX-mode-map
- "TAB" #'bsp/cdlatex-jump)
+(evil-define-key 'motion LaTeX-mode-map
+  (kbd "TAB") #'bsp/cdlatex-jump)
 
 ;; See https://www.gnu.org/software/emacs/manual/html_node/elisp/Face-Attributes.html
 ;; If I could use text properties, then adding an underline to prettified text seems good.
@@ -65,6 +64,8 @@
                ("\\Neg" . ?-)
 
                ("\\Vstore" . ?σ)
+               ("\\Otypstore" . 8764)
+               ("\\Otypbind" . 8764)
                ;; Unfortunately this doesn't seem to work...
                ;; ("\\Neg" . ,(propertize "-" 'face '(:foreground "green")))
                ))
@@ -78,8 +79,14 @@
   (setf prettify-symbols-unprettify-at-point 'right-edge)
   )
 
+(defun bsp-latex//configure ()
+  (make-local-variable 'comment-empty-lines)
+  (setf comment-empty-lines t)
+  )
+
 (add-hook 'LaTeX-mode-hook #'prettify-symbols-mode)
 (add-hook 'LaTeX-mode-hook #'bsp-latex//configure-prettify-symbols-mode)
+(add-hook 'LateX-mode-hook #'bsp-latex//configure)
 
 (defun bsp-latex//filter-tree (tree filter-fn)
   (->> tree

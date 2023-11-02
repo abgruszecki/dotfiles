@@ -214,6 +214,41 @@ If USE-STACK, include the parent paths as well."
   (interactive)
   (mapc #'kill-buffer (magit-mode-get-buffers)))
 
+(defun my-eyebrowse/toggle-magit ()
+  (interactive)
+  (if (eql -1 (eyebrowse--get 'current-slot))
+      (eyebrowse-last-window-config)
+    (let ((root (projectile-project-root))
+          (init-needed? (not (eyebrowse--window-config-present-p -1))))
+      (eyebrowse-switch-to-window-config -1)
+      (when (and init-needed? root)
+        (when (purpose-window-purpose-dedicated-p)
+          (purpose-set-window-purpose-dedicated-p (selected-window) nil))
+        (dired root)))))
+
+(defun my-eyebrowse/reset-magit (root)
+  (unless (eql -1 (eyebrowse--get 'current-slot))
+    (user-error "incorrect workspace for this function!"))
+  (dired root)
+  (delete-other-windows))
+
+(defun my-magit/display-buffer-function (buffer)
+  (let ((root (projectile-project-root)))
+    (when (eq 'magit-status-mode (buffer-local-value 'major-mode buffer))
+      (when (not (eql -1 (eyebrowse--get 'current-slot)))
+        (my-eyebrowse/toggle-magit))
+      (my-eyebrowse/reset-magit root))
+    (magit-display-buffer-traditional buffer)))
+
+(defun my-magit/bury-buffer-function (&optional kill-buffer)
+  (let ((restore-eyebrowse (eq 'magit-status-mode major-mode)))
+    (quit-window kill-buffer (selected-window))
+    (when restore-eyebrowse
+      (eyebrowse-last-window-config))))
+
+(setq magit-display-buffer-function #'my-magit/display-buffer-function
+      magit-bury-buffer-function #'my-magit/bury-buffer-function)
+
 
 ;;; org-mode
 
@@ -490,49 +525,15 @@ If USE-STACK, include the parent paths as well."
                               (projectile-project-buffer-p (current-buffer)
                                                            project-root))))))
 
-(defun my-eyebrowse/toggle-magit ()
-  (interactive)
-  (if (eql -1 (eyebrowse--get 'current-slot))
-      (eyebrowse-last-window-config)
-    (let ((root (projectile-project-root))
-          (init-needed? (not (eyebrowse--window-config-present-p -1))))
-      (eyebrowse-switch-to-window-config -1)
-      (when (and init-needed? root)
-        (when (purpose-window-purpose-dedicated-p)
-          (purpose-set-window-purpose-dedicated-p (selected-window) nil))
-        (dired root)))))
-
-(defun my-eyebrowse/reset-magit (root)
-  (unless (eql -1 (eyebrowse--get 'current-slot))
-    (user-error "incorrect workspace for this function!"))
-  (dired root)
-  (delete-other-windows))
-
-(defun my-magit/display-buffer-function (buffer)
-  (let ((root (projectile-project-root)))
-    (when (eq 'magit-status-mode (buffer-local-value 'major-mode buffer))
-      (when (not (eql -1 (eyebrowse--get 'current-slot)))
-        (my-eyebrowse/toggle-magit))
-      (my-eyebrowse/reset-magit root))
-    (magit-display-buffer-traditional buffer)))
-
-(defun my-magit/bury-buffer-function (&optional kill-buffer)
-  (let ((restore-eyebrowse (eq 'magit-status-mode major-mode)))
-    (quit-window kill-buffer (selected-window))
-    (when restore-eyebrowse
-      (eyebrowse-last-window-config))))
-
-(setq magit-display-buffer-function #'my-magit/display-buffer-function
-      magit-bury-buffer-function #'my-magit/bury-buffer-function)
-
-(defun my/fixup-whitespace (&rest a)
-  (when (or
-         (and (eq (char-before) ?\{)
-              (not (eq (char-after) ?\})))
-         (and (eq (char-after) ?\})
-              (not (eq (char-before) ?\{))))
-    (insert ?\s)))
-(advice-add #'evil-join :after #'my/fixup-whitespace)
+;; This seems unnecessary?!?
+;; (defun my/fixup-whitespace (&rest a)
+;;   (when (or
+;;          (and (eq (char-before) ?\{)
+;;               (not (eq (char-after) ?\})))
+;;          (and (eq (char-after) ?\})
+;;               (not (eq (char-before) ?\{))))
+;;     (insert ?\s)))
+;; (advice-add #'evil-join :after #'my/fixup-whitespace)
 
 
 ;;; my-greek
@@ -567,8 +568,24 @@ If USE-STACK, include the parent paths as well."
 
 (defun bespoke/lambda-mode ()
   "lambda is go!"
-  (quail-define-package "lambda" "utf-8" "λ" t nil nil nil t)
+  (quail-define-package "lambda" "utf-8" "λ"
+                        t ; guidance
+                        nil nil nil
+                        nil ; deterministic
+                        nil nil
+                        t ; maximum-shortest
+                        )
+  ;; This is a hack to allow multiple translation variants without taking over digit keys.
+  ;; `quail-define-package' for whatever reason bundles together DETERMINISTIC and FORGET-LAST,
+  ;; but if only DETERMINISTIC is set, the package does exactly what I want.
+  (setf (nth 7 (quail-package "lambda")) ; deterministic
+        t
+        )
   (quail-define-rules
+   (";;{" "⸢")
+   (";;}" "⸣")
+   (";;[" "⸤")
+   (";;]" "⸥")
    (";[]" "□")
    ;; (";[" "[")
    ;; (";]" "]")
@@ -589,6 +606,7 @@ If USE-STACK, include the parent paths as well."
    (";f" "ϕ")
    (";l" "λ")
    (";g" "γ")
+   (";g" "Γ")
    (";h" "θ")
    (";m" "μ")
    (";n" "ν")

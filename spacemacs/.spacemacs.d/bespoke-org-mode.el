@@ -25,14 +25,16 @@
 
 (add-to-list 'org-babel-load-languages '(ein . t))
 
+(progn ;; evil-org
+  (setf evil-org-special-o/O nil)
+  )
+
 (progn ;; org-ref
   ;; NOTE: bibliography is supposed to be exported from Zotero with better-bibtex
   (setq bibtex-completion-bibliography '("~/.cache/zotero-export/PhD.bib")
         bibtex-completion-library-path "~/zotero-pdf/"
         bibtex-completion-notes-path "~/org/roam/"
-        bibtex-completion-pdf-open-function
-        (lambda (fpath)
-          (call-process "open" nil 0 nil fpath))
+        bibtex-completion-pdf-open-function ($ (call-process "open" nil 0 nil $1))
         org-ref-show-citation-on-enter nil)
   )
 

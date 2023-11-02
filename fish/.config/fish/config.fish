@@ -31,7 +31,19 @@ function tere
     [ -n "$result" ] && cd -- "$result"
 end
 
-### VTERM
+function fish_right_prompt
+    if test $CMD_DURATION
+        # Show duration of the last command in seconds
+        set duration (echo "$CMD_DURATION 1000" | awk '{printf "%.3fs", $1 / $2}')
+        echo $duration
+    end
+end
+
+set -gx PATH $PATH ~/.config/emacs/bin
+
+### EXTERNAL CONFIGURATION
+
+#### VTERM
 
 function vterm_printf;
     if [ -n "$TMUX" ]
@@ -68,13 +80,7 @@ if [ "$INSIDE_EMACS" = 'vterm' ]
     end
 end
 
-function fish_right_prompt
-    if test $CMD_DURATION
-        # Show duration of the last command in seconds
-        set duration (echo "$CMD_DURATION 1000" | awk '{printf "%.3fs", $1 / $2}')
-        echo $duration
-    end
-end
+#### EXTERNAL PATHS
 
 source ~/anaconda3/etc/fish/conf.d/conda.fish
 
