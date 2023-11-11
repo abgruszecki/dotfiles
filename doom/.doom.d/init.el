@@ -1,7 +1,5 @@
 ;;; init.el -*- lexical-binding: t; -*-
 
-;; TODO Fix the font used by Doom. WTF?
-
 ;; This file controls what Doom modules are enabled and what order they load
 ;; in. Remember to run 'doom sync' after modifying it!
 
@@ -170,7 +168,7 @@
        ;;rust              ; Fe2O3.unwrap().unwrap().unwrap().unwrap()
        scala               ; java, but good
        ;;scheme            ; a fully conniving family of lisps
-       sh                  ; she sells {ba,z,fi}sh shells on the C xor
+       (sh +fish)          ; she sells {ba,z,fi}sh shells on the C xor
        ;;sml
        ;;solidity          ; do you need a blockchain? No.
        ;;swift             ; who asked for emoji variables?

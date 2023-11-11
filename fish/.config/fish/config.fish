@@ -7,8 +7,6 @@ alias annihilate "rm -r"
 alias l ls
 alias ll "ls -l"
 
-,openai-init
-
 function mkcd -a dir
   mkdir $dir
   or return

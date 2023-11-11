@@ -26,7 +26,7 @@ Temporary Items
 tags
 .tags
 sbt-ctags-dep-srcs
-#
+
 # Python
 __pycache__
 
@@ -39,6 +39,7 @@ __pycache__
 
 .pdf-view-restore
 .auctex.d
+.auctex-auto
 
 # Personal
 

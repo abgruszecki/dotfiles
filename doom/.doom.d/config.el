@@ -97,6 +97,8 @@
        "C-S-SPC" #'mark ;; why would this be bound to C-SPC by default???
        ))
 
+(setq! embark-cycle-key "C-.")
+
 (map! :prefix "H-`"
       "<tab>" #'~other-window
       "H-<tab>" #'~other-window
@@ -138,14 +140,42 @@
 
 (setq! pop-up-windows nil)
 
-;; Doom packages
+;; Doom module config
 (setq! +evil-want-o/O-to-continue-comments nil)
+
+;; (use-package! evil-collection
+;;   :after evil
+;;   :ensure t
+;;   :config
+;;   (after! magit
+;;     ;; can't quite see how this works...
+;;     (+evil-collection-init 'magit)
+;;     )
+;;   )
+
+;; tame evil-snipe
+(map! (:map evil-snipe-local-mode-map
+       :nv "s" nil
+       :nv "S" nil
+       :nvo "C-s" #'evil-snipe-s
+       :nvo "C-S-s" #'evil-snipe-S)
+      (:map evil-surround-mode-map
+       :v "s" #'evil-surround-region
+       :v "S-s" #'evil-Surround-region)
+      :n "s" #'evil-substitute
+      :n "S-s" #'evil-change-whole-line
+      )
 
 (load! "+window-select")
 (load! "+tex")
-(setq! +latex-indent-item-continuation-offset 'auto
-       TeX-electric-sub-and-superscript nil
-       )
+(load! "+org")
+
+(if (not (eq (car company-global-modes) 'not))
+    (warn "`company-global-mode' is not as expected!")
+  (setq! company-global-modes
+         (nconc `(not org-mode LaTeX-mode)
+                (cdr company-global-modes))
+         ))
 
 (after! centaur-tabs
   (setq! centaur-tabs-adjust-buffer-order 'left)
@@ -154,21 +184,6 @@
 (map! :textobj "B" #'evil-inner-curly #'evil-a-curly
       :textobj "C-S-B" #'evil-textobj-anyblock-inner-block #'evil-textobj-anyblock-a-block
  )
-
-;; tame evil-snipe
-(map! (:map evil-snipe-local-mode-map
-       :nv "s" nil
-       :nv "S" nil
-       ;; :v "s" nil
-       ;; :v "S" nil
-       :nvo "C-s" #'evil-snipe-s
-       :nvo "C-S-s" #'evil-snipe-S)
-      (:map evil-surround-mode-map
-       :v "s" #'evil-surround-region
-       :v "S" #'evil-Surround-region)
-      :n "s" #'evil-substitute
-      :n "S" #'evil-change-whole-line
-      )
 
 ;; My packages
 
@@ -201,8 +216,22 @@
 ;; NOTE Experiments.
 ;; (load! "+exp/override-doom-leaders")
 
+(defun ~make/run (prefix)
+  (interactive "P")
+  (if (and (not prefix) (doom-project-p))
+      (makefile-executor-execute-project-target)
+    (let ((makefile (cl-loop with buffer-file = (or buffer-file-name default-directory)
+                             for file in (list "Makefile" "makefile")
+                             for dir = (locate-dominating-file buffer-file file)
+                             when dir return (file-name-concat dir file))))
+      (unless makefile
+        (user-error "Cannot find a makefile in the current project"))
+      (let ((default-directory (file-name-directory makefile)))
+        (makefile-executor-execute-target makefile))))
+  )
+
 (map! "<f2>" #'org-roam-node-find
-      "<f3>" #'+make/run
+      "<f3>" #'~make/run
       "<f4>" #'+make/run-last
       )
 
