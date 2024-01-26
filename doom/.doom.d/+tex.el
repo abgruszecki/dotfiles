@@ -7,7 +7,10 @@
 ;; Slowly figuring these out by reading https://www.gnu.org/software/auctex/manual/auctex/Fontification-of-macros.html.
 ;; TODO I should play with `font-latex-user-keyword-classes'.
 ;; TODO Does this work? See `font-latex-add-keywords'.
-(setq! font-latex-match-italic-command-keywords '(("Xem" "{")))
+(setq! font-latex-match-italic-command-keywords '(("Xem" "{"))
+       ;; TODO: this gets overridden
+       font-latex-match-reference-keywords '(("aref" "{"))
+       )
 
 ;; HACK Overrides the base definition to take evil state into account.
 (defun prettify-symbols--post-command-hook ()
@@ -131,8 +134,12 @@
 
   (add-hook! '(LaTeX-mode-hook)
              #'hl-todo-mode
-             #'~tex//ensure-evil-tex
+             #'~tex/configure
+             ;; #'~tex//ensure-evil-tex
              )
+
+  ;; (remove-hook! '(LaTeX-mode-hook)
+  ;;   #'~tex//ensure-evil-tex)
   )
 
 (evil-define-text-object ~evil-inner-dollar (count &optional beg end type)

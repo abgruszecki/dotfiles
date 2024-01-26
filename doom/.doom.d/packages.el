@@ -59,6 +59,9 @@
 (package! evil-lisp-state)
 
 ;; (package! emacsql)
-(package! org-roam)
+;; (package! org-roam)
+(package! helm-bibtex)
+(package! org-ref)
+(package! org-roam-bibtex)
 
 (package! org-web-tools)

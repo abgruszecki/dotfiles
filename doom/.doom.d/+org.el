@@ -17,6 +17,11 @@
 
 (setq! org-roam-node-display-template "${title:120} ${tags:30}")
 
+(setq! bibtex-completion-bibliography '("~/.cache/zotero-export/PhD.bib")
+       bibtex-completion-library-path "~/zotero-pdf/"
+       bibtex-completion-notes-path "~/org/roam/"
+       bibtex-completion-pdf-open-function (lambda ($1) (call-process "open" nil 0 nil $1))
+       org-ref-show-citation-on-enter nil)
 
 (map! :mode org-mode
       :localleader

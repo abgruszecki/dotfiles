@@ -154,17 +154,21 @@
 ;;   )
 
 ;; tame evil-snipe
-(map! (:map evil-snipe-local-mode-map
-       :nv "s" nil
-       :nv "S" nil
-       :nvo "C-s" #'evil-snipe-s
-       :nvo "C-S-s" #'evil-snipe-S)
-      (:map evil-surround-mode-map
-       :v "s" #'evil-surround-region
-       :v "S-s" #'evil-Surround-region)
-      :n "s" #'evil-substitute
-      :n "S-s" #'evil-change-whole-line
-      )
+;; TODO This had to be eval'd manually. Should it only be run after loading evil-snipe?
+;; (add-hook! doom-first-input-hook ...)
+(after! evil-snipe
+  (map! (:map evil-snipe-local-mode-map
+         :nv "s" nil
+         :nv "S" nil
+         :nvo "C-s" #'evil-snipe-s
+         :nvo "C-S-s" #'evil-snipe-S)
+        (:map evil-surround-mode-map
+         :v "s" #'evil-surround-region
+         :v "S-s" #'evil-Surround-region)
+        :n "s" #'evil-substitute
+        :n "S-s" #'evil-change-whole-line
+        )
+  )
 
 (load! "+window-select")
 (load! "+tex")
@@ -187,22 +191,34 @@
 
 ;; My packages
 
-(use-package! evil-lisp-state)
-(evil-lisp-state-leader "H-,")
+(use-package! evil-lisp-state
+  :config
+  (setq! evil-lisp-state-cursor '("salmon" box))
+  (evil-lisp-state-leader "H-,")
+  (map! :map evil-lisp-state-map
+        "u" #'evil-undo
+        "C-r" #'evil-redo
+        ))
 
 ;; (use-package! emacsql)
 
-(use-package! org-roam
-  :after org
-  ;; :init (progn (setq org-roam-v2-ack t))
-  :commands (org-roam-node-find)
-  :config (progn
-            (setq org-roam-directory "~/org/roam"
-                  org-roam-db-location "~/.cache/org-roam/org-roam.db")
+;; org-roam
+(setq org-roam-directory "~/org/roam"
+      org-roam-db-location "~/.cache/org-roam/org-roam.db")
 
-            (org-roam-db-autosync-enable)
-            )
-  )
+;; (use-package! org-roam
+;;   :after org
+;;   ;; :init (progn (setq org-roam-v2-ack t))
+;;   :commands (org-roam-node-find)
+;;   :config (progn
+;;             (setq org-roam-directory "~/org/roam"
+;;                   org-roam-db-location "~/.cache/org-roam/org-roam.db")
+;;             (org-roam-db-autosync-enable)))
+
+(use-package! org-roam-bibtex
+  :after org-roam
+  :config (progn
+            (add-hook! org-mode-hook #'org-roam-bibtex-mode)))
 
 (use-package! org-web-tools
   :after org)
@@ -235,10 +251,21 @@
       "<f4>" #'+make/run-last
       )
 
+(defun ~evil-ex-clear-highlights ()
+  (interactive)
+  (evil-ex-nohighlight)
+  ;; I ripped this code from `evil-ex-search-stop-session'.
+  ;; TODO I wonder if this can break something...
+  (when evil-ex-search-overlay
+    (delete-overlay evil-ex-search-overlay)
+    (setf evil-ex-search-overlay nil)
+    )
+  )
+
 (map! (:localleader
        :map (emacs-lisp-mode-map lisp-mode-map)
        "," #'evil-lisp-state)
-      "C-l" #'evil-ex-nohighlight
+      "C-l" #'~evil-ex-clear-highlights
       "C-S-l" #'recenter-top-bottom
       :nv "M-;" #'evilnc-comment-operator
       )
