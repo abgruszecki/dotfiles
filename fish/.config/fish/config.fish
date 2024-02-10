@@ -29,15 +29,26 @@ function tere
     [ -n "$result" ] && cd -- "$result"
 end
 
-function fish_right_prompt
-    if test $CMD_DURATION
-        # Show duration of the last command in seconds
-        set duration (echo "$CMD_DURATION 1000" | awk '{printf "%.3fs", $1 / $2}')
-        echo $duration
-    end
-end
+# function fish_right_prompt
+#     if test $CMD_DURATION
+#         # Show duration of the last command in seconds
+#         set duration (echo "$CMD_DURATION 1000" | awk '{printf "%.3fs", $1 / $2}')
+#         echo $duration
+#     end
+# end
 
 set -gx PATH $PATH ~/.config/emacs/bin
+
+### FISHER
+
+set -gx fisher_path ~/.config/fisher
+
+set fish_function_path $fish_function_path[1] $fisher_path/functions $fish_function_path[2..-1]
+set fish_complete_path $fish_complete_path[1] $fisher_path/completions $fish_complete_path[2..-1]
+
+for file in $fisher_path/conf.d/*.fish
+    source $file
+end
 
 ### EXTERNAL CONFIGURATION
 
@@ -80,6 +91,6 @@ end
 
 #### EXTERNAL PATHS
 
-source ~/anaconda3/etc/fish/conf.d/conda.fish
+# source ~/anaconda3/etc/fish/conf.d/conda.fish
 
 set -q GHCUP_INSTALL_BASE_PREFIX[1]; or set GHCUP_INSTALL_BASE_PREFIX $HOME ; set -gx PATH $HOME/.cabal/bin $PATH /home/gruszecki/.ghcup/bin # ghcup-env
