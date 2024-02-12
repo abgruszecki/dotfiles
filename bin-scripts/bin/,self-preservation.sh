@@ -23,7 +23,7 @@ try() {
 preserve() {
   cd "$1" || { 
     RET=$?
-    echo $'\n!!! ERR: cannot preserve $1 !!!\n\n'
+    echo $'\n!!! ERR: cannot preserve $1 !!!\n'
     return $RET 
   }
   try git add --all
