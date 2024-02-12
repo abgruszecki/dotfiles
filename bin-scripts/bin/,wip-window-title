@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+
+# xwininfo -root -children | 
+
+rofi -e "$(xdotool getactivewindow getwindowname)"

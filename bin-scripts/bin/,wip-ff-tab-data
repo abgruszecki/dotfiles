@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+
+WINDOW_NAME=$(xdotool getactivewindow getwindowname)
+
+if test -z "$(bt clients)"
+then
+   rofi -e 'No brotab clients found. Try `bt install` & restarting FF.'
+   exit 1
+fi
+
+TAB_NAME=$WINDOW_NAME
+TAB_NAME=${TAB_NAME% Private Browsing}
+TAB_NAME=${TAB_NAME% ? Mozilla Firefox}
+
+CANDIDATE=$(bt list | grep -F "$TAB_NAME" | head -n 1)
+
+if [[ -z $CANDIDATE ]]
+then
+    rofi -e 'No candidate found. Inspect `bt list`.'
+    exit 1
+fi
+
+TAB_URL=$(echo "$CANDIDATE" | cut -f 3)
+
+function elisp-escape {
+    IN=$1
+    IN=${IN/\\/\\\\/g}
+    IN=${IN/\"/\\\"/g}
+    echo "$IN"
+}
+
+function elisp-escape-str {
+    printf '"%s"' "$(elisp-escape "$1")"
+}
+
+function say {
+    rofi -e "$*"
+}
+
+emacsclient --eval \
+    '(select-frame-set-input-focus (make-frame))' \
+    '(my-perspective/switch-to-para)' \
+    "(setf bspk//capture-registers '(:url $(elisp-escape-str "$TAB_URL") :title $(elisp-escape-str "$TAB_NAME")))" \
+    '(org-roam-capture- :node (org-roam-node-create :title "none") :goto nil :keys "ll" :templates org-roam-capture-templates)'
+    # "(message-box \"Tab name: $(elisp-escape "$TAB_NAME")\nTab URL: $(elisp-escape "$TAB_URL")\")"
+
+# rofi -e "$TAB_NAME"$'\n'"$TAB_URL"

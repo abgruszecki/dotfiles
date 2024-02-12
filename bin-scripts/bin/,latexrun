@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+[[ $# = 0 ]] && {
+	echo "Expected at least one argument."
+	echo "Usage: ,latexrun FILE [ARGS]"
+	exit 1
+}
+
+NAME=$1
+shift
+
+OUTPUT="${NAME%.tex}.pdf" 
+
+latexrun "$NAME" -o latex.out/"$OUTPUT" --latex-args='-synctex=1' "$@" \
+	&& ,open latex.out/"$OUTPUT"

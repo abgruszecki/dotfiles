@@ -21,7 +21,11 @@ try() {
 ### FUNCTIONS
 
 preserve() {
-  try cd "$1"
+  cd "$1" || { 
+    RET=$?
+    echo $'\n!!! ERR: cannot preserve $1 !!!\n\n'
+    return $RET 
+  }
   try git add --all
   if ! say git diff-index --quiet HEAD
   then

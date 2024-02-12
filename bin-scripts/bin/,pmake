@@ -1,0 +1,29 @@
+#!/usr/bin/env fish
+
+# set script_str '
+# function go
+#     tere
+#     fish -c (read -S -c ",latexrun paper.tex")
+#     set res "$status"
+#     if not test $res -eq 0
+#         sleep 5
+#         fish
+#     end
+# end
+# '
+
+function subterm
+    tere
+    fish -c (read -S -c ",latexrun paper.tex")
+    set res "$status"
+    if not test $res -eq 0
+        # sleep 5
+        fish
+    end
+end
+
+if test -z $argv[1]
+    gnome-terminal -- ,pmake subterm
+else if test $argv[1] = 'subterm'
+    subterm
+end

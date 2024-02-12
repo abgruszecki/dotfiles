@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+
+if test -z "$1"
+then
+	echo >&2 "First arg is empty. Has to be the citation key."
+	exit 1
+fi
+
+# see https://github.com/retorquere/zotero-better-bibtex/issues/1347
+URL=$(curl http://localhost:23119/better-bibtex/json-rpc -X POST  \
+	-H "Content-Type: application/json" \
+	-H "Accept: application/json" \
+	--data-binary '{"jsonrpc": "2.0", "method": "item.attachments", "params": ["'"$1"'"] }' \
+	| jq -r '.result[0].open'
+)
+RES=$?
+[[ -n $DEBUG ]] && echo >&2 ",zot-open-pdf: URL for \`$1\` from better-bibtex = \`$URL\`"
+if [[ ! $RES == 0 ]] 
+then
+	echo >&2 "zot-open-pdf: pipeline exited with $RES. Failing."
+	exit $RES
+fi
+xdg-open "$URL"

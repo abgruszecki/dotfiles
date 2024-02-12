@@ -40,6 +40,7 @@ end
 set -gx PATH $PATH ~/.config/emacs/bin
 
 ### FISHER
+# See fisher readme reg. `fisher_path`.
 
 set -gx fisher_path ~/.config/fisher
 
@@ -92,5 +93,4 @@ end
 #### EXTERNAL PATHS
 
 # source ~/anaconda3/etc/fish/conf.d/conda.fish
-
-set -q GHCUP_INSTALL_BASE_PREFIX[1]; or set GHCUP_INSTALL_BASE_PREFIX $HOME ; set -gx PATH $HOME/.cabal/bin $PATH /home/gruszecki/.ghcup/bin # ghcup-env
+# set -q GHCUP_INSTALL_BASE_PREFIX[1]; or set GHCUP_INSTALL_BASE_PREFIX $HOME ; set -gx PATH $HOME/.cabal/bin $PATH /home/gruszecki/.ghcup/bin # ghcup-env

@@ -1,0 +1,6 @@
+#!/usr/bin/env fish
+# As a turbostupid hack, source this manually and then run the function.
+# source (which ,openai-init.)
+function ,openai-init
+  set -g -x OPENAI_API_KEY (cat ~/.openai)
+end

@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+function spawn {
+    if test -t 1; then
+        "$@"
+    else
+        gnome-terminal -- "$@"
+    fi
+}
+emacsclient -a false -e t || spawn emacs --daemon

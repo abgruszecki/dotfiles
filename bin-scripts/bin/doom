@@ -1,0 +1,2 @@
+#!/bin/env bash
+EMACS_INIT_DIRECTORY=~/.config/doomemacs ~/.config/doomemacs/bin/doom "$@"
