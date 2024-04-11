@@ -36,7 +36,7 @@
 ;;                                :width normal))
 ;; (setq doom-variable-pitch-font doom-font)
 
-(setq doom-font (font-spec :font "FantasqueSansMono Nerd Font"
+(setq doom-font (font-spec :font "Fantasque Sans Mono"
                            :size 12.0
                            ;; :spacing ?d
                            :weight 'normal
@@ -77,13 +77,12 @@
 
 ;; Emacs packages
 
+(setf (alist-get 'undecorated default-frame-alist) t)
+
 (setq! compilation-skip-threshold 2
        compilation-scroll-output 'first-error)
 
-(defun ~other-window (count &optional all-frames interactive)
-  (interactive "p\ni\np")
-  (other-window count all-frames interactive))
-
+(pushnew! treesit-extra-load-path "~/opt/tree-sitter-grammars")
 ;; (map! :leader
 ;;       "w <tab>" #'~other-window)
 
@@ -99,11 +98,12 @@
 
 (setq! embark-cycle-key "C-.")
 
+(defun ~other-window (count &optional all-frames interactive)
+  (interactive "p\ni\np")
+  (other-window count all-frames interactive))
 (map! :prefix "H-`"
       "<tab>" #'~other-window
-      "H-<tab>" #'~other-window
- )
-
+      "H-<tab>" #'~other-window)
 (map! ; "C-<tab>" alternate centaur tab
       "C-`" #'~other-window
       "C-<escape>" #'+popup/toggle)
@@ -156,19 +156,21 @@
 ;; tame evil-snipe
 ;; TODO This had to be eval'd manually. Should it only be run after loading evil-snipe?
 ;; (add-hook! doom-first-input-hook ...)
-(after! evil-snipe
-  (map! (:map evil-snipe-local-mode-map
-         :nv "s" nil
-         :nv "S" nil
-         :nvo "C-s" #'evil-snipe-s
-         :nvo "C-S-s" #'evil-snipe-S)
-        (:map evil-surround-mode-map
-         :v "s" #'evil-surround-region
-         :v "S-s" #'evil-Surround-region)
-        :n "s" #'evil-substitute
-        :n "S-s" #'evil-change-whole-line
-        )
-  )
+;; (after! evil-snipe ...)
+(map! (:map evil-snipe-local-mode-map
+       :nv "s" nil
+       :nv "S" nil
+       :nvo "C-s" #'evil-snipe-s
+       :nvo "C-S" #'evil-snipe-S)
+      (:map evil-surround-mode-map
+       :v "s" nil
+       :v "S" nil)
+      ;; these commands load evil-surround I think
+      :v "s" #'evil-surround-region
+      :v "S" #'evil-Surround-region
+      :n "s" #'evil-substitute
+      :n "S" #'evil-change-whole-line
+      )
 
 (load! "+window-select")
 (load! "+tex")
@@ -181,9 +183,9 @@
                 (cdr company-global-modes))
          ))
 
-(after! centaur-tabs
-  (setq! centaur-tabs-adjust-buffer-order 'left)
-  (pushnew! centaur-tabs-excluded-prefixes "*doom" "*compilation"))
+;; (after! centaur-tabs
+;;   (setq! centaur-tabs-adjust-buffer-order 'left)
+;;   (pushnew! centaur-tabs-excluded-prefixes "*doom" "*compilation"))
 
 (map! :textobj "B" #'evil-inner-curly #'evil-a-curly
       :textobj "C-S-B" #'evil-textobj-anyblock-inner-block #'evil-textobj-anyblock-a-block
@@ -201,27 +203,6 @@
         ))
 
 ;; (use-package! emacsql)
-
-;; org-roam
-(setq org-roam-directory "~/org/roam"
-      org-roam-db-location "~/.cache/org-roam/org-roam.db")
-
-;; (use-package! org-roam
-;;   :after org
-;;   ;; :init (progn (setq org-roam-v2-ack t))
-;;   :commands (org-roam-node-find)
-;;   :config (progn
-;;             (setq org-roam-directory "~/org/roam"
-;;                   org-roam-db-location "~/.cache/org-roam/org-roam.db")
-;;             (org-roam-db-autosync-enable)))
-
-(use-package! org-roam-bibtex
-  :after org-roam
-  :config (progn
-            (add-hook! org-mode-hook #'org-roam-bibtex-mode)))
-
-(use-package! org-web-tools
-  :after org)
 
 ;; text-obj-anyblock sometimes still does crazy things
 ;; (setq evil-textobj-anyblock-blocks
@@ -245,7 +226,6 @@
       (let ((default-directory (file-name-directory makefile)))
         (makefile-executor-execute-target makefile))))
   )
-
 (map! "<f2>" #'org-roam-node-find
       "<f3>" #'~make/run
       "<f4>" #'+make/run-last
@@ -261,7 +241,6 @@
     (setf evil-ex-search-overlay nil)
     )
   )
-
 (map! (:localleader
        :map (emacs-lisp-mode-map lisp-mode-map)
        "," #'evil-lisp-state)
@@ -269,3 +248,12 @@
       "C-S-l" #'recenter-top-bottom
       :nv "M-;" #'evilnc-comment-operator
       )
+
+;; See https://git.sr.ht/~meow_king/typst-ts-mode.
+(use-package! typst-ts-mode
+  :defer t
+  :config
+  (add-to-list 'auto-mode-alist '("\\.typ" . typst-ts-mode))
+  :custom
+  (typst-ts-mode-watch-options "--open")
+  )

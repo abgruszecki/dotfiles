@@ -36,6 +36,8 @@ end
 #         echo $duration
 #     end
 # end
+ 
+fzf --fish | source
 
 set -gx PATH $PATH ~/.config/emacs/bin
 
@@ -91,6 +93,8 @@ if [ "$INSIDE_EMACS" = 'vterm' ]
 end
 
 #### EXTERNAL PATHS
+
+set PATH $PATH ~/.local/share/coursier/bin
 
 # source ~/anaconda3/etc/fish/conf.d/conda.fish
 # set -q GHCUP_INSTALL_BASE_PREFIX[1]; or set GHCUP_INSTALL_BASE_PREFIX $HOME ; set -gx PATH $HOME/.cabal/bin $PATH /home/gruszecki/.ghcup/bin # ghcup-env

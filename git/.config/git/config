@@ -25,3 +25,5 @@
 	f = fuzzy
 	fs = fuzzy status
 	fl = fuzzy log
+[init]
+	defaultBranch = main

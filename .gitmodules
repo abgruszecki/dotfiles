@@ -64,3 +64,6 @@
 [submodule "tmux/plugins/tmux-resurrect"]
 	path = tmux/plugins/tmux-resurrect
 	url = https://github.com/tmux-plugins/tmux-resurrect
+[submodule "alacritty/.config/alacritty/alacritty-theme"]
+	path = alacritty/.config/alacritty/alacritty-theme
+	url = git@github.com:alacritty/alacritty-theme.git
