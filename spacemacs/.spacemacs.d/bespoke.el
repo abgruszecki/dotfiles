@@ -566,7 +566,7 @@ If USE-STACK, include the parent paths as well."
 (my-greek/define-key "1" "⩒")
 (my-greek/define-key "2" "≗")
 
-(defun bespoke/lambda-mode ()
+(defun bespoke/lambda-input-method ()
   "lambda is go!"
   (quail-define-package "lambda" "utf-8" "λ"
                         t ; guidance

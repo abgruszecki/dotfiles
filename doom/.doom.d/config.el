@@ -104,8 +104,9 @@
 (map! :prefix "H-`"
       "<tab>" #'~other-window
       "H-<tab>" #'~other-window)
+(map! "H-<tab>" #'~other-window)
 (map! ; "C-<tab>" alternate centaur tab
-      "C-`" #'~other-window
+      "C-`" #'~other-window ;; should this be other-buffer?
       "C-<escape>" #'+popup/toggle)
 
 (map! "M-1" nil
@@ -161,7 +162,7 @@
        :nv "s" nil
        :nv "S" nil
        :nvo "C-s" #'evil-snipe-s
-       :nvo "C-S" #'evil-snipe-S)
+       :nvo "C-S-s" #'evil-snipe-S)
       (:map evil-surround-mode-map
        :v "s" nil
        :v "S" nil)
@@ -175,6 +176,8 @@
 (load! "+window-select")
 (load! "+tex")
 (load! "+org")
+(load! "+workspaces")
+(load! "+lambda-input-method")
 
 (if (not (eq (car company-global-modes) 'not))
     (warn "`company-global-mode' is not as expected!")

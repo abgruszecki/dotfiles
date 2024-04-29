@@ -1,0 +1,86 @@
+;;; $DOOMDIR/+lambda-input-method.el -*- lexical-binding: t; -*-
+
+(defun ~lambda-input-method ()
+  "lambda is go!"
+  (quail-define-package "lambda" "utf-8" "λ"
+                        t ; guidance
+                        nil nil nil
+                        nil ; deterministic
+                        nil nil
+                        t ; maximum-shortest
+                        )
+  ;; This is a hack to allow multiple translation variants without taking over digit keys.
+  ;; `quail-define-package' for whatever reason bundles together DETERMINISTIC and FORGET-LAST,
+  ;; but if only DETERMINISTIC is set, the package does exactly what I want.
+  (setf (nth 7 (quail-package "lambda")) ; deterministic
+        t
+        )
+  (quail-define-rules
+   (";;{" "⸢")
+   (";;}" "⸣")
+   (";;[" "⸤")
+   (";;]" "⸥")
+   (";[]" "□")
+   ;; (";[" "[")
+   ;; (";]" "]")
+   (";0" "₀")
+   (";1" "₁")
+   (";2" "₂")
+   (";3" "₃")
+   (";4" "₄")
+   (";5" "₅")
+   (";6" "₆")
+   (";7" "₇")
+   (";8" "₈")
+   (";9" "₉")
+   (";a" "α")
+   (";b" "β")
+   (";d" "δ")
+   (";e" "ε")
+   (";f" "ϕ")
+   (";l" "λ")
+   (";g" "γ")
+   (";g" "Γ")
+   (";h" "θ")
+   (";m" "μ")
+   (";n" "ν")
+   (";p" "ψ")
+   (";r" "ρ")
+   (";s" "σ")
+   (";t" "τ")
+   (";z" "ϕ")
+   (";D" "Δ")
+   (";G" "Γ")
+   (";L" "Λ")
+   (";P" "Ψ")
+   (";S" "Σ")
+   (";X" "Ξ")
+   (";tp" "⊤")
+   (";bt" "⊥")
+   (";=" "≜")
+   (";/=" "≠")
+   (";-" "⊢")
+   (";->" "→")
+   (";<" "≤")
+   (";>" "≥")
+   (";." "·")
+   (";ts" "⊢")
+   (";to" "↦")
+   (";or" "∨")
+   (";and" "∧")
+   (";all" "∀")
+   (";fa" "∀")
+   (";ex" "∃")
+   (";box" "□")
+   (";meet" "⊓")
+   (";join" "⊔")
+   (";sc" "⊂")
+   (";su" "∪")
+   (";si" "∩")
+   (";>>" "»")
+   (";<<" "«")
+   (";oo" "∘")
+   (";oO" "●")
+   ))
+
+(~lambda-input-method)
