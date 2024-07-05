@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+
+# Check if current dir starts with ~/playground/
+if [[ "$(pwd)" != "$HOME/playground/"* ]]; then
+    echo "Not in playground directory"
+    exit 1
+fi
+
+# Delete the directory in ~/playground
+PLAYGROUND_DIR=${PWD#$HOME/playground/}
+PLAYGROUND_DIR=${PLAYGROUND_DIR%%/*}
+PLAYGROUND_DIR="$HOME/playground/$PLAYGROUND_DIR"
+rm -rf "$PLAYGROUND_DIR"

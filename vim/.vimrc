@@ -114,6 +114,9 @@ nnoremap <Leader>8 :call SetTabStop(8)<CR>
 
 nnoremap <Leader><F2> :set ft=ansible<CR>
 
+command! -nargs=1 Silent execute ':silent !'.<q-args> | execute ':redraw!'
+nmap <Leader>\x :Silent ,open %:h<cr>
+
 " It's syntastic!
 map <F4> :SyntasticCheck<CR>
 

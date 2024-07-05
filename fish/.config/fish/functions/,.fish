@@ -14,7 +14,7 @@ end
 function __comma_print_methods
     set -l comma_dir (__comma_locate)
     if test "$comma_dir" = ""
-        echo >&2 "Not under a comma dir."
+        printf >&2 '\nNot under a comma dir.\n'
         return 1
     end
 
@@ -45,6 +45,6 @@ function ,
     "$comma_dir/$argv[1]" $argv[2..-1]
 end
 
-complete -c , -e
-complete -c , -x -n "__comma_no_command" -d "Method" -a "(__comma_print_methods)"
+complete , -e
+complete , -x -n "__comma_no_command" -d "Method" -a "(__comma_print_methods)"
 # complete -c , -d "Method" -a "(__comma_print_methods)"

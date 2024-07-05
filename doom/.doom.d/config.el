@@ -30,19 +30,15 @@
 ;; font string. You generally only need these two:
 ;; (setq doom-font (font-spec :family "monospace" :size 12 :weight 'semi-light)
 ;;       doom-variable-pitch-font (font-spec :family "sans" :size 13))
-;; (setq doom-font '("FantasqueSansMono Nerd Font"
-;;                                :size 12.0
-;;                                :weight normal
-;;                                :width normal))
 ;; (setq doom-variable-pitch-font doom-font)
-
-(setq doom-font (font-spec :font "Fantasque Sans Mono"
-                           :size 12.0
+(setq doom-font (font-spec :family "Fantasque Sans Mono"
+                           :size 13.0
                            ;; :spacing ?d
                            :weight 'normal
-                           :width 'normal))
-;; (setq doom-symbol-font "Linux Libertine Display O")
-(setq doom-symbol-font "Julia Mono")
+                           :width 'normal)
+      ;; doom-symbol-font "Linux Libertine Display O"
+      doom-symbol-font "Julia Mono"
+      )
 
 ;; There are two ways to load a theme. Both assume the theme is installed and
 ;; available. You can either set `doom-theme' or manually load a theme with the
@@ -173,18 +169,20 @@
       :n "S" #'evil-change-whole-line
       )
 
+;; TODO I forgot to load a file yet another time. That should be automatic.
+(load! "+embark")
 (load! "+window-select")
 (load! "+tex")
 (load! "+org")
 (load! "+workspaces")
 (load! "+lambda-input-method")
 
-(if (not (eq (car company-global-modes) 'not))
-    (warn "`company-global-mode' is not as expected!")
-  (setq! company-global-modes
-         (nconc `(not org-mode LaTeX-mode)
-                (cdr company-global-modes))
-         ))
+;; (if (not (eq (car company-global-modes) 'not))
+;;     (warn "`company-global-mode' is not as expected!")
+;;   (setq! company-global-modes
+;;          (nconc `(not org-mode LaTeX-mode)
+;;                 (cdr company-global-modes))
+;;          ))
 
 ;; (after! centaur-tabs
 ;;   (setq! centaur-tabs-adjust-buffer-order 'left)

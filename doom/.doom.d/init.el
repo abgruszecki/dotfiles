@@ -27,7 +27,8 @@
        ;;layout            ; auie,ctsrnm is the superior home row
 
        :completion
-       company           ; the ultimate code completion backend
+       ;; company           ; the ultimate code completion backend
+       corfu
        vertico
        ;; helm              ; the *other* search engine for love and life
        ;;ido               ; the other *other* search engine...
@@ -92,6 +93,7 @@
        ;;grammar           ; tasing grammar mistake every you make
 
        :tools
+       biblio
        ;;ansible
        ;;debugger          ; FIXME stepping through code, to help you add bugs
        ;;direnv

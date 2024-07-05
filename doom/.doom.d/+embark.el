@@ -17,12 +17,15 @@
     (call-process "x-terminal-emulator" nil 0 nil))
   )
 
-(map! :map embark-url-map
-      "C-'" #'org-web-tools-insert-link-for-url)
+(after! embark
+  (map! :map embark-url-map
+        "C-'" #'org-web-tools-insert-link-for-url)
 
-(map! :map embark-file-map
-      "C-x" #'~embark-open-terminal)
+  (map! :map embark-file-map
+        "C-x" #'~embark-open-terminal)
 
-(setf (alist-get #'org-web-tools-insert-link-for-url embark-pre-action-hooks)
-      `(embark--mark-target ~embark//delete-region)
-      )
+  (setf
+   (alist-get #'org-web-tools-insert-link-for-url embark-pre-action-hooks)
+   `(embark--mark-target ~embark//delete-region)
+   )
+  )

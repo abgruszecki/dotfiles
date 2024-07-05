@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+rm -rf ~/Downloads/Current/*
+rm -rf ~/Downloads/Current/.*

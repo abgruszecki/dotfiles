@@ -14,7 +14,7 @@
                            (sequence "OPEN(o)" "CLSD(c)")
                            (sequence "EVNT(e)" "PAST(p)"))
        org-reverse-note-order t
-       org-agenda-files "~/.cache/emacs-org-mode/agenda"
+       ;; org-agenda-files "~/.cache/emacs-org-mode/agenda"
        org-refile-targets '((org-agenda-files . (:level . 1)))
        org-outline-path-complete-in-steps nil
        org-refile-use-outline-path t
@@ -90,6 +90,8 @@
        bibtex-completion-pdf-open-function (lambda ($1) (call-process "open" nil 0 nil $1))
        org-ref-show-citation-on-enter nil)
 
+(setq! citar-bibliography '("~/.cache/zotero-export/PhD.bib"))
+
 (setq! org-roam-directory "~/org/roam"
        org-roam-db-location "~/.cache/org-roam/org-roam.db"
        org-roam-node-display-template "${title:120} ${tags:30}")
@@ -144,6 +146,16 @@
   (org-roam-bibtex-mode 1)
   (org-ref-cite-insert-helm))
 
-(map!
- :prefix ("SPC \\" . "Private keybindings")
+(defun ~org-roam-visit-attachment-dir ()
+  (interactive)
+  (let ((dir (file-name-concat "~/org/attachments"
+                               (file-name-with-extension
+                                (file-name-sans-extension
+                                 (file-name-nondirectory (buffer-file-name)))
+                                ".d"))))
+    ;; (when ())
+    (make-directory dir t)
+    (dired dir)))
+
+(map! :leader :prefix ("\\" . "Private keybindings")
  :n "b" #'~org-ref-cite-insert-helm)

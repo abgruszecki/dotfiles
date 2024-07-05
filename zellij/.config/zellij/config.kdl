@@ -1,0 +1,4 @@
+theme "solarized-dark"
+default_shell "fish"
+default_layout "compact"
+on_force_close "quit"

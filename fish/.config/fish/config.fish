@@ -35,9 +35,15 @@ end
 #     end
 # end
  
-fzf --fish | source
+if command -q fzf
+    fzf --fish | source
+end
 
+set -gx PATH $PATH ~/.local/bin
 set -gx PATH $PATH ~/.config/emacs/bin
+set -gx PATH $PATH ~/.bun/bin
+
+set -gx MANPATH $MANPATH ~/.local/share/man
 
 ### FISHER
 # See fisher readme reg. `fisher_path`.
