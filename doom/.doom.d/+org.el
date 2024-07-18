@@ -154,6 +154,9 @@
                                  (file-name-nondirectory (buffer-file-name)))
                                 ".d"))))
     ;; (when ())
+    (when (file-regular-p dir)
+      (error "Path unexpectedly points to a regular file: %s" dir)
+        )
     (make-directory dir t)
     (dired dir)))
 

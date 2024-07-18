@@ -34,7 +34,11 @@ end
 #         echo $duration
 #     end
 # end
+
+set -g fish_greeting "Welcome to fish, the friendly interactive shell. Remember: M-e for magic."
  
+bind \ee _aichat_fish
+
 if command -q fzf
     fzf --fish | source
 end

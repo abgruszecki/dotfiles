@@ -1,0 +1,2 @@
+#!/usr/bin/env bash
+,cl -e "(call-interactively #'man)"

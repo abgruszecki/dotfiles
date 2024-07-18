@@ -7,6 +7,14 @@ function ,venv
     end
     printf "Failed. "
 
+    set -l VENV_PATH ./venv
+    echo "Sourcing from: $VENV_PATH"
+    if path is --type file $VENV_PATH/bin/activate.fish
+        source $VENV_PATH/bin/activate.fish
+	return 0
+    end
+    printf "Failed. "
+
     set -l VENV_PATH ./
     echo "Sourcing from: $VENV_PATH"
     if path is --type file $VENV_PATH/bin/activate.fish
@@ -16,8 +24,9 @@ function ,venv
     printf "Failed. "
 
     echo "Did not find a venv here."
+    set -l VENV_PATH ./.venv
     while true
-        read -l -P 'Create a venv in ./.venv ? [y/N] ' confirm
+        read -l -P "Create a venv in $VENV_PATH ? [y/N] " confirm
 
         switch $confirm
             case Y y
@@ -28,6 +37,6 @@ function ,venv
                 return 0
         end
     end
-    python3 -m venv ./.venv
-    source ./.venv/bin/activate.fish
+    python3 -m venv $VENV_PATH
+    source $VENV_PATH/bin/activate.fish
 end
