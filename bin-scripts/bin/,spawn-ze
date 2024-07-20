@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+
+zellij attach -b bg
+zellij -s bg action new-tab --name "$1"
+shift
+CHARS=$(printf '%s\r' "$*")
+echo CHARS = "$(printf '%q' "$CHARS")"
+zellij -s bg action write-chars "$CHARS"
