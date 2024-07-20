@@ -35,9 +35,10 @@ end
 #     end
 # end
 
-set -g fish_greeting "Welcome to fish, the friendly interactive shell. Remember: M-e for magic."
+set -g fish_greeting "Welcome to fish, the friendly interactive shell. Remember: M-e or M-E for magic."
  
-bind \ee _aichat_fish
+bind \ee _navi-smart-replace
+bind \eE _aichat_fish
 
 if command -q fzf
     fzf --fish | source

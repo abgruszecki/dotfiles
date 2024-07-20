@@ -1,2 +1,5 @@
 #!/usr/bin/env bash
+
+# Tell the scripts they're being run from the "launcher".
+export BSP_LAUNCHER=1
 rofi -modi combi -combi-modi 'run,drun' -show combi

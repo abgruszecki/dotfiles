@@ -1,5 +1,5 @@
 configuration {
-  modi: "combi,window,run,drun";
+  modi: "combi,windowcd,window,run,drun";
   combi-modi: "drun,run";
 }
 @theme "solarized"
