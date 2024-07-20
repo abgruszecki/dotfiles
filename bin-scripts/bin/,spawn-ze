@@ -1,8 +1,31 @@
 #!/usr/bin/env bash
 
-zellij attach -b bg
-zellij -s bg action new-tab --name "$1"
+main() {
+    zellij attach -b bg
+    zellij -s bg action new-tab --name "$1"
+    shift
+    CHARS=$(printf ',spawn-ze _wrap %s\r' "$*")
+    echo CHARS = "$(printf '%q' "$CHARS")"
+    zellij -s bg action write-chars "$CHARS"
+}
+
+_wrap() {
+    "$@"
+    RET=$?
+    if [[ $RET -eq 0 ]]; then
+        exit
+    else
+        rofi -e "Command returned $RET: $*"
+    fi
+}
+
+CMD=$1
 shift
-CHARS=$(printf '%s\r' "$*")
-echo CHARS = "$(printf '%q' "$CHARS")"
-zellij -s bg action write-chars "$CHARS"
+if [[ $CMD = main ]]; then
+    main "$@"
+elif [[ $CMD = _wrap ]]; then
+    _wrap "$@"
+else
+    "Unrecognized command: $CMD"
+    exit 1
+fi
