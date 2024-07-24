@@ -1,1 +1,2 @@
-../../../opt/cursor-0.36.2-build-2407077n6pzboby-x86_64.AppImage
+#!/usr/bin/env bash
+exec ~/opt/cursor/*.AppImage "$@"

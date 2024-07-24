@@ -5,6 +5,9 @@ alias g git
 alias l ls
 alias ll "ls -l"
 
+alias lz eza
+alias lzl "eza -l"
+
 function mkcd -a dir
   mkdir $dir
   or return

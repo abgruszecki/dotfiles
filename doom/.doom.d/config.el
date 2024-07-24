@@ -70,29 +70,95 @@
 ;; You can also try 'gd' (or 'C-c c d') to jump to their definition and see how
 ;; they are implemented.
 
-
-;; Emacs packages
-
+;; Emacs config
 (setf (alist-get 'undecorated default-frame-alist) t)
 
 (setq! compilation-skip-threshold 2
        compilation-scroll-output 'first-error)
 
+(setq! pop-up-windows nil)
+
+(add-to-list 'default-frame-alist '(fullscreen . maximized))
+
+;; Doom module config
+(setq! +evil-want-o/O-to-continue-comments nil)
+
+;; TODO I forgot to load a file yet another time. That should be automatic.
+(load! "+embark")
+(load! "+window-select")
+(load! "+tex")
+(load! "+org")
+(load! "+workspaces")
+(load! "+lambda-input-method")
+
+;; Extra configs
 (pushnew! treesit-extra-load-path "~/opt/tree-sitter-grammars")
-;; (map! :leader
-;;       "w <tab>" #'~other-window)
 
-(map! :n "C-." nil
-      "C-SPC" nil
-      "C-." #'embark-act
-      "C-," #'embark-dwim
-      "M-=" #'universal-argument
-      (:map embark-general-map
-       "C-SPC" #'embark-select
-       "C-S-SPC" #'mark ;; why would this be bound to C-SPC by default???
-       ))
+;; (use-package! evil-collection
+;;   :after evil
+;;   :ensure t
+;;   :config
+;;   (after! magit
+;;     ;; can't quite see how this works...
+;;     (+evil-collection-init 'magit)
+;;     )
+;;   )
 
-(setq! embark-cycle-key "C-.")
+;; tame evil-snipe
+;; TODO This had to be eval'd manually. Should it only be run after loading evil-snipe?
+;; (add-hook! doom-first-input-hook ...)
+;; (after! evil-snipe ...)
+(map! (:map evil-snipe-local-mode-map
+       :nv "s" nil
+       :nv "S" nil
+       :nvo "C-s" #'evil-snipe-s
+       :nvo "C-S-s" #'evil-snipe-S)
+      (:map evil-surround-mode-map
+       :v "s" nil
+       :v "S" nil)
+      ;; these commands load evil-surround I think
+      :v "s" #'evil-surround-region
+      :v "S" #'evil-Surround-region
+      :n "s" #'evil-substitute
+      :n "S" #'evil-change-whole-line
+      )
+
+;; (if (not (eq (car company-global-modes) 'not))
+;;     (warn "`company-global-mode' is not as expected!")
+;;   (setq! company-global-modes
+;;          (nconc `(not org-mode LaTeX-mode)
+;;                 (cdr company-global-modes))
+;;          ))
+
+;; (after! centaur-tabs
+;;   (setq! centaur-tabs-adjust-buffer-order 'left)
+;;   (pushnew! centaur-tabs-excluded-prefixes "*doom" "*compilation"))
+
+(map! :textobj "B" #'evil-inner-curly #'evil-a-curly
+      :textobj "C-S-B" #'evil-textobj-anyblock-inner-block #'evil-textobj-anyblock-a-block
+ )
+
+;; My packages
+
+(use-package! evil-lisp-state
+  :config
+  (setq! evil-lisp-state-cursor '("salmon" box))
+  (evil-lisp-state-leader "H-,")
+  (map! :map evil-lisp-state-map
+        "u" #'evil-undo
+        "C-r" #'evil-redo
+        ))
+
+;; (use-package! emacsql)
+
+;; text-obj-anyblock sometimes still does crazy things
+;; (setq evil-textobj-anyblock-blocks
+;;         '(("(" . ")")
+;;           ("{" . "}")
+;;           ("\\[" . "\\]")))
+
+;; NOTE Experiments.
+;; (load! "+exp/override-doom-leaders")
 
 (defun ~other-window (count &optional all-frames interactive)
   (interactive "p\ni\np")
@@ -134,85 +200,6 @@
                "<f8>" #'+workspace/switch-to-7
                )
       )
-
-(setq! pop-up-windows nil)
-
-;; Doom module config
-(setq! +evil-want-o/O-to-continue-comments nil)
-
-;; (use-package! evil-collection
-;;   :after evil
-;;   :ensure t
-;;   :config
-;;   (after! magit
-;;     ;; can't quite see how this works...
-;;     (+evil-collection-init 'magit)
-;;     )
-;;   )
-
-;; tame evil-snipe
-;; TODO This had to be eval'd manually. Should it only be run after loading evil-snipe?
-;; (add-hook! doom-first-input-hook ...)
-;; (after! evil-snipe ...)
-(map! (:map evil-snipe-local-mode-map
-       :nv "s" nil
-       :nv "S" nil
-       :nvo "C-s" #'evil-snipe-s
-       :nvo "C-S-s" #'evil-snipe-S)
-      (:map evil-surround-mode-map
-       :v "s" nil
-       :v "S" nil)
-      ;; these commands load evil-surround I think
-      :v "s" #'evil-surround-region
-      :v "S" #'evil-Surround-region
-      :n "s" #'evil-substitute
-      :n "S" #'evil-change-whole-line
-      )
-
-;; TODO I forgot to load a file yet another time. That should be automatic.
-(load! "+embark")
-(load! "+window-select")
-(load! "+tex")
-(load! "+org")
-(load! "+workspaces")
-(load! "+lambda-input-method")
-
-;; (if (not (eq (car company-global-modes) 'not))
-;;     (warn "`company-global-mode' is not as expected!")
-;;   (setq! company-global-modes
-;;          (nconc `(not org-mode LaTeX-mode)
-;;                 (cdr company-global-modes))
-;;          ))
-
-;; (after! centaur-tabs
-;;   (setq! centaur-tabs-adjust-buffer-order 'left)
-;;   (pushnew! centaur-tabs-excluded-prefixes "*doom" "*compilation"))
-
-(map! :textobj "B" #'evil-inner-curly #'evil-a-curly
-      :textobj "C-S-B" #'evil-textobj-anyblock-inner-block #'evil-textobj-anyblock-a-block
- )
-
-;; My packages
-
-(use-package! evil-lisp-state
-  :config
-  (setq! evil-lisp-state-cursor '("salmon" box))
-  (evil-lisp-state-leader "H-,")
-  (map! :map evil-lisp-state-map
-        "u" #'evil-undo
-        "C-r" #'evil-redo
-        ))
-
-;; (use-package! emacsql)
-
-;; text-obj-anyblock sometimes still does crazy things
-;; (setq evil-textobj-anyblock-blocks
-;;         '(("(" . ")")
-;;           ("{" . "}")
-;;           ("\\[" . "\\]")))
-
-;; NOTE Experiments.
-;; (load! "+exp/override-doom-leaders")
 
 (defun ~make/run (prefix)
   (interactive "P")

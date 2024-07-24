@@ -17,6 +17,18 @@
     (call-process "x-terminal-emulator" nil 0 nil))
   )
 
+(setq! embark-cycle-key "C-.")
+
+(map! :n "C-." nil
+      "C-SPC" nil
+      "C-." #'embark-act
+      "C-," #'embark-dwim
+      "M-=" #'universal-argument
+      (:map embark-general-map
+       "C-SPC" #'embark-select
+       "C-S-SPC" #'mark ;; why would this be bound to C-SPC by default???
+       ))
+
 (after! embark
   (map! :map embark-url-map
         "C-'" #'org-web-tools-insert-link-for-url)
