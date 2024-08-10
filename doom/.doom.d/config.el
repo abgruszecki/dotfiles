@@ -83,6 +83,10 @@
 ;; Doom module config
 (setq! +evil-want-o/O-to-continue-comments nil)
 
+(map! "M-=" #'universal-argument
+      (:map universal-argument-map "M-=" #'universal-argument-more)
+      )
+
 ;; TODO I forgot to load a file yet another time. That should be automatic.
 (load! "+embark")
 (load! "+window-select")
@@ -201,10 +205,18 @@
                )
       )
 
-(defun ~make/run (prefix)
+(defvar ~last-compilation-cmd-type nil)
+
+(defun ~compile-project (prefix)
   (interactive "P")
-  (if (and (not prefix) (doom-project-p))
+  (cond
+   ((equal prefix '(16))
+    (call-interactively #'projectile-compile-project)
+    (setf ~last-compilation-cmd-type 'projectile-compile))
+   ((and (not prefix) (doom-project-p))
       (makefile-executor-execute-project-target)
+      (setf ~last-compilation-cmd-type nil))
+   (t
     (let ((makefile (cl-loop with buffer-file = (or buffer-file-name default-directory)
                              for file in (list "Makefile" "makefile")
                              for dir = (locate-dominating-file buffer-file file)
@@ -212,11 +224,22 @@
       (unless makefile
         (user-error "Cannot find a makefile in the current project"))
       (let ((default-directory (file-name-directory makefile)))
-        (makefile-executor-execute-target makefile))))
+        (makefile-executor-execute-target makefile)))
+    (setf ~last-compilation-cmd-type nil))
+   ))
+
+(defun ~repeat-compile-project ()
+  (interactive)
+  (pcase ~last-compilation-cmd-type
+    ('projectile-compile
+     (call-interactively #'projectile-repeat-last-command))
+    ('nil
+     (call-interactively #'+make/run-last)))
   )
+
 (map! "<f2>" #'org-roam-node-find
-      "<f3>" #'~make/run
-      "<f4>" #'+make/run-last
+      "<f3>" #'~compile-project
+      "<f4>" #'~repeat-compile-project
       )
 
 (defun ~evil-ex-clear-highlights ()

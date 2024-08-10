@@ -1,1 +1,4 @@
-../../../opt/beeper
+#!/usr/bin/env bash
+
+# see https://askubuntu.com/questions/1512287/obsidian-appimage-the-suid-sandbox-helper-binary-was-found-but-is-not-configu
+exec ~/opt/beeper/beeper --no-sandbox

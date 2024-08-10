@@ -7,4 +7,12 @@
 #     fi
 # }
 # emacsclient -a false -e t || spawn emacs --daemon
-emacsclient -c "$@"
+
+# START_TIME=$(date +%s)
+if [[ $BSP_LAUNCHER = 1 ]]; then
+    emacsclient --alternate-editor=emacs -c "$@"
+else
+    emacsclient -c "$@"
+fi
+# EXIT=$?
+# EXIT_TIME=$(date +%s)

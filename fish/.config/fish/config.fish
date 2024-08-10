@@ -38,7 +38,7 @@ end
 #     end
 # end
 
-set -g fish_greeting "Welcome to fish, the friendly interactive shell. Remember: M-e or M-E for magic."
+set -g fish_greeting "Welcome to fish, the friendly interactive shell. Remember: M-e for navi, M-E for aichat."
  
 bind \ee _navi-smart-replace
 bind \eE _aichat_fish

@@ -23,7 +23,6 @@
       "C-SPC" nil
       "C-." #'embark-act
       "C-," #'embark-dwim
-      "M-=" #'universal-argument
       (:map embark-general-map
        "C-SPC" #'embark-select
        "C-S-SPC" #'mark ;; why would this be bound to C-SPC by default???
