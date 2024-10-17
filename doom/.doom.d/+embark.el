@@ -19,6 +19,13 @@
 
 (setq! embark-cycle-key "C-.")
 
+(defvar-keymap embark-org-link-bespoke-map
+  :doc "Bespoke org-link actions."
+  :parent nil
+  "r" #'~org-roam-relink-orb-to-citar)
+
+(fset 'embark-org-link-bespoke-map embark-org-link-bespoke-map)
+
 (map! :n "C-." nil
       "C-SPC" nil
       "C-." #'embark-act
@@ -35,8 +42,27 @@
   (map! :map embark-file-map
         "C-x" #'~embark-open-terminal)
 
+  (map! :map embark-org-link-map
+        :desc "bespoke"
+        "\\" 'embark-org-link-bespoke-map)
+
   (setf
    (alist-get #'org-web-tools-insert-link-for-url embark-pre-action-hooks)
    `(embark--mark-target ~embark//delete-region)
    )
+  )
+
+(defun ~citar-copy-short-title (citekey)
+  (let* ((entry (citar-get-entry citekey))
+         (res (or (alist-get "shorttitle" entry nil nil #'equal)
+                  (alist-get "title" entry nil nil #'equal))))
+    (kill-new res)
+    ;; (message "Copied as kill: %s" res)
+    ))
+
+(after! (embark citar)
+  (map! :map citar-citation-map
+        :desc "Copy short title as kill"
+        "w" #'~citar-copy-short-title
+        )
   )

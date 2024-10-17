@@ -69,3 +69,10 @@
 (package! typst-ts-mode
   :recipe (:type git :host sourcehut :repo "meow_king/typst-ts-mode")
   :pin "6a35d230")
+
+;; Claude gave me some hints here: https://console.anthropic.com/workbench/b89a4c24-845c-4c05-8c78-c36aa3c0c9cb .
+(package! bookmark+
+  ;; This is a mirror, actual files are hosted on the Emacs Wiki.
+  ;; See https://www.emacswiki.org/emacs/BookmarkPlus
+  :recipe (:type git :host github :repo "emacsmirror/bookmark-plus")
+  :pin "e077023")

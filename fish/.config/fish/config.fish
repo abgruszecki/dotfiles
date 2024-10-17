@@ -104,6 +104,10 @@ if [ "$INSIDE_EMACS" = 'vterm' ]
     end
 end
 
+#### AIDER
+
+set AIDER_ENV_FILE $HOME/.ai/.env
+
 #### EXTERNAL PATHS
 
 set PATH $PATH ~/.local/share/coursier/bin

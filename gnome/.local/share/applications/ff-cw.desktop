@@ -1,0 +1,13 @@
+[Desktop Entry]
+Type=Application
+Name=Firefox URL Handler
+Comment=Open URLs in Firefox, focusing the window in the current workspace
+Exec=/home/abgruszecki/bin/ff-cw %u
+Icon=firefox
+Categories=Network;WebBrowser;
+MimeType=x-scheme-handler/http;x-scheme-handler/https;
+NoDisplay=true
+
+# To make this actually handle URLs, run:
+# xdg-mime default ff-cw.desktop x-scheme-handler/http
+# xdg-mime default ff-cw.desktop x-scheme-handler/https

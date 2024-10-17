@@ -113,7 +113,7 @@
 
             ("p" "pracka" plain "%?"
              :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org"
-                                "#+title: ${title}\n#+filetags: :@pracka:@zasób:\n\n* ZTK\n* Wiedza")
+                                "#+title: ${title}\n#+filetags: :@pracka:@zasób:\n\n* Fragmenty\n** Reading ZTK\n* Notes")
              :unnarrowed t)
 
             ("s" "standalone" plain "%?"
@@ -126,6 +126,9 @@
                                 "#+title: ${title}\n#+filetags: :@domena:\n")
              :unnarrowed
              )))
+
+(setq! citar-org-roam-note-title-template "${title}"
+       citar-org-roam-capture-template-key "p")
 
 ;; These are already set by Doom.
 ;; (map! :mode org-mode
@@ -160,5 +163,63 @@
     (make-directory dir t)
     (dired dir)))
 
+(defun ~org-roam-relink-orb-to-citar (&rest rest)
+  (interactive)
+  (when (org-in-regexp org-link-any-re)
+       (let* (;; (full (match-string-no-properties 0))
+              (target (or (match-string-no-properties 2)
+                          (match-string-no-properties 0)))
+              ;; (description (match-string-no-properties 3))
+              (replacement (string-replace "&" "@" target))
+              )
+         ;; (ignore full target description)
+         (save-excursion
+           (delete-region (match-beginning 0) (match-end 0))
+           (insert "[" replacement "]")
+           )
+         )))
+
 (map! :leader :prefix ("\\" . "Private keybindings")
  :n "b" #'~org-ref-cite-insert-helm)
+
+;; NOTE Actually, this doesn't work. See below.
+;; NOTE copied from ~/.config/emacs/modules/lang/org/contrib/roam2.el
+;; since ATTW this is overwritten by smerge
+;; (map! :map org-mode-map
+;;       :localleader
+;;       :prefix ("m" . "org-roam")
+;;       "D" #'org-roam-demote-entire-buffer
+;;       "f" #'org-roam-node-find
+;;       "F" #'org-roam-ref-find
+;;       "g" #'org-roam-graph
+;;       "i" #'org-roam-node-insert
+;;       "I" #'org-id-get-create
+;;       "m" #'org-roam-buffer-toggle
+;;       "M" #'org-roam-buffer-display-dedicated
+;;       "n" #'org-roam-capture
+;;       "r" #'org-roam-refile
+;;       "R" #'org-roam-link-replace-all
+;;       (:prefix ("d" . "by date")
+;;        :desc "Goto previous note" "b" #'org-roam-dailies-goto-previous-note
+;;        :desc "Goto date"          "d" #'org-roam-dailies-goto-date
+;;        :desc "Capture date"       "D" #'org-roam-dailies-capture-date
+;;        :desc "Goto next note"     "f" #'org-roam-dailies-goto-next-note
+;;        :desc "Goto tomorrow"      "m" #'org-roam-dailies-goto-tomorrow
+;;        :desc "Capture tomorrow"   "M" #'org-roam-dailies-capture-tomorrow
+;;        :desc "Capture today"      "n" #'org-roam-dailies-capture-today
+;;        :desc "Goto today"         "t" #'org-roam-dailies-goto-today
+;;        :desc "Capture today"      "T" #'org-roam-dailies-capture-today
+;;        :desc "Goto yesterday"     "y" #'org-roam-dailies-goto-yesterday
+;;        :desc "Capture yesterday"  "Y" #'org-roam-dailies-capture-yesterday
+;;        :desc "Find directory"     "-" #'org-roam-dailies-find-directory)
+;;       (:prefix ("o" . "node properties")
+;;                "a" #'org-roam-alias-add
+;;                "A" #'org-roam-alias-remove
+;;                "t" #'org-roam-tag-add
+;;                "T" #'org-roam-tag-remove
+;;                "r" #'org-roam-ref-add
+;;                "R" #'org-roam-ref-remove))
+
+;; Should /disable/ smerge-mode
+;; (add-hook! org-mode-hook :append #'smerge-mode)
+;; (smerge-mode 0)

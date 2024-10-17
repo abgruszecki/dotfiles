@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+CW=$(xdotool get_desktop)
+# The `$` at the end of the regex is to filter out private windows
+# TODO: if there's no URL to open, private windows are OK to focus
+WIN_HEX=$(wmctrl -l | awk '/Firefox$/ {if ($2 == '"$CW"') print $1}' | head -n 1)
+
+if [[ -n $WIN_HEX ]]; then
+    wmctrl -ia "$WIN_HEX"
+    # TODO: this actually opens a new window if there's no URL
+    firefox "$@"
+else
+    firefox --new-window "$@"
+fi

@@ -11,6 +11,6 @@ X11.XCloseDisplay(display)
 # NOTE: the call to XkbLockModifiers now causes a SIGSEGV. Don't know why.
 
 xmodmap ~/dotfiles/capslock.d/xmodmaprc
-killall xcape
-xcape -t 100 -e 'Shift_L=parenleft;Shift_R=parenright'
-xcape -t 100 -e "Hyper_L=Escape"
+# killall xcape
+# xcape -t 100 -e 'Shift_L=parenleft;Shift_R=parenright'
+# xcape -t 100 -e "Hyper_L=Escape"

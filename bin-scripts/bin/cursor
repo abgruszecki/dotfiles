@@ -1,2 +1,2 @@
 #!/usr/bin/env bash
-exec ~/opt/cursor/*.AppImage "$@"
+exec ~/opt/cursor/*.AppImage --no-sandbox "$@"
