@@ -97,6 +97,7 @@
 (load! "+bespoke")
 
 ;; Extra configs
+;; Install grammars using M-x treesit-install-language-grammar
 (pushnew! treesit-extra-load-path "~/opt/tree-sitter-grammars")
 
 ;; (use-package! evil-collection

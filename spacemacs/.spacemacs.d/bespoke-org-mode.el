@@ -67,66 +67,71 @@
           (:name "Inne")
             )))
 
-(setq org-capture-templates
-        '(("h" "Log here" entry #'values "* %U
- %?" :prepend t)
-          ("z" "Roam ZTK note" entry
-           (file+olp buffer-file-name "ZTK" "Niezorganizowane")
-           "* #? %?
-  :PROPERTIES:%(org-cycle)
-  :ID:       %(org-id-new)
-  :ZTK:      ?
-  :END:" :unnarrowed t :no-save t)
-          ("r" "Roam reading list" entry
-           (file+headline "~/org/roam/do_przeczytania.org" "Notes")
-           "* %?
-  %u
-** Dlaczego?
-" :prepend t :empty-lines 1)
-          ("l" "Log research" entry
-           (file+headline "~/org/research-log.org" "Log")
-           "** %U %?
-  %a" :prepend t)
-          ("e" "Events")
-          ("ee" "Event NOW" entry
-           (file+olp "~/org/roam/captured.org" "Wydarzenia")
-           "*** EVNT %?\nSCHEDULED: %T"
-           :clock-in t
-           :prepend t)
-          ("e1" "Dotty weekly item" entry
-           (file+olp "~/org/roam/captured.org" "Wydarzenia" "Dotty weekly")
-           "*** %?")
-          ("c" "Todo item")
-          ("c1" "Todo item (TODO)" entry
-           (file+headline "~/org/roam/captured.org" "TODOs")
-           #'my-org//todo-capture-template :my-org//todo-item "TODO" :prepend t :jump-to-captured nil)
-          ("c2" "Todo item (TASK)" entry
-           (file+headline "~/org/roam/captured.org" "Zadania")
-           #'my-org//todo-capture-template :my-org//todo-item "TASK" :prepend t)
-          ("c3" "Todo item (OPEN)" entry
-           (file+headline "~/org/roam/captured.org" "Problemy")
-           #'my-org//todo-capture-template :my-org//todo-item "OPEN" :prepend t)
-          ("C" "Immediate todo item")
-          ("C1" "Immediate todo item (TODO)" entry
-           (file+headline buffer-file-name "TODOs")
-           #'my-org//todo-capture-template :my-org//todo-item "TODO" :prepend t)
-          ("C2" "Immediate todo item (TASK)" entry
-           (file+headline buffer-file-name "Zadania")
-           #'my-org//todo-capture-template :my-org//todo-item "TASK" :prepend t)
-          ("C3" "Immediate todo item (OPEN)" entry
-           (file+headline buffer-file-name "Problemy")
-           #'my-org//todo-capture-template :my-org//todo-item "OPEN" :prepend t)
-          ("n" "Roam note" entry #'my-org/move-to-notes "* %?
-%a")
-          ("g" "Note" entry
-           (file+headline "~/org/roam/captured.org" "Notes")
-           "* " :prepend t)
-          ("C" "Roam capture note (HERE)" entry
-           (file+headline buffer-file-name "TODOs")
-           "* ")
-          ("t" "Project TODO" entry
-           (file+headline my/current-project-TODOs-file "TODOs")
-           #'my/org-template/project-todo-capture)))
+(setq! org-capture-templates
+       '(
+         ("h" "Log here" entry
+          (file+headline #'buffer-file-name "Notes")
+          "* %? %U"
+          :prepend t)
+;;          ("z" "Roam ZTK note" entry
+;;           (file+olp buffer-file-name "ZTK" "Niezorganizowane")
+;;           "* #? %?
+;;   :PROPERTIES:%(org-cycle)
+;;   :ID:       %(org-id-new)
+;;   :ZTK:      ?
+;;   :END:" :unnarrowed t :no-save t)
+;;          ("r" "Roam reading list" entry
+;;           (file+headline "~/org/roam/do_przeczytania.org" "Notes")
+;;           "* %?
+;;   %u
+;; ** Dlaczego?
+;; " :prepend t :empty-lines 1)
+;;          ("l" "Log research" entry
+;;           (file+headline "~/org/research-log.org" "Log")
+;;           "** %U %?
+;;   %a"
+;;           :prepend t)
+;;          ("e" "Events")
+;;          ("ee" "Event NOW" entry
+;;           (file+olp "~/org/roam/captured.org" "Wydarzenia")
+;;           "*** EVNT %?\nSCHEDULED: %T"
+;;           :clock-in t
+;;           :prepend t)
+;;          ("e1" "Dotty weekly item" entry
+;;           (file+olp "~/org/roam/captured.org" "Wydarzenia" "Dotty weekly")
+;;           "*** %?")
+;;          ("c" "Todo item")
+;;          ("c1" "Todo item (TODO)" entry
+;;           (file+headline "~/org/roam/captured.org" "TODOs")
+;;           #'my-org//todo-capture-template :my-org//todo-item "TODO" :prepend t :jump-to-captured nil)
+;;          ("c2" "Todo item (TASK)" entry
+;;           (file+headline "~/org/roam/captured.org" "Zadania")
+;;           #'my-org//todo-capture-template :my-org//todo-item "TASK" :prepend t)
+;;          ("c3" "Todo item (OPEN)" entry
+;;           (file+headline "~/org/roam/captured.org" "Problemy")
+;;           #'my-org//todo-capture-template :my-org//todo-item "OPEN" :prepend t)
+;;          ("C" "Immediate todo item")
+;;          ("C1" "Immediate todo item (TODO)" entry
+;;           (file+headline buffer-file-name "TODOs")
+;;           #'my-org//todo-capture-template :my-org//todo-item "TODO" :prepend t)
+;;          ("C2" "Immediate todo item (TASK)" entry
+;;           (file+headline buffer-file-name "Zadania")
+;;           #'my-org//todo-capture-template :my-org//todo-item "TASK" :prepend t)
+;;          ("C3" "Immediate todo item (OPEN)" entry
+;;           (file+headline buffer-file-name "Problemy")
+;;           #'my-org//todo-capture-template :my-org//todo-item "OPEN" :prepend t)
+;;          ("n" "Roam note" entry #'my-org/move-to-notes "* %?
+;; %a")
+;;          ("g" "Note" entry
+;;           (file+headline "~/org/roam/captured.org" "Notes")
+;;           "* " :prepend t)
+;;          ("C" "Roam capture note (HERE)" entry
+;;           (file+headline buffer-file-name "TODOs")
+;;           "* ")
+;;          ("t" "Project TODO" entry
+;;           (file+headline my/current-project-TODOs-file "TODOs")
+;;           #'my/org-template/project-todo-capture)
+         ))
 
 (setq attempt "ROAM_TAGS={@zasób}")
 (org-add-agenda-custom-command '("z" "Rzeczy uchwycone" tags-todo attempt))

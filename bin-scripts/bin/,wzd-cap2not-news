@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+
+if [[ $BSP_LAUNCHER = 1 ]]; then
+    response=$(zot2not cap2not-news 2>&1)
+    status=$?
+    if [[ $status -eq 0 ]]; then
+        # last line of response is the URL
+        url=$(echo "$response" | tail -n 1)
+        echo "$url" | xclip -selection clipboard
+        rofi -e "Captured! Copied URL. Response:\n$response"
+    else
+        rofi -e "Failed ($status):\n$response"
+    fi
+else
+    response=$(zot2not cap2not-news 2>&1)
+    status=$?
+    echo "$response"; echo
+    if [[ $status -eq 0 ]]; then
+        # last line of response is the URL
+        url=$(echo "$response" | tail -n 1)
+        echo "$url" | xclip -selection clipboard
+        echo "Captured! Copied URL."
+    else
+        echo "Failed ($status)."
+        exit $status
+    fi
+fi

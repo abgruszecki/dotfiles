@@ -65,6 +65,7 @@
 (package! org-roam-bibtex)
 
 (package! org-web-tools)
+(package! ox-gfm)
 
 (package! typst-ts-mode
   :recipe (:type git :host sourcehut :repo "meow_king/typst-ts-mode")

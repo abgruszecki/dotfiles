@@ -8,81 +8,109 @@
 (use-package! org-web-tools
   :after org)
 
-(setq! org-todo-keywords '((sequence "TODO(t)" "DONE(d)")
-                           (sequence "STEP(s)" "DONE(d)")
-                           (sequence "TASK(k)" "DONE(d)")
-                           (sequence "OPEN(o)" "CLSD(c)")
-                           (sequence "EVNT(e)" "PAST(p)"))
-       org-reverse-note-order t
-       ;; org-agenda-files "~/.cache/emacs-org-mode/agenda"
-       org-refile-targets '((org-agenda-files . (:level . 1)))
-       org-outline-path-complete-in-steps nil
-       org-refile-use-outline-path t
-       org-export-with-toc nil
-       org-id-link-to-org-use-id 'create-if-interactive-and-no-custom-id
-       org-hide-block-startup t
-       org-startup-folded "fold")
+(use-package! ox-gfm
+  :after org)
 
-(setq! org-capture-templates
-       '(("h" "Log here" entry #'values "* %U
- %?" :prepend t)
-         ("z" "Roam ZTK note" entry
-          (file+olp buffer-file-name "ZTK" "Niezorganizowane")
-          "* #? %?
-  :PROPERTIES:%(org-cycle)
-  :ID:       %(org-id-new)
-  :ZTK:      ?
-  :END:" :unnarrowed t :no-save t)
-         ("r" "Roam reading list" entry
-          (file+headline "~/org/roam/do_przeczytania.org" "Notes")
-          "* %?
-  %u
-** Dlaczego?
-" :prepend t :empty-lines 1)
-         ("l" "Log research" entry
-          (file+headline "~/org/research-log.org" "Log")
-          "** %U %?
-  %a" :prepend t)
-         ("e" "Events")
-         ("ee" "Event NOW" entry
-          (file+olp "~/org/roam/captured.org" "Wydarzenia")
-          "*** EVNT %?\nSCHEDULED: %T"
-          :clock-in t
-          :prepend t)
-         ;; ("e1" "Dotty weekly item" entry
-         ;;  (file+olp "~/org/roam/captured.org" "Wydarzenia" "Dotty weekly")
-         ;;  "*** %?")
-         ("c" "Todo item")
-         ("c1" "Todo item (TODO)" entry
-          (file+headline "~/org/roam/captured.org" "TODOs")
-          #'my-org//todo-capture-template :my-org//todo-item "TODO" :prepend t :jump-to-captured nil)
-         ("c2" "Todo item (TASK)" entry
-          (file+headline "~/org/roam/captured.org" "Zadania")
-          #'my-org//todo-capture-template :my-org//todo-item "TASK" :prepend t)
-         ("c3" "Todo item (OPEN)" entry
-          (file+headline "~/org/roam/captured.org" "Problemy")
-          #'my-org//todo-capture-template :my-org//todo-item "OPEN" :prepend t)
-         ("C" "Immediate todo item")
-         ("C1" "Immediate todo item (TODO)" entry
-          (file+headline buffer-file-name "TODOs")
-          #'my-org//todo-capture-template :my-org//todo-item "TODO" :prepend t)
-         ("C2" "Immediate todo item (TASK)" entry
-          (file+headline buffer-file-name "Zadania")
-          #'my-org//todo-capture-template :my-org//todo-item "TASK" :prepend t)
-         ("C3" "Immediate todo item (OPEN)" entry
-          (file+headline buffer-file-name "Problemy")
-          #'my-org//todo-capture-template :my-org//todo-item "OPEN" :prepend t)
-         ("n" "Roam note" entry #'my-org/move-to-notes "* %?
-%a")
-         ("g" "Note" entry
-          (file+headline "~/org/roam/captured.org" "Notes")
-          "* " :prepend t)
-         ("C" "Roam capture note (HERE)" entry
-          (file+headline buffer-file-name "TODOs")
-          "* ")
-         ("t" "Project TODO" entry
-          (file+headline my/current-project-TODOs-file "TODOs")
-          #'my/org-template/project-todo-capture)))
+(after! org
+  (setq! org-timestamp-formats '("%Y-%m-%d" . "%Y-%m-%d %H:%M")
+         org-todo-keywords '((sequence "TODO(t)" "DONE(d)")
+                             (sequence "STEP(s)" "DONE(d)")
+                             (sequence "TASK(k)" "DONE(d)")
+                             (sequence "OPEN(o)" "CLSD(c)")
+                             (sequence "EVNT(e)" "PAST(p)"))
+         org-reverse-note-order t
+         ;; org-agenda-files "~/.cache/emacs-org-mode/agenda"
+         org-refile-targets '((org-agenda-files . (:level . 1)))
+         org-outline-path-complete-in-steps nil
+         org-refile-use-outline-path t
+         org-export-with-toc nil
+         org-id-link-to-org-use-id 'create-if-interactive-and-no-custom-id
+         org-hide-block-startup t
+         org-startup-folded "fold")
+
+  (setq! org-capture-templates
+         '(
+           ("h" "Log here" entry
+            ;; (file+headline "~/org/roam/20240717071652-large_language_models.org" "Notes")
+            (file+headline ~org-capture-get-original-file "Notes")
+            "* %? %u"
+            :prepend t)
+;;            ("z" "Roam ZTK note" entry
+;;             (file+olp buffer-file-name "ZTK" "Niezorganizowane")
+;;             "* #? %?
+;;   :PROPERTIES:%(org-cycle)
+;;   :ID:       %(org-id-new)
+;;   :ZTK:      ?
+;;   :END:"
+;;             :unnarrowed t :no-save t)
+;;            ("r" "Roam reading list" entry
+;;             (file+headline "~/org/roam/do_przeczytania.org" "Notes")
+;;             "* %?
+;;   %u
+;; ** Dlaczego?
+;; "
+;;             :prepend t :empty-lines 1)
+           ("l" "Log")
+           ("lp" "Log paper" entry
+            (file+headline ~org-capture-get-original-file "Notes")
+            "* %^{Verb|Found|Read}: %?[cite:@%(citar-select-ref)] %u"
+            :prepend t)
+;;            ("ll" "Log research" entry
+;;             (file+headline "~/org/research-log.org" "Log")
+;;             "** %U %?
+;;   %a"
+;;             :prepend t)
+;;            ("e" "Events")
+;;            ("ee" "Event NOW" entry
+;;             (file+olp "~/org/roam/captured.org" "Wydarzenia")
+;;             "*** EVNT %?\nSCHEDULED: %T"
+;;             :clock-in t
+;;             :prepend t)
+;;            ("e1" "Dotty weekly item" entry
+;;             (file+olp "~/org/roam/captured.org" "Wydarzenia" "Dotty weekly")
+;;             "*** %?")
+;;            ("c" "Todo item")
+;;            ("c1" "Todo item (TODO)" entry
+;;             (file+headline "~/org/roam/captured.org" "TODOs")
+;;             #'my-org//todo-capture-template
+;;             :my-org//todo-item "TODO" :prepend t :jump-to-captured nil)
+;;            ("c2" "Todo item (TASK)" entry
+;;             (file+headline "~/org/roam/captured.org" "Zadania")
+;;             #'my-org//todo-capture-template
+;;             :my-org//todo-item "TASK" :prepend t)
+;;            ("c3" "Todo item (OPEN)" entry
+;;             (file+headline "~/org/roam/captured.org" "Problemy")
+;;             #'my-org//todo-capture-template
+;;             :my-org//todo-item "OPEN" :prepend t)
+;;            ("C" "Immediate todo item")
+;;            ("C1" "Immediate todo item (TODO)" entry
+;;             (file+headline buffer-file-name "TODOs")
+;;             #'my-org//todo-capture-template
+;;             :my-org//todo-item "TODO" :prepend t)
+;;            ("C2" "Immediate todo item (TASK)" entry
+;;             (file+headline buffer-file-name "Zadania")
+;;             #'my-org//todo-capture-template
+;;             :my-org//todo-item "TASK" :prepend t)
+;;            ("C3" "Immediate todo item (OPEN)" entry
+;;             (file+headline buffer-file-name "Problemy")
+;;             #'my-org//todo-capture-template
+;;             :my-org//todo-item "OPEN" :prepend t)
+;;            ("n" "Roam note" entry #'my-org/move-to-notes "* %?
+;; %a")
+;;            ("g" "Note" entry
+;;             (file+headline "~/org/roam/captured.org" "Notes")
+;;             "* "
+;;             :prepend t)
+;;            ("C" "Roam capture note (HERE)" entry
+;;             (file+headline buffer-file-name "TODOs")
+;;             "* ")
+;;            ("t" "Project TODO" entry
+;;             (file+headline my/current-project-TODOs-file "TODOs")
+;;             #'my/org-template/project-todo-capture)
+;;            )
+           ))
+
+
 
 (setq! bibtex-completion-bibliography '("~/.cache/zotero-export/PhD.bib")
        bibtex-completion-library-path "~/zotero-pdf/"
@@ -142,6 +170,10 @@
 ;;       "r" 'org-roam-tag-remove
 ;;       "a" 'org-roam-alias-add
 ;;       )
+
+(defun ~org-capture-get-original-file ()
+  (message "~org-capture-get-original-file: %s" (org-capture-get :original-file))
+  (org-capture-get :original-file))
 
 (defun ~org-ref-cite-insert-helm ()
   (interactive)
