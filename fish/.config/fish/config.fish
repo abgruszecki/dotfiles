@@ -106,7 +106,7 @@ end
 
 #### AIDER
 
-set AIDER_ENV_FILE $HOME/.ai/.env
+set -x AIDER_ENV_FILE $HOME/.ai/.env
 
 #### EXTERNAL PATHS
 

@@ -55,17 +55,24 @@
 
 ;; (disable-packages! evil-textobj-anyblock)
 
+;; NOTE Seems: an unlisted dependency of a listed package won't be correct updated.
+;; At least: I had to manually add parsebib here b/c it wasn't updating as helm-bibtex expected.
+
 (package! bsp-utils :recipe (:local-repo "+bsp/utils"))
 (package! evil-lisp-state)
 
 ;; (package! emacsql)
 ;; (package! org-roam)
-(package! helm-bibtex)
+(package! parsebib :pin "c0ee4d5f10bf801af03f633b6b73ced4a0ffead7")
+(package! helm-bibtex :pin "6064e8625b2958f34d6d40312903a85c173b5261")
 (package! org-ref)
 (package! org-roam-bibtex)
 
 (package! org-web-tools)
 (package! ox-gfm)
+
+(package! gptel)
+(package! aider :recipe (:host github :repo "tninja/aider.el" :files ("*.el")))
 
 (package! typst-ts-mode
   :recipe (:type git :host sourcehut :repo "meow_king/typst-ts-mode")

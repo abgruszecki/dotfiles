@@ -1,6 +1,8 @@
 [user]
 	name = Aleksander Boruch-Gruszecki
 	email = aleksander.boruch-gruszecki@epfl.ch
+[merge]
+conflictstyle = zdiff3
 [core]
 [rerere]
 	enabled = true
@@ -14,7 +16,7 @@
 	sw = switch
 	re = restore
 	poh = push origin HEAD
-	hps = push staging HEAD
+	psth = push staging HEAD
 	unstage = reset HEAD --
 	stage = add
 	fix = commit --amend -C HEAD

@@ -1,0 +1,2 @@
+#!/usr/bin/env bash
+exec osh -O strict:all -O parse_at -O parse_brace -O parse_paren "$@"

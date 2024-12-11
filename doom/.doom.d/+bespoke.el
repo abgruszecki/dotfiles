@@ -16,7 +16,18 @@
     (kill-new (format-time-string "%d.%m.%Y"))
       (kill-new (format-time-string "%Y.%m.%d"))))
 
+(defun ~new-scratch-templated ()
+  (interactive)
+  (if-let ((file (read-file-name "Select template:" "~/org/scratch/templates/")))
+     (let ((buf (generate-new-buffer (concat "*scratch-" (f-base file) "*"))))
+       (with-current-buffer buf
+         (insert-file-contents file)
+         (markdown-mode))
+       (set-window-buffer nil buf))
+    ))
+
 ;; TODO ...does this depend on being after the code which configures the name of the prefix?
 (map! :leader
       "\\ Y G" #'~yank-magit-current-commit-hash
-      "\\ Y D" #'~yank-current-date)
+      "\\ Y D" #'~yank-current-date
+      "\\ C-n" #'~new-scratch-templated)

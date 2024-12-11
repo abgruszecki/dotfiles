@@ -88,12 +88,16 @@
       )
 
 ;; TODO I forgot to load a file yet another time. That should be automatic.
-(load! "+embark")
-(load! "+window-select")
-(load! "+tex")
 (load! "+org")
+(load! "+window-select")
+;;
 (load! "+workspaces")
 (load! "+lambda-input-method")
+;;
+(load! "+embark")
+(load! "+tex")
+(load! "+ai")
+;;
 (load! "+bespoke")
 
 ;; Extra configs

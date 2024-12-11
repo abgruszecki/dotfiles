@@ -7,9 +7,12 @@ if [[ $BSP_LAUNCHER = 1 ]]; then
         # last line of response is the URL
         url=$(echo "$response" | tail -n 1)
         echo "$url" | xclip -selection clipboard
-        rofi -e "Captured! Copied URL. Response:\n$response"
+	fmtd=$(printf "Captured! Copied URL. Response:\n%s" "$response")
+        rofi -e "$fmtd"
     else
-        rofi -e "Failed ($status):\n$response"
+        small_response=$(echo "$response" | tail -n 20)
+	fmtd=$(printf "Failed ($status). Check logs. End of response:\n%s" "$small_response")
+        rofi -e "$fmtd"
     fi
 else
     response=$(zot2not cap2not-news 2>&1)

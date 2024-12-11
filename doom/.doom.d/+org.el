@@ -109,8 +109,8 @@
 ;;             #'my/org-template/project-todo-capture)
 ;;            )
            ))
-
-
+  ;; end after! org
+  )
 
 (setq! bibtex-completion-bibliography '("~/.cache/zotero-export/PhD.bib")
        bibtex-completion-library-path "~/zotero-pdf/"
@@ -119,6 +119,15 @@
        org-ref-show-citation-on-enter nil)
 
 (setq! citar-bibliography '("~/.cache/zotero-export/PhD.bib"))
+
+(after! org-roam
+  ;; this advice uses deprecated functions like org-roam-teardown.
+  ;; (docs say: deprecated in org-roam v2)
+  ;; it also mentions org-roam-setup (similarly deprecated).
+  ;; it also talks about errors in compile-log (which aren't there)
+  ;; and isn't sqlite support supposed to be built into emacs?
+  (advice-remove 'org-roam-db-query #'+org-roam-try-init-db-a)
+  )
 
 (setq! org-roam-directory "~/org/roam"
        org-roam-db-location "~/.cache/org-roam/org-roam.db"
