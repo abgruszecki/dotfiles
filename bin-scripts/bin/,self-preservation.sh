@@ -19,6 +19,7 @@ try() {
 }
 
 ### FUNCTIONS
+# TODO Run this in a separate process (use the self-invoke trick).
 
 preserve() {
   cd "$1" || { 
@@ -35,9 +36,6 @@ preserve() {
 }
 
 ### START
-
-preserve ~/.config/spacemacs/private/bespoke-scala-mode/local/scala-mode
-preserve ~/.config/spacemacs/private/
 
 # preserve dotfiles last as they contain the self-preservation script
 preserve ~/dotfiles/
