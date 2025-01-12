@@ -1,0 +1,15 @@
+#!/usr/bin/env fish
+set old_suffix $argv[1]
+set new_suffix $argv[2]
+set candidates $argv[3..]
+
+# echo candidates = $candidates
+# echo regex = "\Q$old_suffix\E\$"
+
+for cand in $candidates
+    if set replaced (string replace --regex "\Q$old_suffix\E\$" '' "$cand")
+        echo "$replaced$new_suffix"
+    else
+        echo $cand
+    end
+end

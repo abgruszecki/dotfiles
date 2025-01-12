@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+export BSP_LAUNCHER=1
+rofi -show combi \
+	-modi combi,window,windowcd,run,drun \
+	-combi-modi 'run,drun,window' \
+	-filter ,wzd-cap-

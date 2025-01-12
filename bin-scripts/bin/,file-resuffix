@@ -1,0 +1,12 @@
+#!/usr/bin/env fish
+set old_suffix $argv[1]
+set new_suffix $argv[2]
+set candidates $argv[3..]
+
+for cand in $candidates
+    if set replaced (string replace --regex "\Q$old_suffix\E\$" '' "$cand")
+        mv -v "$cand" "$replaced$new_suffix"
+    else
+        echo Not touching: $cand
+    end
+end

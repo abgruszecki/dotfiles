@@ -114,8 +114,3 @@ set PATH $PATH ~/.local/share/coursier/bin
 
 # source ~/anaconda3/etc/fish/conf.d/conda.fish
 # set -q GHCUP_INSTALL_BASE_PREFIX[1]; or set GHCUP_INSTALL_BASE_PREFIX $HOME ; set -gx PATH $HOME/.cabal/bin $PATH /home/gruszecki/.ghcup/bin # ghcup-env
-
-# The next line updates PATH for the Google Cloud SDK.
-# if [ -f '~/Downloads/google-cloud-cli-linux-x86_64/google-cloud-sdk/path.fish.inc' ];
-#     source '~/Downloads/google-cloud-cli-linux-x86_64/google-cloud-sdk/path.fish.inc'
-# end

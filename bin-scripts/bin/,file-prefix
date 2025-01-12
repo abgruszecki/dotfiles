@@ -1,0 +1,2 @@
+#!/usr/bin/env fish
+mv -v $argv[1] "$argv[2]$argv[1]"

@@ -1,2 +1,2 @@
 #!/usr/bin/env bash
-,launch ,cl -e "(call-interactively #'man)"
+,launch ,cl --eval "(call-interactively #'man)"

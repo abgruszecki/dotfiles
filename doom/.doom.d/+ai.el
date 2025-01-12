@@ -20,8 +20,10 @@
 (defvar ~aider-base-args '("--no-git"
                            "--no-check-update"))
 
-(defvar ~ai-model-groq-llama31-70b "llama-3.1-70b-versatile")
-(defvar ~ai-model-claude35plus "claude-3-5-sonnet-20241022")
+(defvar ~ai-model-groq-llama31-70b)
+(defvar ~ai-model-claude35plus)
+(setq ~ai-model-claude35plus "claude-3-5-sonnet-20241022")
+(setq ~ai-model-groq-llama31-70b "llama-3.3-70b-versatile")
 
 (use-package! aider
   :config

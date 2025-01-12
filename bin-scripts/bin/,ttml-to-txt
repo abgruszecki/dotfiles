@@ -1,0 +1,9 @@
+#!/usr/bin/env python3
+
+import xml.etree.ElementTree as ET
+
+doc = ET.parse('test.pl.ttml')
+for e in doc.findall('.//{http://www.w3.org/ns/ttml}p'):
+    start = e.get('begin').split('.', 1)[0] # no error without the dot
+    txt = e.text
+    print(f"[{start}]\n{txt}")

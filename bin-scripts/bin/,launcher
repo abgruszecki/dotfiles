@@ -2,5 +2,5 @@
 
 # Tell the scripts they're being run from the "launcher".
 export BSP_LAUNCHER=1
-# rofi -modi combi -combi-modi 'run,drun' -show combi
-rofi -show combi
+rofi -show combi -modi combi,window,windowcd,run,drun -combi-modi 'run,drun,window'
+# rofi -show combi
