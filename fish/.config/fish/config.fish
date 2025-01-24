@@ -9,7 +9,7 @@ alias lz eza
 alias lzl "eza -l"
 
 function mkcd -a dir
-  mkdir $dir
+  mkdir -p $dir
   or return
   cd $dir
 end
@@ -50,6 +50,7 @@ end
 set -gx PATH $PATH ~/.local/bin
 set -gx PATH $PATH ~/.config/emacs/bin
 set -gx PATH $PATH ~/.bun/bin
+set -gx PATH $PATH ~/opt/juliaup/bin
 
 set -gx MANPATH $MANPATH ~/.local/share/man
 

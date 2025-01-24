@@ -148,6 +148,10 @@
       :textobj "C-S-B" #'evil-textobj-anyblock-inner-block #'evil-textobj-anyblock-a-block
  )
 
+;; NOTE A fix for a potential BUG in dirvish
+;; (after! 'dirvish
+;;         (advice-remove #'dired-find-file #'dirvish-find-entry-a))
+
 ;; My packages
 
 (use-package! evil-lisp-state
@@ -210,6 +214,8 @@
                "<f8>" #'+workspace/switch-to-7
                )
       )
+
+(map! :leader "f M-f" #'consult-find)
 
 (defvar ~last-compilation-cmd-type nil)
 

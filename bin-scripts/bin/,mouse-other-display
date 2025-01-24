@@ -1,0 +1,96 @@
+#!/usr/bin/env python3
+import subprocess
+import re
+
+def get_display_info() -> list[tuple[str, int, int, int, int]]:
+    """
+    Get display information using xrandr.
+    Returns list of tuples: (display_name, x, y, width, height)
+    """
+    displays = []
+
+    # Run xrandr command and get output
+    try:
+        output = subprocess.check_output(['xrandr', '--current']).decode()
+    except subprocess.CalledProcessError as e:
+        raise RuntimeError(f"Failed to run xrandr: {e}")
+
+    # Parse xrandr output to get display info
+    # Looking for lines like: "HDMI-1 connected 1920x1080+1920+0"
+    pattern = r'(\S+) connected.*?(\d+)x(\d+)\+(\d+)\+(\d+)'
+    matches = re.finditer(pattern, output)
+
+    for match in matches:
+        name = match.group(1)
+        width = int(match.group(2))
+        height = int(match.group(3))
+        x = int(match.group(4))
+        y = int(match.group(5))
+        displays.append((name, x, y, width, height))
+
+    return displays
+
+def get_current_mouse_position() -> tuple[int, int]:
+    """
+    Get current mouse cursor position using xdotool.
+    Returns tuple of (x, y) coordinates.
+    """
+    try:
+        output = subprocess.check_output(['xdotool', 'getmouselocation']).decode()
+        x = int(re.search(r'x:(\d+)', output).group(1))
+        y = int(re.search(r'y:(\d+)', output).group(1))
+        return (x, y)
+    except subprocess.CalledProcessError as e:
+        raise RuntimeError(f"Failed to get mouse position: {e}")
+
+def move_to_other_display():
+    """
+    Move mouse cursor to the center of the other display.
+    """
+    try:
+        # Get all display information
+        displays = get_display_info()
+
+        if len(displays) < 2:
+            print("Error: Multiple displays not detected")
+            return
+
+        # Get current mouse position
+        current_x, current_y = get_current_mouse_position()
+
+        # Find current display
+        current_display = None
+        for display in displays:
+            name, x, y, width, height = display
+            if (x <= current_x < x + width) and (y <= current_y < y + height):
+                current_display = display
+                break
+
+        if not current_display:
+            print("Error: Cannot determine current display")
+            return
+
+        # Find other display
+        other_display = None
+        for display in displays:
+            if display != current_display:
+                other_display = display
+                break
+
+        # Calculate center of other display
+        _, x, y, width, height = other_display
+        center_x = x + (width // 2)
+        center_y = y + (height // 2)
+
+        # Move mouse to center of other display
+        try:
+            subprocess.run(['xdotool', 'mousemove', str(center_x), str(center_y)], check=True)
+            print(f"Moved mouse to center of {other_display[0]} ({center_x}, {center_y})")
+        except subprocess.CalledProcessError as e:
+            print(f"Failed to move mouse: {e}")
+
+    except Exception as e:
+        print(f"An error occurred: {e}")
+
+if __name__ == "__main__":
+    move_to_other_display()

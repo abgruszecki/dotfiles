@@ -29,6 +29,7 @@ sbt-ctags-dep-srcs
 
 # Python
 __pycache__
+.ruff_cache
 
 # IDE
 
