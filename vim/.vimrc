@@ -59,6 +59,8 @@ let mapleader = "\<Space>"
 let &showbreak = '↪ '
 
 nnoremap <F9> :set relativenumber!<CR>
+nnoremap ZW :wqa<CR>
+" nnoremap ZQ :qa!<CR>
 
 " Copypasting {{{
 " vnoremap <silent> <F1> "zy:new \| pu z \| exe '2,.!pbcopy' \| bw!<CR>

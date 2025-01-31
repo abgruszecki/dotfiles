@@ -2,6 +2,12 @@
 
 ;;; Misc configuration which (currently?) doesn't fit anywhere else
 
+(defun bsp/dwim-clear-screen (&optional arg)
+  (interactive "P")
+  (evil-ex-nohighlight)
+  (unless (eq arg 0)
+    (recenter-top-bottom arg)))
+
 (defun ~yank-magit-current-commit-hash (prefix)
   (interactive "P")
   (let ((hash (if prefix

@@ -7,12 +7,6 @@
       doom-localleader-key ","
       doom-localleader-alt-key "M-,")
 
-(defun bsp/dwim-clear-screen (&optional arg)
-  (interactive "P")
-  (evil-ex-nohighlight)
-  (unless (eq arg 0)
-    (recenter-top-bottom arg)))
-
 ;; Some functionality uses this to identify you, e.g. GPG configuration, email
 ;; clients, file templates and snippets.
 (setq user-full-name "Aleksander Boruch-Gruszecki"
@@ -148,9 +142,9 @@
       :textobj "C-S-B" #'evil-textobj-anyblock-inner-block #'evil-textobj-anyblock-a-block
  )
 
-;; NOTE A fix for a potential BUG in dirvish
-;; (after! 'dirvish
-;;         (advice-remove #'dired-find-file #'dirvish-find-entry-a))
+;; NOTE A fix for a BUG in... dirvish? doom?
+(after! dirvish
+        (advice-remove #'dired-find-file #'dirvish-find-entry-a))
 
 ;; My packages
 
