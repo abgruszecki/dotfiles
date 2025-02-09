@@ -48,8 +48,27 @@
 
   (setf
    (alist-get #'org-web-tools-insert-link-for-url embark-pre-action-hooks)
-   `(embark--mark-target ~embark//delete-region)
-   )
+   `(embark--mark-target ~embark//delete-region))
+
+  ;; (setq! echo-keystrokes 0.02)
+  ;; (defadvice! ~embark//silence-keypress-echo2 (underlying-fn &rest args)
+  ;;   :around #'embark--confirm
+  ;;   (let ((echo-keystrokes 0)
+  ;;         (which-key-echo-keystrokes 0))
+  ;;     (apply underlying-fn args)
+  ;;     )
+  ;;   )
+  ;; (defadvice! ~embark//silence-keypress-echo (underlying-fn &rest args)
+  ;;   :around #'embark-act
+  ;;   (let ((old-echo-keystrokes echo-keystrokes))
+  ;;       (setq! echo-keystrokes 0)
+  ;;       (unwind-protect
+  ;;           (apply underlying-fn args)
+  ;;         (setq! echo-keystrokes old-echo-keystrokes)
+  ;;         (warn "foo: %s" echo-keystrokes)
+  ;;       )
+  ;;     )
+  ;;   )
   )
 
 (defun ~citar-copy-short-title (citekey)

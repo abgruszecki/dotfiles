@@ -82,17 +82,42 @@
       )
 
 ;; TODO I forgot to load a file yet another time. That should be automatic.
-(load! "+org")
-(load! "+window-select")
-;;
-(load! "+workspaces")
-(load! "+lambda-input-method")
-;;
-(load! "+embark")
-(load! "+tex")
-(load! "+ai")
-;;
-(load! "+bespoke")
+(defmacro load-config-fragments (&rest names)
+  (cons 'progn
+        (mapcar
+         (lambda (name)
+           `(condition-case err
+                (load! ,name)
+              (error
+               (message "Error when loading %s: %s" ,name err))))
+         names
+         ))
+  )
+
+(load-config-fragments
+ "+org"
+ "+window-select"
+ ;;
+ "+workspaces"
+ "+lambda-input-method"
+ ;;
+ "+embark"
+ "+tex"
+ "+ai"
+ ;;
+ "+bespoke"
+ )
+;; (load! "+org")
+;; (load! "+window-select")
+;; ;;
+;; (load! "+workspaces")
+;; (load! "+lambda-input-method")
+;; ;;
+;; (load! "+embark")
+;; (load! "+tex")
+;; (load! "+ai")
+;; ;;
+;; (load! "+bespoke")
 
 ;; Extra configs
 ;; Install grammars using M-x treesit-install-language-grammar

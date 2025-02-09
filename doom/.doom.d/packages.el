@@ -71,7 +71,7 @@
 (package! org-web-tools)
 (package! ox-gfm)
 
-(package! gptel)
+;; (package! gptel)
 (package! aider :recipe (:host github :repo "tninja/aider.el" :files ("*.el")))
 
 (package! typst-ts-mode

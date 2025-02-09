@@ -1,5 +1,4 @@
 # Automatically created by GitHub for Mac
-
 .DS_Store
 .AppleDouble
 .LSOverride
@@ -22,7 +21,6 @@ Temporary Items
 .apdisk
 
 # Tags
-
 tags
 .tags
 sbt-ctags-dep-srcs
@@ -30,23 +28,21 @@ sbt-ctags-dep-srcs
 # Python
 __pycache__
 .ruff_cache
+.venv
 
 # IDE
-
 .idea
 *.iml
 
 # Emacs
-
 .pdf-view-restore
 .auctex.d
 .auctex-auto
 
 # Personal
-
 ,
 ,,
 
-.sbt-hydra-history
-
+# misc
+.mise.local.cfg
 .env

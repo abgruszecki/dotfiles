@@ -105,6 +105,11 @@ if [ "$INSIDE_EMACS" = 'vterm' ]
     end
 end
 
+#### mise
+
+set -x MISE_PARANOID 1
+~/.local/bin/mise activate fish | source
+
 #### AIDER
 
 set -x AIDER_ENV_FILE $HOME/.ai/.env
