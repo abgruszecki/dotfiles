@@ -1,2 +1,2 @@
 #!/usr/bin/env bash
-sudo -p '[sudo docker] Password:' docker "$@"
+sudo -p '[sudo docker] Password: ' docker "$@"

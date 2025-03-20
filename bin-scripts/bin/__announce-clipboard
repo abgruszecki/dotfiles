@@ -1,0 +1,2 @@
+#!/usr/bin/env bash
+rofi -e "Copied!"$'\n'"$(xclip -selection c -o)"

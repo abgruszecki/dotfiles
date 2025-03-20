@@ -1,5 +1,10 @@
 configuration {
   modi: "combi,windowcd,window,run,drun";
   combi-modi: "drun,run";
+  kb-accept-entry: "Return,KP_Enter";
+  kb-row-down: "Down,Alt+j";
+  kb-row-up: "Up,Alt+k";
+  kb-mode-next: "Control+Tab,Shift+Right";
+  kb-mode-prev: "Control+ISO_Left_Tab,Shift+Left";
 }
 @theme "solarized"

@@ -12,9 +12,16 @@
 ;;          )
 ;;   )
 
+;; See https://github.com/cheahjs/free-llm-api-resources.
+
 (defun ~ai-load-anthropic-key ()
   (with-temp-buffer
     (insert-file-contents "~/.ai/ANTHROPIC_API_KEY")
+    (s-trim (buffer-string))))
+
+(defun ~ai-load-openrouter-key ()
+  (with-temp-buffer
+    (insert-file-contents "~/.ai/OPENROUTER_API_KEY")
     (s-trim (buffer-string))))
 
 (defvar ~aider-base-args '("--no-git"
@@ -35,6 +42,29 @@
                      ~aider-base-args)
          )
   (setenv "ANTHROPIC_API_KEY" (~ai-load-anthropic-key))
+  )
+
+(defun ~aidermacs-vterm-disable-truncate-lines ()
+  (setq truncate-lines nil))
+
+(use-package! aidermacs
+  :config
+  (setenv "ANTHROPIC_API_KEY" (~ai-load-anthropic-key))
+  (setenv "OPENROUTER_API_KEY" (~ai-load-openrouter-key))
+
+  (setq! aidermacs-extra-args `("--no-git"
+                                "--no-check-update"
+                                "--chat-mode" "ask"
+                                "--model" "openrouter/deepseek/deepseek-r1:free")
+         ;; The default backend is comint.
+         ;; Comint seems to have better support for evil-mode editing,
+         ;; which may be what I actually want?
+         ;; But vterm acts more like a terminal, which may be more familiar.
+         aidermacs-backend 'vterm)
+
+  ;; This doesn't seem necessary.
+  (add-hook! aidermacs-vterm-mode
+             #'~aidermacs-vterm-disable-truncate-lines)
   )
 
 (defun aider-doom-setup-keys ()
@@ -68,10 +98,15 @@
     (aider-run-aider)
     ))
 
+(defun ~aidermacs-doom-setup-keys ()
+  ;; See `aidermacs-add-file-to-session'.
+  (map! :leader
+        :desc "Aidermacs" "A" #'aidermacs-transient-menu))
+
 (defun ~aider-doom-setup-keys ()
   "Setup Aider keybindings if the current buffer is in a git repository."
   (map! :leader
-        (:prefix ("A" . "Aider")
+        (:prefix ("C-A" . "Aider")
                  (:prefix ("a" . "Add")
                   :desc "Current file" "c" #'aider-add-current-file
                   :desc "Files in window" "w" #'aider-add-files-in-current-window
@@ -110,3 +145,4 @@
                  :desc "Exit Aider" "x" #'aider-exit)))
 
 (~aider-doom-setup-keys)
+(~aidermacs-doom-setup-keys)

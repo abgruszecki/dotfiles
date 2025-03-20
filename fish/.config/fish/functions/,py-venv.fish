@@ -37,6 +37,6 @@ function ,py-venv
                 return 0
         end
     end
-    python3 -m venv $VENV_PATH
+    uv venv $VENV_PATH
     source $VENV_PATH/bin/activate.fish
 end

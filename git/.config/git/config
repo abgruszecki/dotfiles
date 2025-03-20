@@ -28,4 +28,4 @@ conflictstyle = zdiff3
 	fs = fuzzy status
 	fl = fuzzy log
 [init]
-	defaultBranch = main
+	# defaultBranch = main

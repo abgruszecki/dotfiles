@@ -46,7 +46,7 @@ filetype plugin indent on
 
 " Pathogen {{{
 runtime bundle/vim-pathogen/autoload/pathogen.vim
-let g:pathogen_disabled=[ 'vim-pandoc', 'vim-pandoc-syntax' ]
+let g:pathogen_disabled=[ 'vim-pandoc', 'vim-pandoc-syntax', ] " 'vim-colors-solarized' ]
 execute pathogen#infect()
 " }}}
 
@@ -188,7 +188,12 @@ let g:syntastic_cpp_compiler_options = "-std=c++11 -Wall -Wextra -Wpedantic"
 
 " solarized scheme
 set background=dark
-colorscheme solarized
+let g:solarized_t_Co=16
+colorscheme solarized8
+" Add an underline to the entire tabline (try :help highlight)
+highlight TabLine cterm=underline
+highlight TabLineSel cterm=underline
+highlight TabLineFill cterm=underline
 
 " airline
 let g:airline_theme_patch_func = 'AirlineThemePatch'

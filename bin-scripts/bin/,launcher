@@ -1,6 +1,13 @@
 #!/usr/bin/env bash
 
 # Tell the scripts they're being run from the "launcher".
+args=(
+   -show combi
+   # -kb-row-down 'Control-j'
+   -modi combi,window,windowcd,ssh,run,drun
+   -combi-modi 'run,drun,window,ssh'
+   -ssh-client ',kssh'
+)
 export BSP_LAUNCHER=1
-rofi -show combi -modi combi,window,windowcd,run,drun -combi-modi 'run,drun,window'
+rofi "${args[@]}"
 # rofi -show combi

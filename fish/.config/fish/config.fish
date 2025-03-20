@@ -40,8 +40,14 @@ end
 
 set -g fish_greeting "Welcome to fish, the friendly interactive shell. Remember: M-e for navi, M-E for aichat."
  
-bind \ee _navi-smart-replace
-bind \eE _aichat_fish
+bind alt-e _navi-smart-replace
+bind alt-E _aichat_fish
+bind alt-left      backward-token
+bind alt-right     forward-token
+bind alt-backspace backward-kill-token
+bind ctrl-alt-left      backward-bigword
+bind ctrl-alt-right     forward-bigword
+bind ctrl-alt-backspace backward-kill-bigword
 
 if command -q fzf
     fzf --fish | source
@@ -106,16 +112,14 @@ if [ "$INSIDE_EMACS" = 'vterm' ]
 end
 
 #### mise
-
-set -x MISE_PARANOID 1
+# NOTE I could also try out doing `mise en` on shell start and otherwise calling it manually?
+# set -x MISE_PARANOID 1
 ~/.local/bin/mise activate fish | source
 
-#### AIDER
-
+#### aider
 set -x AIDER_ENV_FILE $HOME/.ai/.env
 
-#### EXTERNAL PATHS
-
+#### coursier
 set PATH $PATH ~/.local/share/coursier/bin
 
 # source ~/anaconda3/etc/fish/conf.d/conda.fish

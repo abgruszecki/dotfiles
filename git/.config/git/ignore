@@ -42,7 +42,8 @@ __pycache__
 # Personal
 ,
 ,,
+README.local.md
 
 # misc
-.mise.local.cfg
+.mise.local.toml
 .env

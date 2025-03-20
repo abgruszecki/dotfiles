@@ -1,6 +1,9 @@
+[general]
 import = [
   "~/.config/alacritty/alacritty-theme/themes/solarized_dark.toml",
 ]
 
-[shell]
+[terminal]
+
+[terminal.shell]
 program = "fish"

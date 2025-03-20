@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+dry() { { printf '$'; printf ' %q' "$@"; echo; } >&2; }
+
+
+old_prefix="$1"
+new_prefix="$2"
+shift 2  # Remove first two arguments, leaving only file candidates
+
+for cand in "$@"; do
+    # Use parameter expansion to check if file ends with old suffix
+    if [[ "$cand" == "$old_prefix"* ]]; then
+        # Remove old prefix and append new one
+        new_name="${cand#"$old_prefix"}$new_prefix"
+        mv -v "$cand" "$new_name"
+    else
+        echo "Not touching: $cand"
+    fi
+done

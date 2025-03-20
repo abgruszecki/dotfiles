@@ -73,6 +73,9 @@
 
 ;; (package! gptel)
 (package! aider :recipe (:host github :repo "tninja/aider.el" :files ("*.el")))
+(package! aidermacs
+  :recipe (:host github :repo "matthewzmd/aidermacs")
+  :pin "764a99d")
 
 (package! typst-ts-mode
   :recipe (:type git :host sourcehut :repo "meow_king/typst-ts-mode")

@@ -72,6 +72,8 @@
 
 (setq! pop-up-windows nil)
 
+(setq! frame-title-format `("[" (:eval (safe-persp-name (get-current-persp))) "] %b – Doom Emacs"))
+
 (add-to-list 'default-frame-alist '(fullscreen . maximized))
 
 ;; Doom module config
