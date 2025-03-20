@@ -67,3 +67,14 @@
 [submodule "alacritty/.config/alacritty/alacritty-theme"]
 	path = alacritty/.config/alacritty/alacritty-theme
 	url = git@github.com:alacritty/alacritty-theme.git
+[submodule "vim/.vim/bundle/--help"]
+	path = vim/.vim/bundle/--help
+	url = https://github.com/lifepillar/vim-solarized8/
+[submodule "vim/.vim/bundle/vim-solarized8"]
+	path = vim/.vim/bundle/vim-solarized8
+	url = https://github.com/lifepillar/vim-solarized8/
+	branch = neovim
+[submodule "vim/.vim/pack/themes/start/vim-solarized8"]
+	path = vim/.vim/pack/themes/start/vim-solarized8
+	url = https://github.com/lifepillar/vim-solarized8/
+	branch = neovim
