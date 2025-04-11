@@ -46,4 +46,5 @@ README.local.md
 
 # misc
 .mise.local.toml
+.mise
 .env

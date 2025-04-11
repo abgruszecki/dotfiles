@@ -1,5 +1,6 @@
 set -x EDITOR vim
 
+# TODO move aliases to a separate file?
 alias g git
 
 alias l ls
@@ -8,28 +9,13 @@ alias ll "ls -l"
 alias lz eza
 alias lzl "eza -l"
 
-function mkcd -a dir
-  mkdir -p $dir
-  or return
-  cd $dir
-end
-
-function up -a dir
-    if [ -z "$dir" ]
-        return
-    end
-    set target (string replace -r "/\Q$dir\E/.*" "/$dir" $PWD)
-    echo $target
-    cd $target
-end
-
-complete -x -k -c up -a '(string split -n / $PWD)'
-
+# TODO what's tere?
 function tere
     set --local result (~/.cargo/bin/tere $argv)
     [ -n "$result" ] && cd -- "$result"
 end
 
+# TODO move this to my notes?
 # function fish_right_prompt
 #     if test $CMD_DURATION
 #         # Show duration of the last command in seconds

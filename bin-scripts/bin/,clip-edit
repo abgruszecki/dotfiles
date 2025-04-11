@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+tmp_file=$(mktemp)
+xclip -o -selection clipboard >"$tmp_file"
+,cl "$tmp_file"
+rm "$tmp_file"

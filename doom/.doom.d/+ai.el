@@ -60,10 +60,13 @@
          ;; Comint seems to have better support for evil-mode editing,
          ;; which may be what I actually want?
          ;; But vterm acts more like a terminal, which may be more familiar.
-         aidermacs-backend 'vterm)
+         aidermacs-backend 'comint
+         )
 
   ;; This doesn't seem necessary.
   (add-hook! aidermacs-vterm-mode
+             #'~aidermacs-vterm-disable-truncate-lines)
+  (add-hook! aidermacs-comint-mode
              #'~aidermacs-vterm-disable-truncate-lines)
   )
 

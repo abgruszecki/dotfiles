@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+[[ -z $EDITOR ]] && export EDITOR=vim
+uv run --with ipython ipython "$@"

@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+# apparently the PPA package now installs a keyd.rvaiya command...
+exec keyd.rvaiya "$@"

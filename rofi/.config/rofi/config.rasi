@@ -1,10 +1,21 @@
 configuration {
   modi: "combi,windowcd,window,run,drun";
   combi-modi: "drun,run";
-  kb-accept-entry: "Return,KP_Enter";
-  kb-row-down: "Down,Alt+j";
-  kb-row-up: "Up,Alt+k";
-  kb-mode-next: "Control+Tab,Shift+Right";
-  kb-mode-prev: "Control+ISO_Left_Tab,Shift+Left";
+  kb-row-down: "Down,Control+j";
+  kb-row-up: "Up,Control+k";
+  kb-mode-next: "Control+l,Control+Tab,Shift+Right";
+  kb-mode-previous: "Control+h,Control+ISO_Left_Tab,Shift+Left";
+  kb-accept-entry: "Return,KP_Enter"; // used C-j, I think
+  kb-remove-to-eol: ""; // was C-k, I guess I dont need it
+  kb-remove-char-back: "BackSpace"; // used C-h
+  kb-mode-complete: "Alt+l"; // was C-l
 }
+
 @theme "solarized"
+
+window {
+  width: 100%;
+  anchor: north;
+  location: north;
+  margin: 5 20 0;
+}

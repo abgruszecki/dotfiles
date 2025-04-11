@@ -1,4 +1,4 @@
-;;; $DOOMDIR/config.el -*- lexical-binding: t; -*-
+;; $DOOMDIR/config.el -*- lexical-binding: t; -*-
 
 ;; Place your private configuration here! Remember, you do not need to run 'doom
 ;; sync' after modifying this file!
@@ -64,7 +64,7 @@
 ;; You can also try 'gd' (or 'C-c c d') to jump to their definition and see how
 ;; they are implemented.
 
-;; Emacs config
+;;; Emacs config
 (setf (alist-get 'undecorated default-frame-alist) t)
 
 (setq! compilation-skip-threshold 2
@@ -76,7 +76,7 @@
 
 (add-to-list 'default-frame-alist '(fullscreen . maximized))
 
-;; Doom module config
+;;; Doom module config
 (setq! +evil-want-o/O-to-continue-comments nil)
 
 (map! "M-=" #'universal-argument
@@ -98,9 +98,11 @@
 
 (load-config-fragments
  "+org"
- "+window-select"
  ;;
+ "+buffers"
+ "+window-select"
  "+workspaces"
+ ;;
  "+lambda-input-method"
  ;;
  "+embark"
@@ -121,21 +123,22 @@
 ;; ;;
 ;; (load! "+bespoke")
 
-;; Extra configs
+;;; Extra configs
 ;; Install grammars using M-x treesit-install-language-grammar
 (pushnew! treesit-extra-load-path "~/opt/tree-sitter-grammars")
 
-;; (use-package! evil-collection
-;;   :after evil
-;;   :ensure t
-;;   :config
-;;   (after! magit
-;;     ;; can't quite see how this works...
-;;     (+evil-collection-init 'magit)
-;;     )
-;;   )
+;;;; tweak citar for markdown-mode
+(after! (citar markdown-mode)
+  (map! :map markdown-mode-map
+        :localleader
+        :n "@" #'citar-insert-citation)
+  )
 
-;; tame evil-snipe
+(after! citar-markdown
+  ;; NOTE `citar-markdown' is loaded only when citar needs markdown-specific code.
+  (setq! citar-markdown-prompt-for-extra-arguments nil))
+
+;;;; tame evil-snipe
 ;; TODO This had to be eval'd manually. Should it only be run after loading evil-snipe?
 ;; (add-hook! doom-first-input-hook ...)
 ;; (after! evil-snipe ...)
@@ -165,9 +168,58 @@
 ;;   (setq! centaur-tabs-adjust-buffer-order 'left)
 ;;   (pushnew! centaur-tabs-excluded-prefixes "*doom" "*compilation"))
 
+;;; tame evil-textobj-anyblock
 (map! :textobj "B" #'evil-inner-curly #'evil-a-curly
       :textobj "C-S-B" #'evil-textobj-anyblock-inner-block #'evil-textobj-anyblock-a-block
  )
+
+;;; tweak Man-mode
+(defun ~man-section-search-backwards (&optional print-help)
+  "Search backward for the nearest line with Man-overstrike face at first non-whitespace."
+  (interactive "p")
+
+  (progn
+    (let ((res nil)
+          (start-pos (point)))
+      (when (eq -1 (forward-line -1))
+        (goto-char pos)))
+
+    (catch 'found
+      (while (not (bobp))
+        (beginning-of-line)
+        (let ((pos (point)))
+          (skip-chars-forward " \t")
+          (when (and (eq (get-text-property (point) 'face) 'Man-overstrike)
+                     (save-excursion
+                       (let ((case-fold-search nil))
+                         (or (re-search-forward "\\W"        (+ 1 (point)) t)
+                             (re-search-forward "[A-Z][A-Z]" (+ 2 (point)) t)
+                             ))))
+            (let ((res-start (point))
+                  (res-end (next-single-property-change (point) 'face)))
+              ;; (message "Setting match-data to '(%s %s)" res-start res-end)
+              (set-match-data (list res-start res-end (current-buffer)))
+              )
+            (throw 'found t)))
+        (forward-line -1))
+
+      (when print-help
+        (message "No Man-overstrike line found"))
+      (message "here")
+      (set-match-data nil)
+      nil
+      ))
+)
+
+(defun ~//man-set-imenu-generic-expression ()
+  (setq imenu-generic-expression
+        (list (list nil #'~man-section-search-backwards 0)))
+  )
+
+;; This sometimes adds too many things to imenu (e.g. on the manpage of bash),
+;; but it's an improvement compared to only listing uppercase sections.
+(add-hook! Man-mode
+           #'~//man-set-imenu-generic-expression)
 
 ;; NOTE A fix for a BUG in... dirvish? doom?
 (after! dirvish
@@ -194,47 +246,6 @@
 
 ;; NOTE Experiments.
 ;; (load! "+exp/override-doom-leaders")
-
-(defun ~other-window (count &optional all-frames interactive)
-  (interactive "p\ni\np")
-  (other-window count all-frames interactive))
-(map! :prefix "H-`"
-      "<tab>" #'~other-window
-      "H-<tab>" #'~other-window)
-(map! "H-<tab>" #'~other-window)
-(map! ; "C-<tab>" alternate centaur tab
-      "C-`" #'~other-window ;; should this be other-buffer?
-      "C-<escape>" #'+popup/toggle)
-
-(map! "M-1" nil
-      "M-2" nil
-      "M-3" nil
-      "M-4" nil
-      "M-5" nil
-      "M-6" nil
-      "M-7" nil
-      "M-8" nil
-
-      "C-<f1>" #'+workspace/switch-to-0
-      "C-<f2>" #'+workspace/switch-to-1
-      "C-<f3>" #'+workspace/switch-to-2
-      "C-<f4>" #'+workspace/switch-to-3
-      "C-<f5>" #'+workspace/switch-to-4
-      "C-<f6>" #'+workspace/switch-to-5
-      "C-<f7>" #'+workspace/switch-to-6
-      "C-<f8>" #'+workspace/switch-to-7
-
-      (:prefix "H-`"
-               "<f1>" #'+workspace/switch-to-0
-               "<f2>" #'+workspace/switch-to-1
-               "<f3>" #'+workspace/switch-to-2
-               "<f4>" #'+workspace/switch-to-3
-               "<f5>" #'+workspace/switch-to-4
-               "<f6>" #'+workspace/switch-to-5
-               "<f7>" #'+workspace/switch-to-6
-               "<f8>" #'+workspace/switch-to-7
-               )
-      )
 
 (map! :leader "f M-f" #'consult-find)
 
@@ -273,6 +284,7 @@
 (map! "<f2>" #'org-roam-node-find
       "<f3>" #'~compile-project
       "<f4>" #'~repeat-compile-project
+      "<f9>" #'doom/open-private-config
       )
 
 (defun ~evil-ex-clear-highlights ()

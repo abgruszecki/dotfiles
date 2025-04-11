@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+! [[ $# == 1 ]] && {
+    echo >&2 "Usage: ,lcl-which <command>"
+    exit 1
+}
+exec ,lcl "$(which "$1")"

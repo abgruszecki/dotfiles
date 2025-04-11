@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+
+exec env BSP_SHOW_MODI=window __launcher
