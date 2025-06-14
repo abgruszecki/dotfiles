@@ -2,7 +2,7 @@
 
 export EDITOR=vim
 
-PS1='\u@\h:\W\$'
+PS1='\u@\h:\W\$ '
 
 ### (Only apply if current shell is interactive)
 if [[ $- = *i* ]]; then
