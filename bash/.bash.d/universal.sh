@@ -2,6 +2,8 @@
 
 export EDITOR=vim
 
+PS1='\u@\h:\W\$'
+
 ### (Only apply if current shell is interactive)
 if [[ $- = *i* ]]; then
 # Every time a command is ran, add it to the history
