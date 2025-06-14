@@ -43,8 +43,11 @@ __pycache__
 ,
 ,,
 README.local.md
+,scratch
+,archived
 
 # misc
+.env
 .mise.local.toml
 .mise
-.env
+latex.out

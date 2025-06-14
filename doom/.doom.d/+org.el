@@ -13,11 +13,16 @@
 
 (after! org
   (setq! org-timestamp-formats '("%Y-%m-%d" . "%Y-%m-%d %H:%M")
+         ;; NOTE Changing org-todo-keywords only takes effect at Emacs startup.
+         ;; This may be related to how Org is initialized.
+         ;; NOTE !,@ (see docs) "log" the changes in an ugly way.
          org-todo-keywords '((sequence "TODO(t)" "DONE(d)")
-                             (sequence "STEP(s)" "DONE(d)")
-                             (sequence "TASK(k)" "DONE(d)")
+                             ;; (sequence "STEP(s)" "DONE(d)")
+                             ;; (sequence "TASK(k)" "DONE(d)")
                              (sequence "OPEN(o)" "CLSD(c)")
-                             (sequence "EVNT(e)" "PAST(p)"))
+                             (sequence "EVNT(e)" "PAST(p)")
+                             )
+         org-log-done 'time
          org-reverse-note-order t
          ;; org-agenda-files "~/.cache/emacs-org-mode/agenda"
          org-refile-targets '((org-agenda-files . (:level . 1)))

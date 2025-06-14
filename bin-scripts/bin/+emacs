@@ -1,9 +1,2 @@
 #!/usr/bin/env bash
-# echo "Wrapping emacs!"
-declare -a args
-if ! test -z "$EMACS_INIT_DIRECTORY"; then
-    args+=(--init-directory)
-    args+=("$EMACS_INIT_DIRECTORY")
-fi
-# echo "${args[@]}"
-exec /usr/local/bin/emacs "${args[@]}" "$@"
+exec /usr/local/bin/emacs "$@"

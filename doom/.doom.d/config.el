@@ -99,9 +99,9 @@
 (load-config-fragments
  "+org"
  ;;
- "+buffers"
  "+window-select"
  "+workspaces"
+ "+buffers"
  ;;
  "+lambda-input-method"
  ;;

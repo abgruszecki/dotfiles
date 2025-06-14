@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+
+response=$("$@" 2>&1)
+status=$?
+
+if [[ $BSP_LAUNCHER = 1 ]]; then
+    if [[ $status -eq 0 ]]; then
+        # last line of response is the URL
+        url=$(echo "$response" | tail -n 1)
+        echo "$url" | xclip -selection clipboard
+        fmtd=$(printf "Captured! Copied URL. Response:\n%s" "$response")
+        rofi -e "$fmtd"
+    else
+        small_response=$(echo "$response" | tail -n 20)
+        fmtd=$(printf 'Failed (%s). Check logs. End of response:\n%s' "$status" "$small_response")
+        rofi -e "$fmtd"
+    fi
+else
+    printf '%s\n' "$response"
+    if [[ $status -eq 0 ]]; then
+        # last line of response is the URL
+        url=$(echo "$response" | tail -n 1)
+        echo "$url" | xclip -selection clipboard
+        echo "Captured! Copied URL."
+    else
+        echo "Failed ($status)."
+        exit $status
+    fi
+fi
