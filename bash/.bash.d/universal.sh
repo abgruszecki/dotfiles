@@ -7,6 +7,8 @@ PS1='\u@\h:\W\$ '
 ### (Only apply if current shell is interactive)
 if [[ $- = *i* ]]; then
 
+shopt -s histappend
+
 HISTCONTROL=ignoreboth
 
 HISTSIZE=200000
