@@ -6,6 +6,12 @@ PS1='\u@\h:\W\$ '
 
 ### (Only apply if current shell is interactive)
 if [[ $- = *i* ]]; then
+
+HISTCONTROL=ignoreboth
+
+HISTSIZE=200000
+HISTFILEZIE=1000000
+
 # Every time a command is ran, add it to the history
 # (To read them use `history -n` or just start a new session.)
 PROMPT_COMMAND="history -a; $PROMPT_COMMAND"
@@ -31,4 +37,5 @@ bind '"\C-H": backward-kill-word'            # C-Bckspc (by default nothing)
 bind '"\e\C-?": shell-backward-kill-word'    # M-Bckspc
 
 command >/dev/null 2>&1 -v fzf && eval "$(fzf --bash)"
+
 fi
