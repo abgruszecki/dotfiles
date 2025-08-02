@@ -39,7 +39,9 @@ if command -q fzf
     fzf --fish | source
 end
 
-set -gx PATH $PATH ~/.local/bin
+set -gx PATH ~/.local/share/rdot/bin $PATH
+set -gx PATH ~/.local/bin $PATH
+
 set -gx PATH $PATH ~/.config/emacs/bin
 set -gx PATH $PATH ~/.bun/bin
 set -gx PATH $PATH ~/opt/juliaup/bin

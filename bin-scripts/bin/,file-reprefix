@@ -9,8 +9,8 @@ shift 2  # Remove first two arguments, leaving only file candidates
 for cand in "$@"; do
     # Use parameter expansion to check if file ends with old suffix
     if [[ "$cand" == "$old_prefix"* ]]; then
-        # Remove old prefix and append new one
-        new_name="${cand#"$old_prefix"}$new_prefix"
+        # Remove old prefix and prepend new one
+        new_name="$new_prefix${cand#"$old_prefix"}"
         mv -v "$cand" "$new_name"
     else
         echo "Not touching: $cand"

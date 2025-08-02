@@ -28,6 +28,7 @@ preserve() {
     return $RET 
   }
   try git add --all
+  # Check if anything was staged (added to the index)
   if ! say git diff-index --quiet HEAD
   then
     try git commit --message="$(date +'%A %d %B (%d/%m/%Y)')"
