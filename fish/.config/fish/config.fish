@@ -40,6 +40,7 @@ if command -q fzf
 end
 
 set -gx PATH ~/.local/share/rdot/bin $PATH
+set -gx PATH ~/.local/share/go/bin $PATH
 set -gx PATH ~/.local/bin $PATH
 
 set -gx PATH $PATH ~/.config/emacs/bin
