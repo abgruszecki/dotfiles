@@ -21,7 +21,7 @@ git merge --ff-only robolang/dev
 ```
 
 ```bash
-parallel --halt-on-error=2 --lb -j1 rtmr-repo-push.sh dotfiles {} ::: explorer boa robolang robolidar
+parallel --halt-on-error=2 --lb -j1 rdot-repo-push.sh dotfiles {} ::: explorer boa robolang robolidar
 ```
 
 # "Documentation"
@@ -32,6 +32,19 @@ Put your remote's configuration in files, track them in a repo,
 keep a local copy of all the remote configurations so that
 you can easily compare them and copy-paste between them,
 easily push local changes to all the remote repos.
+
+### TODO Reuse connections
+Create a socket for the connections, why not?
+We may as well handle this on the script level,
+no need to rely on ssh being configured appropriately.
+In either case rdot should start by interactively sequentially connecting to the servers
+so that I have a chance to enter my password etc (e.g., to Aurora).
+
+### TODO should this also install remote programs?
+Like uv, neovim, fzf, zoxide?
+
+It's different functionality.
+But it'd be good to have it somewhere anyway.
 
 ## How does it work?
 You should have a git repo with configurations.

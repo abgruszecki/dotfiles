@@ -7,7 +7,8 @@ remote=$2
 
 aloud-bracketed ssh -T "$remote" -- bash - <<EOF
 $(cat "$script_real_dir"/prelude.sh)
-aloud cd && aloud cd "$repo_name" || exit
+# aloud cd && aloud cd "$repo_name" || exit
+aloud cd ~/"$repo_name" || exit
 aloud git switch dev || exit
 aloud git add --all || exit
 log 'info> Checking if there is anything to commit.'

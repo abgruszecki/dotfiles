@@ -1,11 +1,10 @@
 #!/usr/bin/env bash
-
 log() {
     echo >&2 "$@"
 }
 
 aloud() {
-    { printf '$' && printf ' %q' "$@" && printf '\n'; } >&2
+    { printf '$'; printf ' %q' "$@"; printf '\n'; } >&2
     "$@"
 }
 
