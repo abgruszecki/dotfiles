@@ -8,11 +8,18 @@ PS1='\u@\h:\W\$ '
 if [[ $- = *i* ]]; then
 
 shopt -s histappend
+# Some programmable completions, like for tmux, are broken.
+# complete -r tmux doesn't seem to fix the problem.
+# I think many progcomps are useful though, like git's.
+# This would remove *all* progcomps.
+# complete -r
+# This would disable custom completion instead.
+# shopt -u progcomp
 
 HISTCONTROL=ignoreboth
 
 HISTSIZE=200000
-HISTFILEZIE=1000000
+HISTFILESIZE=1000000
 
 # Every time a command is ran, add it to the history
 # (To read them use `history -n` or just start a new session.)
@@ -38,6 +45,6 @@ bind '"\e[1;3C": shell-forward-word'         # C-Right
 bind '"\C-H": backward-kill-word'            # C-Bckspc (by default nothing)
 bind '"\e\C-?": shell-backward-kill-word'    # M-Bckspc
 
-command >/dev/null 2>&1 -v fzf && eval "$(fzf --bash)"
+command -v fzf >/dev/null 2>&1 && eval "$(fzf --bash)"
 
 fi
