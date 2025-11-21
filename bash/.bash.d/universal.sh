@@ -32,8 +32,11 @@ PROMPT_COMMAND="history -a; $PROMPT_COMMAND"
 # Readline bindings
 # NOTE: use `bind -p` to figure out existing bindings
 
+bind 'set enable-bracketed-paste on'
 # See https://stackoverflow.com/questions/38960716/prevent-accidental-history-editing-in-bash 
 bind 'set revert-all-at-newline on'          # revert all history edits after nl
+
+# Completion settings
 bind 'set skip-completed-text on'            # after comp, skip common suffix
 bind 'set completion-ignore-case on'         # comp: ignore case
 bind 'set completion-map-case on'            # comp: conflate -/_

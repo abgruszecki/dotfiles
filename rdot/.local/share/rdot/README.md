@@ -41,7 +41,7 @@ On the remote machine you symlink files from that dir where they should go
 (consider using GNU stow).
 
 There's a local and a remote repo.
-(For simplicity, you must keep them both in your home directory, and name them the same.)
+(KISS: you must keep them both in the home, and not rename the repo directory.)
 Locally you have the master branch checked out.
 On the remote you have a special `dev` branch,
 which should always be ahead of the remote copy of the master branch.
@@ -60,6 +60,20 @@ Then you can pull and you get a dev which you can re-integrate back into master.
 At least I think pulling will make things reasonable.
 As a sanity check, you can also run `git fetch` for all remotes:
 `parallel -j1 --lb git -C dotfiles-private fetch {} ::: explorer boa robolang robolidar perlmutter`
+
+Running commands on multiple hosts?
+
+```text
+$ tmux
+$ tmux set remain-on-exit on
+$ parallel tmux neww cmd {} ::: explorer boa robolang robolidar perlmutter
+```
+
+Also try:
+
+```bash
+curl -sSfL https://raw.githubusercontent.com/ajeetdsouza/zoxide/main/install.sh | ssh explorer sh -
+```
 
 ### TODO Reuse connections
 Create a socket for the connections, why not?
