@@ -33,19 +33,6 @@ keep a local copy of all the remote configurations so that
 you can easily compare them and copy-paste between them,
 easily push local changes to all the remote repos.
 
-### TODO Reuse connections
-Create a socket for the connections, why not?
-We may as well handle this on the script level,
-no need to rely on ssh being configured appropriately.
-In either case rdot should start by interactively sequentially connecting to the servers
-so that I have a chance to enter my password etc (e.g., to Aurora).
-
-### TODO should this also install remote programs?
-Like uv, neovim, fzf, zoxide?
-
-It's different functionality.
-But it'd be good to have it somewhere anyway.
-
 ## How does it work?
 You should have a git repo with configurations.
 Doesn't need to be public.
@@ -60,3 +47,31 @@ On the remote you have a special `dev` branch,
 which should always be ahead of the remote copy of the master branch.
 Locally, you also have a git remote for the remote repository.
 This lets you use `git` to push and pull changes, while keeping things as simple as possible.
+
+# Dev notes
+What is the "all clear" state?
+`git -C dotfiles-private log`
+All remotes have `master`, `dev` pointing to HEAD.
+
+You need to push before you pull.
+Pushing moves the remote master and rebases dev on top of it.
+Then you can pull and you get a dev which you can re-integrate back into master.
+
+At least I think pulling will make things reasonable.
+As a sanity check, you can also run `git fetch` for all remotes:
+`parallel -j1 --lb git -C dotfiles-private fetch {} ::: explorer boa robolang robolidar perlmutter`
+
+### TODO Reuse connections
+Create a socket for the connections, why not?
+We may as well handle this on the script level,
+no need to rely on ssh being configured appropriately.
+In either case rdot should start by interactively sequentially connecting to the servers
+so that I have a chance to enter my password etc (e.g., to Aurora).
+
+### TODO should this also install remote programs?
+Like uv, neovim, fzf, zoxide, vd?
+
+It's different functionality.
+But it'd be good to have it somewhere anyway.
+
+- vd is installed with `uv`: `uv tool install visidata`

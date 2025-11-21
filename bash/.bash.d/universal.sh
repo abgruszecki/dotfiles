@@ -1,5 +1,9 @@
 # .bash_universal : Bash bindings for any host
 
+__cmd_exists() {
+    command -v "$1" >/dev/null 2>&1
+}
+
 export EDITOR=vim
 
 PS1='\u@\h:\W\$ '
@@ -27,6 +31,9 @@ PROMPT_COMMAND="history -a; $PROMPT_COMMAND"
 
 # Readline bindings
 # NOTE: use `bind -p` to figure out existing bindings
+
+# See https://stackoverflow.com/questions/38960716/prevent-accidental-history-editing-in-bash 
+bind 'set revert-all-at-newline on'          # revert all history edits after nl
 bind 'set skip-completed-text on'            # after comp, skip common suffix
 bind 'set completion-ignore-case on'         # comp: ignore case
 bind 'set completion-map-case on'            # comp: conflate -/_
@@ -45,6 +52,7 @@ bind '"\e[1;3C": shell-forward-word'         # C-Right
 bind '"\C-H": backward-kill-word'            # C-Bckspc (by default nothing)
 bind '"\e\C-?": shell-backward-kill-word'    # M-Bckspc
 
-command -v fzf >/dev/null 2>&1 && eval "$(fzf --bash)"
+__cmd_exists fzf && eval "$(fzf --bash)"
+__cmd_exists zoxide && eval "$(zoxide init bash)"
 
 fi
