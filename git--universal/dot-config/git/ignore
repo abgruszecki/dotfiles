@@ -1,0 +1,53 @@
+# Automatically created by GitHub for Mac
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Icon must end with two \r
+Icon
+
+# Thumbnails
+._*
+
+# Files that might appear on external disk
+.Spotlight-V100
+.Trashes
+
+# Directories potentially created on remote AFP share
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+# Tags
+tags
+.tags
+sbt-ctags-dep-srcs
+
+# Python
+__pycache__
+.ruff_cache
+.venv
+
+# IDE
+.idea
+*.iml
+
+# Emacs
+.pdf-view-restore
+.auctex.d
+.auctex-auto
+
+# Personal
+,
+,,
+README.local.md
+,scratch
+,archived
+
+# misc
+.env
+.mise.local.toml
+.mise
+latex.out
