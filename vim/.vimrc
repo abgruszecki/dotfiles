@@ -127,8 +127,10 @@ vnoremap il 0$
 " Add around-all motion
 onoremap aa :<C-U>normal! ggVG<CR>
 
-noremap <Leader>y "+y
-noremap <Leader>p "+p
+" noremap <Leader>y "+y
+" noremap <Leader>p "+p
+
+set clipboard=unnamedplus
 
 set backupdir=~/.cache/vim/backup/
 set directory=~/.cache/vim/swap/

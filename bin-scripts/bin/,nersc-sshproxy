@@ -1,3 +1,17 @@
 #!/usr/bin/env sh
-echo >&2 'Use Google Authenticator for the OTP.'
+log() {
+    echo >&2 "$@"
+}
+
+# The code below solves a problem where `ssh` says "Too many authentication failures."
+# when logging into Perlmutter from an SSH connection with the key forwarded via SSH agent.
+# There is a bad interaction between sshproxy and ssh-agent:
+# the nested SSH connection will try too many identities, since ssh-agent forwards
+# many identities generated with `sshproxy` (I assume all the ones generated in one login session).
+# The keys can be observed with adding `-v` to the nested `ssh` command.
+# The solution is to remove all the previous NERSC identities before asking for a new one.
+log 'Removing previous NERSC identities from ssh-agent.'
+ssh-add -L | grep nersc | ssh-add -d -
+
+log 'Use Google Authenticator for the OTP.'
 exec sshproxy -u abgru "$@"
