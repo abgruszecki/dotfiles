@@ -80,4 +80,6 @@ __cmd_exists broot && {
 }
 __cmd_exists zoxide && eval "$(zoxide init bash)"
 
+alias g git
+
 fi
