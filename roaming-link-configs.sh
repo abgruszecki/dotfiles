@@ -4,15 +4,15 @@ log() {
 }
 
 aloud() {
-    { printf '$'; printf ' %q' "$@"; printf '\n'; } >&2
+    { printf '$'; printf ' %q' "$@"; echo; } >&2
     "$@"
 }
 
 
 cd ~ || exit
-test -e dotfiles || {
-    echo >&2 'Exiting, as dir is missing: ~/dotfiles/'
+test -d dotfiles || {
+    echo >&2 'Exiting - missing dir : ~/dotfiles/'
     exit 1
 }
-aloud ln -sf dotfiles/tmux/.config/tmux/tmux.conf .tmux.conf
-aloud ln -sf dotfiles/bash/.bash.d .bash.d
+aloud ln -sf dotfiles/tmux/dot-config/tmux/tmux.conf .tmux.conf
+aloud ln -sf dotfiles/bash--universal/dot-bash.d .bash.d
