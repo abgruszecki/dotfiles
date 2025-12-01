@@ -65,9 +65,12 @@ Running commands on multiple hosts?
 
 ```text
 $ tmux
-$ tmux set remain-on-exit on
-$ parallel tmux neww cmd {} ::: explorer boa robolang robolidar perlmutter
+$ tmux set -g remain-on-exit on
+$ parallel tmux neww -n {} $CMD {} ::: explorer boa robolang robolidar perlmutter
 ```
+
+Use `tmux respawn-pane` to restart commands in case something goes wrong, quite useful.
+Use `tmux kill-window -a` to kill all other windows.
 
 Also try:
 
