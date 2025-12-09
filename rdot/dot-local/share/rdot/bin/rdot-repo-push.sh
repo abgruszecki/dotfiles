@@ -14,3 +14,5 @@ aloud git switch dev || exit
 aloud git rebase --autostash master || exit
 aloud git status --porcelain
 EOF
+status=$?; test $status == 0 || exit $status
+log 'success> Done.' # Clearly mark the script finished correctly.

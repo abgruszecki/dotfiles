@@ -49,6 +49,9 @@ Locally, you also have a git remote for the remote repository.
 This lets you use `git` to push and pull changes, while keeping things as simple as possible.
 
 # Dev notes
+Remember: one reason for piping scripts into `ssh bash -` is remotely executing local scripts.
+You can develop the script locally and then exec it remotely, no need to push it first.
+
 What is the "all clear" state?
 `git -C dotfiles-private log`
 All remotes have `master`, `dev` pointing to HEAD.
@@ -62,22 +65,55 @@ As a sanity check, you can also run `git fetch` for all remotes:
 `parallel -j1 --lb git -C dotfiles-private fetch {} ::: explorer boa robolang robolidar perlmutter`
 
 Running commands on multiple hosts?
-
 ```text
 $ tmux
 $ tmux set -g remain-on-exit on
 $ parallel tmux neww -n {} $CMD {} ::: explorer boa robolang robolidar perlmutter
 ```
+KEEP THE COMMAND SIMPLE - - `parallel` uses Bash to interpret its template. 
 
 Use `tmux respawn-pane` to restart commands in case something goes wrong, quite useful.
 Use `tmux kill-window -a` to kill all other windows.
 
-Also try:
+Remember to consider:
 
 ```bash
 curl -sSfL https://raw.githubusercontent.com/ajeetdsouza/zoxide/main/install.sh | ssh explorer sh -
 ```
 
+### Easily running commands on remote hosts
+Ultimately it's probably easiest to just start many terminals, set variables, and copy-paste a command.
+
+There was an entire small saga with using `parallel` to run a commandline on remote hosts.
+
+#### Saga
+The problem: we want parallel to start tmux windows.
+So we need to go through _many_ layers before the command gets executed.
+Some of them support interpreting the command with Bash, others don't.
+In the end it's really easiest to just copy-paste the stupid command.
+
+There's `parallel --pipe --tee` can help circumvent running inside tmux:
+```bash
+seq 1000 | parallel --pipe --tee -v wc {} ::: -w -l -c
+```
+
+Quoting is just an annoyance here:
+```bash
+parallel tmux neww -n{} ssh {} ln -srv '\~/dotfiles-private/{}/bash-local' '\~/.bash.d/local' ::: explorer boa robolang robolidar perlmutter
+```
+But here, despite the `echo`, `parallel` will run part of the command _locally_:
+``` bash
+parallel -j1 echo tmux neww -n{} ssh {} 'cd \~/dotfiles && stow -v git' ::: explorer boa robolang robolidar perlmutter
+```
+
+### TODO Write `rdot-do`
+The command just runs a script on a remote via ssh.
+Maybe with the prelude included?
+
+### TODO Install shellcheck, vim config, maybe even OSH?
+- https://oils.pub/osh.html
+- https://mywiki.wooledge.org/BashFAQ/105
+- https://www.shellcheck.net/
 ### TODO Reuse connections
 Create a socket for the connections, why not?
 We may as well handle this on the script level,

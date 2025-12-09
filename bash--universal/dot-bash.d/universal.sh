@@ -8,6 +8,8 @@ export EDITOR=vim
 
 PS1='\u@\h:\W\$ '
 
+. ~/.bash.d/aliases.sh
+
 ### (Only apply if current shell is interactive)
 if [[ $- = *i* ]]; then
 

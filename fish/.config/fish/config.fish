@@ -39,6 +39,8 @@ if command -q fzf
     fzf --fish | source
 end
 
+set -x PARALLEL_SHELL bash
+
 set -gx PATH ~/.local/share/rdot/bin $PATH
 set -gx PATH ~/.local/share/go/bin $PATH
 set -gx PATH ~/.local/bin $PATH
