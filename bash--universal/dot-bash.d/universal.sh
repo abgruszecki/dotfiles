@@ -10,6 +10,10 @@ PS1='\u@\h:\W\$ '
 
 . ~/.bash.d/aliases.sh
 
+,print1() {
+   printf '%s\n' "$@"
+}
+
 ### (Only apply if current shell is interactive)
 if [[ $- = *i* ]]; then
 
