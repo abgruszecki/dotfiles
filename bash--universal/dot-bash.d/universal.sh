@@ -1,4 +1,4 @@
-# .bash_universal : Bash bindings for any host
+# Bash bindings for any node
 
 __cmd_exists() {
     command -v "$1" >/dev/null 2>&1
@@ -9,10 +9,7 @@ export EDITOR=vim
 PS1='\u@\h:\W\$ '
 
 . ~/.bash.d/aliases.sh
-
-,print1() {
-   printf '%s\n' "$@"
-}
+. ~/.bash.d/functions.sh
 
 ### (Only apply if current shell is interactive)
 if [[ $- = *i* ]]; then

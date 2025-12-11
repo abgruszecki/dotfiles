@@ -64,7 +64,7 @@ At least I think pulling will make things reasonable.
 As a sanity check, you can also run `git fetch` for all remotes:
 `parallel -j1 --lb git -C dotfiles-private fetch {} ::: explorer boa robolang robolidar perlmutter`
 
-Running commands on multiple hosts?
+## Running commands in parallel
 ```text
 $ tmux
 $ tmux set -g remain-on-exit on
@@ -81,10 +81,15 @@ Remember to consider:
 curl -sSfL https://raw.githubusercontent.com/ajeetdsouza/zoxide/main/install.sh | ssh explorer sh -
 ```
 
-### Easily running commands on remote hosts
+### Waiting for the commands
+First, remain-on-exit can be set in the commandline, since tmux interprets the commands with the shell.
+Second, `tmux list-panes -s -F 'PANE_ID,#{pane_dead},#{pane_dead_status}'` can be used to wait for all the panes.
+(Don't confuse the main pane with the "background" ones.)
+
+### Complex commandlines
 Ultimately it's probably easiest to just start many terminals, set variables, and copy-paste a command.
 
-There was an entire small saga with using `parallel` to run a commandline on remote hosts.
+I went through an entire small saga with using `parallel` to run a commandline on remote hosts.
 
 #### Saga
 The problem: we want parallel to start tmux windows.
@@ -106,22 +111,30 @@ But here, despite the `echo`, `parallel` will run part of the command _locally_:
 parallel -j1 echo tmux neww -n{} ssh {} 'cd \~/dotfiles && stow -v git' ::: explorer boa robolang robolidar perlmutter
 ```
 
-### TODO Write `rdot-do`
+
+## TODO Write `rdot-do`
 The command just runs a script on a remote via ssh.
 Maybe with the prelude included?
 
-### TODO Install shellcheck, vim config, maybe even OSH?
+"Automatically" including the prelude is ugly but maybe the best out of bad choices.
+The script can't source local files.
+The script can be "templated" but that makes rdot-do behave strangely.
+
+Seriously I just want to have `aloud` and `log` and `die` in the template script,
+it's not that complicated.
+
+## TODO Install shellcheck, vim config, maybe even OSH?
 - https://oils.pub/osh.html
 - https://mywiki.wooledge.org/BashFAQ/105
 - https://www.shellcheck.net/
-### TODO Reuse connections
-Create a socket for the connections, why not?
-We may as well handle this on the script level,
-no need to rely on ssh being configured appropriately.
-In either case rdot should start by interactively sequentially connecting to the servers
-so that I have a chance to enter my password etc (e.g., to Aurora).
+## TODO Let git take advantage of controlsocks
+Right now we set controlsocks options via the commandline.
+This doesn't work for ssh connections made through git,
+and we make a lot of those.
+So should the scripts expect controlsocks to exist?
+Alternatively, can use `GIT_SSH_COMMAND`.
 
-### TODO should this also install remote programs?
+## TODO should `rdot` also install remote programs?
 Like uv, neovim, fzf, zoxide, vd?
 
 It's different functionality.

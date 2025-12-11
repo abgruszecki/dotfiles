@@ -5,6 +5,6 @@
 repo=$1
 remote=$2
 
-aloud cd && aloud cd "$repo" || exit
+aloud cd ~/"$repo" || exit
 aloud git fetch "$remote" || exit
 aloud git merge --ff-only "$remote"/dev || exit

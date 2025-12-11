@@ -5,7 +5,8 @@
 repo_name=$1
 remote=$2
 
-aloud-bracketed ssh -T "$remote" -- bash - <<EOF
+ensure-init || die 1 "ensure-init failed!"
+aloud-bracketed rdot-ssh -T "$remote" -- bash - <<EOF
 $(cat "$script_real_dir"/prelude.sh)
 # aloud cd && aloud cd "$repo_name" || exit
 aloud cd ~/"$repo_name" || exit

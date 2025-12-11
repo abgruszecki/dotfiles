@@ -5,9 +5,10 @@
 repo_name=$1
 remote=$2
 
+ensure-init || die 1 "ensure-init failed!"
 aloud cd ~/"$repo_name" || exit
 aloud git push "$remote" master --force-with-lease || exit
-aloud-bracketed ssh -T "$remote" -- bash - <<EOF
+aloud-bracketed rdot-ssh -T "$remote" -- bash - <<EOF
 $(cat "$script_real_dir"/prelude.sh)
 aloud cd ~/"$repo_name" || exit
 aloud git switch dev || exit
