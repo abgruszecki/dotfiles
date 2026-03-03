@@ -1,3 +1,8 @@
+# NOTE Config errors aren't displayed well by Visidata;
+# NOTE it's unclear if they come from the config or from somewhere else.
+# NOTE For the time being it'd be for the best to catch exceptions here,
+# NOTE extend the message and say where the exception occurred.
+
 @VisiData.api
 def my_ipy():
     with SuspendCurses():
@@ -31,6 +36,24 @@ BaseSheet.addCommand(
     'my-view-cell', # command name
     'my_view_cell()', # ...execstr
     'view current cell in vim', # description
+)
+
+
+@Sheet.api
+def my_syscopy_row_keys(sheet):
+    if not sheet.keyCols:
+        vd.error('Current sheet has no key columns!')
+        return
+
+    key = sheet.rowkey(sheet.cursorRow)
+    # TODO finish this
+    pass
+
+BaseSheet.addCommand(
+    None, # keystrokes
+    'my-syscopy-row-keys', # command name
+    'my_syscopy_row_keys()', # ...execstr
+    'Copy current row\'s keys to system clipboard', # description
 )
 
 
@@ -136,10 +159,14 @@ BaseSheet.addCommand(
 #     'my_toggle_width': my_toggle_width
 # })
 
-BaseSheet.unbindkey('F2')
+try:
+    BaseSheet.unbindkey('F2')
+except:
+    pass
 BaseSheet.bindkey('F2', 'my-jump-to-key-address')
 BaseSheet.bindkey('^F2', 'my-store-key-address')
 BaseSheet.bindkey('F3', 'syscopy-cell')
+# BaseSheet.bindkey('^F3', 'syscopy-row-key')
 BaseSheet.bindkey('F4', 'my-view-cell')
 BaseSheet.bindkey('Alt+_', 'my-toggle-width-col')
 #BaseSheet.bindkey('Alt+:', '')
