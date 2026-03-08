@@ -1,0 +1,2 @@
+#!/usr/bin/env bash
+exec mise exec node@25.3.0 npm@11.6.2 -- codex "$@"

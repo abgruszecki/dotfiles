@@ -10,6 +10,7 @@ conflictstyle = zdiff3
 	clean = git-media-clean %f
 	smudge = git-media-smudge %f
 [alias]
+	log1 = log --oneline
 	co = checkout
 	ci = commit
 	s = status
@@ -28,4 +29,5 @@ conflictstyle = zdiff3
 	fs = fuzzy status
 	fl = fuzzy log
 [init]
+	defaultBranch = master
 	# defaultBranch = main

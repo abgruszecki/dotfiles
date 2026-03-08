@@ -76,6 +76,28 @@
 
 (add-to-list 'default-frame-alist '(fullscreen . maximized))
 
+;; Emacs server config
+(defun ~server-select-window-where-buffer-is-visible ()
+  "Switches to the frame&window where the current buffer is visible.
+
+Intended to be called from `server-switch-hook'.
+My use-case is improving the behavior when writing Latex and jumping from preview to source.
+If I was doing something else in another Emacs frame,
+I come back to the preview and I jump to the source from the preview,
+the buffer gets opened in the last used frame,which is never what I want.
+
+In the future, I should integrate this with perspectives too.
+Instead of jumping to the window which shows the buffer,
+I should jump to the window which shows any buffer from the same perspective.
+"
+  (let ((win (get-buffer-window (current-buffer) 'visible)))
+    (when (window-live-p win)
+      (select-frame-set-input-focus (window-frame win))
+      (select-window win))))
+
+(after! server
+  (add-hook! server-switch #'~server-select-window-where-buffer-is-visible))
+
 ;;; Doom module config
 (setq! +evil-want-o/O-to-continue-comments nil)
 

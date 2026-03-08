@@ -3,8 +3,12 @@
 # NOTE For the time being it'd be for the best to catch exceptions here,
 # NOTE extend the message and say where the exception occurred.
 
+
 @VisiData.api
-def my_ipy():
+def my_ipy(vd):
+    # Short snippets.
+    # `vd.sheet.cursorValue` - value at cursor (useful for writing functions)
+    # `[c.getValue(vd.sheet.cursorRow) for c in vd.sheet.columns]` - a list representing the current row
     with SuspendCurses():
         import IPython
         # We talk to the terminal to switch to an "alternative buffer" (like Vim).
@@ -13,6 +17,11 @@ def my_ipy():
         # to the regular one when suspended, so we just manually switch
         # to an alternative buffer again.
         # Slight downside: we don't have history, but that's too bad I suppose.
+        # However, after IPython starts a tool which uses an alternative buffer,
+        # the terminal seems to go back to the "main" buffer, complete with the original history,
+        # contrary to what we want.
+        # Printing the (escape?) code again fixes the issue.
+        # Maybe IPython has a hook which would enable printing the code automatically.
         print('\033[?1049h\033[H', end='')
         print('Alternate buffer!')
         # This should allow accessing the local namespace
@@ -20,6 +29,13 @@ def my_ipy():
         # https://ipython.readthedocs.io/en/stable/api/generated/IPython.terminal.embed.html#IPython.terminal.embed.InteractiveShellEmbed
         IPython.embed()
         print('\033[?1049l', end='')
+
+BaseSheet.addCommand(
+    None, # keystrokes
+    'my-ipy', # command name
+    'my_ipy()', # ...execstr
+    'ipython', # description
+)
 
 
 import subprocess
@@ -158,6 +174,68 @@ BaseSheet.addCommand(
 # addGlobals({
 #     'my_toggle_width': my_toggle_width
 # })
+
+
+def _my_sheet_source_path(sheet):
+    src = getattr(sheet, 'source', None)
+    if not src:
+        return None
+    if isinstance(src, BaseSheet):
+        return None
+    if isinstance(src, (list, tuple)):
+        return None
+    if hasattr(src, 'parent') and hasattr(src, 'name'):
+        return src
+    try:
+        return Path(str(src))
+    except Exception:
+        return None
+
+
+from pathlib import Path
+@Sheet.api
+def my_make_sheet_names_unique(sheet):
+    sheets = vd.sheetstack(sheet.pane)
+    if not sheets:
+        vd.status('No sheets in current stack')
+        return
+
+    cur_names = [s.name for s in sheets]
+    if len(cur_names) == len(set(cur_names)):
+        vd.status('All sheets already have unique names')
+        return
+
+    source_paths = []
+    for s in sheets:
+        p = _my_sheet_source_path(s)
+        if p is None:
+            vd.fail(f'A sheet has no file source: {s.name}')
+        source_paths.append(p)
+
+    ancestors = [p.parent for p in source_paths]
+    depth = 1
+    while True:
+        cand_names = [a.name for a in ancestors]
+        if len(cand_names) == len(set(cand_names)):
+            for s, newname in zip(sheets, cand_names):
+                s.name = newname
+            vd.status(f'Renamed {len(sheets)} sheets with parent depth {depth}')
+            return
+
+        next_ancestors = [a.parent for a in ancestors]
+        if all(n == a for n, a in zip(next_ancestors, ancestors)):
+            vd.fail('Could not find unique sheet names from parent directories')
+        ancestors = next_ancestors
+        depth += 1
+
+
+BaseSheet.addCommand(
+    None,  # keystrokes
+    'my-make-sheet-names-unique',  # command name
+    'my_make_sheet_names_unique()',  # execstr
+    'rename sheets in current stack to unique names based on source parent dirs',  # description
+)
+
 
 try:
     BaseSheet.unbindkey('F2')
