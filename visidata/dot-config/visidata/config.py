@@ -55,6 +55,44 @@ BaseSheet.addCommand(
 )
 
 
+import base64
+import os
+import sys
+
+def _my_osc52_copy(text: str) -> None:
+    # OSC52: ESC ] 52 ; c ; base64(data) BEL
+    # No tmux/screen passthrough per user preference.
+    if text is None:
+        text = ''
+    data_b64 = base64.b64encode(text.encode('utf-8')).decode('ascii')
+    seq = f'\x1b]52;c;{data_b64}\x07'.encode('ascii')
+    # Prefer the controlling terminal; stdout may be redirected.
+    if os.path.exists('/dev/tty'):
+        with open('/dev/tty', 'wb') as tty:
+            tty.write(seq)
+            tty.flush()
+    else:
+        # Fallback for environments without /dev/tty.
+        sys.stdout.buffer.write(seq)
+        sys.stdout.flush()
+
+@Sheet.api
+def my_osc52_copy_cell(sheet):
+    try:
+        with SuspendCurses():
+            _my_osc52_copy(str(sheet.cursorDisplay))
+        vd.status('copied current cell to clipboard (OSC52)')
+    except Exception as e:
+        vd.fail(str(e))
+
+BaseSheet.addCommand(
+    None,  # keystrokes
+    'my-osc52-copy-cell',  # command name
+    'my_osc52_copy_cell()',  # execstr
+    'copy current cell to clipboard via OSC52',  # description
+)
+
+
 @Sheet.api
 def my_syscopy_row_keys(sheet):
     if not sheet.keyCols:
