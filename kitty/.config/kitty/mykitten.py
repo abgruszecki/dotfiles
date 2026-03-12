@@ -14,9 +14,14 @@ def main(args: list[str]) -> str:
         raise SystemExit(res.returncode)
 
     in_ = ''
-    for r in json.loads(res.stdout):
-        in_ += json.dumps(r)
-    in_ += '\n'
+    def out_r_iter():
+        for top_r in json.loads(res.stdout):
+            for tab_r in top_r['tabs']:
+                yield tab_r
+    
+    for out_r in out_r_iter():
+        in_ += json.dumps(out_r)
+        in_ += '\n'
 
     subprocess.run(
         ['vd', '-f', 'jsonl'],

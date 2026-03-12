@@ -5,8 +5,26 @@ so the only option will be to have a job log and write output to files
 
 "Pull" from a remote repo:
 ``` bash
+rdot-repo-push.sh $repo $remote
 rdot-repo-pull.sh $repo $remote
 ```
+Currently to pull correctly it's necessary to "push" local changes first.
+(The remote `dev` head must be rebased on top of the local `master`?)
+IIRC if the repo isn't pushed first, later operations could potentially fail, or maybe the pull itself may fail?
+(Maybe the "pull" actually pulls to the local `master`?)
+(Thought: current pull should be semi-pull and new pull should both push and semi-pull.)
+(Reflection: the need for the push is to resolve conflicts remotely.
+Resolving them on the "central" machine would require pushing the resolution;
+I didn't yet consider how to safely push the resolution.
+Would committing changes remotely, fetching them, then pushing a merge commit work?
+Maybe, but the changes should be tested on the remote machine.)
+
+Currently the simplest way to run arbitrary commands on remote hosts:
+```bash
+remote=boa
+tmux neww -e remote=$remote -n $remote
+```
+Option: use parallel to spawn many windows at once.
 
 ```bash
 # fish code

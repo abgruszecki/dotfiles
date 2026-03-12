@@ -248,3 +248,6 @@ BaseSheet.bindkey('F3', 'syscopy-cell')
 BaseSheet.bindkey('F4', 'my-view-cell')
 BaseSheet.bindkey('Alt+_', 'my-toggle-width-col')
 #BaseSheet.bindkey('Alt+:', '')
+
+vd.options.motd_url = ''
+vd.options.disp_menu_fmt = '| VisiData {vd.version}'
