@@ -34,13 +34,19 @@ bind alt-backspace backward-kill-token
 bind ctrl-alt-left      backward-bigword
 bind ctrl-alt-right     forward-bigword
 bind ctrl-alt-backspace backward-kill-bigword
+# Replicate some standard Bash keybindings
+bind ctrl-x,ctrl-e edit_command_buffer
+bind ctrl-x,ctrl-u undo
 
 if command -q fzf
+    # *_OPTS must be in the env, it seems they're only read at keypress time
+    set -x FZF_CTRL_T_OPTS '--exact'
     fzf --fish | source
 end
 
 set -x PARALLEL_SHELL bash
 
+# I think -g does nothing here. It means "global" as opposed to "local".
 set -gx PATH ~/.local/share/rdot/bin $PATH
 set -gx PATH ~/.local/share/go/bin $PATH
 set -gx PATH ~/.local/bin $PATH

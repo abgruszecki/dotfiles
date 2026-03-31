@@ -335,3 +335,14 @@ I should jump to the window which shows any buffer from the same perspective.
   :custom
   (typst-ts-mode-watch-options "--open")
   )
+
+;; FOR TEXT MESSAGES TO BE COPIED SOMEWHERE ELSE
+(defun ~join-paragraph ()
+  "Join lines in current paragraph into one line, removing end-of-lines.
+With active region, join lines in all paragraphs inside the region."
+  (interactive)
+  ;; Code ripped from rst-join-paragraph.
+  (let ((fill-column 65000)) ; Some big number.
+    (call-interactively #'fill-paragraph)))
+
+(map! :nv "g M-J" #'~join-paragraph)

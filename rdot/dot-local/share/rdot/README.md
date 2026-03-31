@@ -24,7 +24,21 @@ Currently the simplest way to run arbitrary commands on remote hosts:
 remote=boa
 tmux neww -e remote=$remote -n $remote
 ```
-Option: use parallel to spawn many windows at once.
+Option: use parallel to spawn many windows at once. Consider:
+```bash
+parallel --jl >(sponge /dev/stderr) -j1 --lb -- 
+```
+Also consider using `,tmux-broadcast.sh` to broadcast commented-out commands to all panes.
+(
+Distinguish remote panes by starting their names with `r:`?
+Make all panes remain on exit?
+Check for errors and crash panes if there are any?
+(`ssh` seems to exit with the status of the remote command)
+)
+FUN idea: when an error occurs, send the bell character to the terminal:
+```bash
+tmux send-keys -t 2.1 -l $'\a'
+```
 
 ```bash
 # fish code
@@ -129,6 +143,17 @@ But here, despite the `echo`, `parallel` will run part of the command _locally_:
 parallel -j1 echo tmux neww -n{} ssh {} 'cd \~/dotfiles && stow -v git' ::: explorer boa robolang robolidar perlmutter
 ```
 
+
+## Improving ssh scripts
+Goal:
+1. run the same scripts locally and via ssh
+2. have a command which can run an "ssh script" file (which can source scripts)
+
+Approach:
+1. Write the main script with special comments for sourced scripts
+2. -
+   1. When running remotely, replace the comments with sources
+   2. When running locally, replace the comments with source commands
 
 ## TODO Write `rdot-do`
 The command just runs a script on a remote via ssh.

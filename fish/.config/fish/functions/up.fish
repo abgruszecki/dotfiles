@@ -7,4 +7,11 @@ function up -a dir
     cd $target
 end
 
-complete -x -k -c up -a '(string split -n / $PWD)'
+function __up_complete
+    set -l path_elts (string split -n / $PWD)
+    for i in (seq (count $path_elts) -1 1)
+        echo $path_elts[$i]
+    end
+end
+
+complete -x -k -c up -a '(__up_complete)'
