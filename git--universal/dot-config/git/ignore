@@ -39,6 +39,9 @@ __pycache__
 .auctex.d
 .auctex-auto
 
+# Projects
+.sbatch-logs
+
 # Personal
 ,
 ,,
