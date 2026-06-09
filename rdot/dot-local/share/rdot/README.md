@@ -23,12 +23,15 @@ Currently the simplest way to run arbitrary commands on remote hosts:
 ```bash
 remote=boa
 tmux neww -e remote=$remote -n $remote
+# Consider:
+# parallel -j1 -- tmux neww -e remote={} -n {} ::: boa robolang robolidar explorer perlmutter
 ```
 Option: use parallel to spawn many windows at once. Consider:
 ```bash
 parallel --jl >(sponge /dev/stderr) -j1 --lb -- 
 ```
 Also consider using `,tmux-broadcast.sh` to broadcast commented-out commands to all panes.
+It opens an editor and then broadcasts each line.
 (
 Distinguish remote panes by starting their names with `r:`?
 Make all panes remain on exit?
