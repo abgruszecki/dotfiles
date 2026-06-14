@@ -282,7 +282,10 @@ except:
     pass
 BaseSheet.bindkey('F2', 'my-jump-to-key-address')
 BaseSheet.bindkey('^F2', 'my-store-key-address')
-BaseSheet.bindkey('F3', 'syscopy-cell')
+if os.environ.get('SSH_TTY'):
+    BaseSheet.bindkey('F3', 'my-osc52-copy-cell')
+else:
+    BaseSheet.bindkey('F3', 'syscopy-cell')
 # BaseSheet.bindkey('^F3', 'syscopy-row-key')
 BaseSheet.bindkey('F4', 'my-view-cell')
 BaseSheet.bindkey('Alt+_', 'my-toggle-width-col')
