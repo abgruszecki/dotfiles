@@ -5,6 +5,7 @@ __cmd_exists() {
 }
 
 export EDITOR=vim
+export PATH=$HOME/.local/bin:$PATH
 
 . ~/.bash.d/aliases.sh
 . ~/.bash.d/functions.sh
