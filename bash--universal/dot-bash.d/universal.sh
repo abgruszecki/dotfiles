@@ -8,6 +8,7 @@ export EDITOR=vim
 
 . ~/.bash.d/aliases.sh
 . ~/.bash.d/functions.sh
+[[ -f ~/.local/my-apps/bash-private/config.sh ]] && . ~/.local/my-apps/bash-private/config.sh
 
 __cmd_exists fzf && {
     export FZF_CTRL_T_OPTS='--exact'

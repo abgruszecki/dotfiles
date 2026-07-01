@@ -122,6 +122,56 @@
 ;;       (iedit-expand-up-to-occurrence))))
 
 (after! tex
+
+  ;; NOTE: in principle it'd be better to add an :around advice and use display-buffer-overriding-action.
+  ;; \ A clanker can do it.
+  (~assert-straight-package-commit
+   'auctex
+  "1939acb54bb90a1b358eb479aa949af150ac06ec"
+   "`~tex/source-correlate-sync-source'")
+  (defun ~tex/source-correlate-sync-source (file linecol &rest _ignored)
+    "Show TeX FILE with point at LINECOL, reusing a matching perspective frame."
+    ;; This is `TeX-source-correlate-sync-source' with the `pop-to-buffer' call
+    ;; replaced. SyncTeX from Evince does not go through `server-switch-hook',
+    ;; and `TeX-raise-frame-function' runs too late to prevent the wrong frame
+    ;; from being disturbed.
+    (let* ((file (progn
+                   (require 'url-parse)
+                   (require 'url-util)
+                   (url-unhex-string (aref (url-generic-parse-url file) 6))))
+           (flc (or (apply #'TeX-source-correlate-handle-TeX-region file linecol)
+                    (apply #'list file linecol)))
+           (file (car flc))
+           (line (cadr flc))
+           (col  (nth 2 flc))
+           (buf (or (find-buffer-visiting file)
+                    (find-file-noselect file))))
+      (unless (~select-window-for-buffer buf)
+        (pop-to-buffer buf))
+      (push-mark nil 'nomsg)
+      (let ((pos
+             (when (> line 0)
+               (save-excursion
+                 (save-restriction
+                   (widen)
+                   (goto-char 1)
+                   (forward-line (1- line))
+                   (when (> col 0)
+                     (forward-char (1- col)))
+                   (point))))))
+        (when pos
+          (when (or (< pos (point-min))
+                    (> pos (point-max)))
+            (widen))
+          (goto-char pos))
+        (when TeX-raise-frame-function
+          (funcall TeX-raise-frame-function)))))
+
+  (advice-remove #'TeX-source-correlate-sync-source
+                 #'~tex/source-correlate-sync-source)
+  (advice-add #'TeX-source-correlate-sync-source
+              :override #'~tex/source-correlate-sync-source)
+
   (evil-declare-motion #'LaTeX-find-matching-begin)
   (evil-declare-motion #'LaTeX-find-matching-end)
 

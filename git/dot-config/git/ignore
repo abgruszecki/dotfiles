@@ -30,24 +30,25 @@ __pycache__
 .ruff_cache
 .venv
 
-# IDE
+
+# Tools
+.codex
+.cursor
+.entire
+
 .idea
 *.iml
 
-# Emacs
 .pdf-view-restore
 .auctex.d
 .auctex-auto
 
+.env
+.env.d
+
+latex.out
+
 # Personal
 ,
-,,
+,*
 README.local.md
-,scratch
-,archived
-
-# misc
-.env
-.mise.local.toml
-.mise
-latex.out

@@ -76,9 +76,103 @@
 
 (add-to-list 'default-frame-alist '(fullscreen . maximized))
 
+;; Package guard helpers
+(defun ~straight-package-local-repo (package)
+  "Return straight's local repo name for PACKAGE."
+  (let* ((package-name (if (symbolp package) (symbol-name package) package))
+         (package-symbol (if (symbolp package) package (intern package-name)))
+         (recipe (when (fboundp 'straight-recipes-retrieve)
+                   (ignore-errors
+                     (straight-recipes-retrieve package-symbol)))))
+    (or (and recipe
+             (fboundp 'straight-vc-local-repo-name)
+             (ignore-errors
+               (straight-vc-local-repo-name recipe)))
+        package-name)))
+
+(defun ~assert-straight-package-commit (package expected-commit &optional context)
+  "Signal an error unless PACKAGE is checked out at EXPECTED-COMMIT.
+
+CONTEXT should describe the config or monkey patch that depends on the exact
+package revision."
+  (require 'straight)
+  (unless (fboundp 'straight-vc-get-commit)
+    (error "Cannot verify straight commit for %S%s"
+           package
+           (if context (format " (%s)" context) "")))
+  (let* ((local-repo (~straight-package-local-repo package))
+         (actual-commit (straight-vc-get-commit 'git local-repo)))
+    (unless (equal actual-commit expected-commit)
+      (error "%S is at %s, but%s expected %s; review the dependent config"
+             package
+             actual-commit
+             (if context (format " %s" context) "")
+             expected-commit))))
+
 ;; Emacs server config
+(defun ~target-window-for-buffer (buf)
+  "Return a visible window suitable for displaying BUF.
+
+Prefer a visible frame whose current perspective already contains BUF. If no
+such frame exists, prefer a visible window already showing BUF on another frame."
+  (require 'cl-lib)
+  (let* (;; All windows showing BUF on any visible frame.
+         (visible-wins (get-buffer-window-list buf 'no-minibuf 'visible))
+         ;; Prefer selecting an existing window on some *other* frame first, so we
+         ;; don't keep jumping to the window `server.el' just created.
+         (other-frame-win
+          (cl-find-if (lambda (w)
+                        (not (eq (window-frame w) (selected-frame))))
+                      visible-wins))
+         ;; If BUF is in a perspective and some other visible frame is currently
+         ;; on that perspective, use that frame.
+         (persps (when (fboundp 'persp--buffer-in-persps)
+                   (delq nil (persp--buffer-in-persps buf))))
+         (persp-frame
+          (when (and persps (fboundp 'get-frame-persp))
+            (or (cl-find-if (lambda (f)
+                              (and (frame-live-p f)
+                                   (eq (frame-visible-p f) t)
+                                   (not (eq f (selected-frame)))
+                                   (memq (get-frame-persp f) persps)))
+                            (frame-list))
+                (cl-find-if (lambda (f)
+                              (and (frame-live-p f)
+                                   (eq (frame-visible-p f) t)
+                                   (memq (get-frame-persp f) persps)))
+                            (frame-list))))))
+    (cond
+     ;; If we found a frame matching BUF's persp, prefer a window in that frame.
+     (persp-frame
+      (or (cl-find-if (lambda (w)
+                        (eq (window-frame w) persp-frame))
+                      visible-wins)
+          (let ((w (frame-selected-window persp-frame)))
+            (and (window-live-p w)
+                 (not (window-minibuffer-p w))
+                 (not (window-dedicated-p w))
+                 w))
+          (cl-find-if (lambda (w)
+                        (and (not (window-minibuffer-p w))
+                             (not (window-dedicated-p w))))
+                      (window-list persp-frame 'no-minibuf))))
+     (other-frame-win other-frame-win)
+     (t (car visible-wins)))))
+
+(defun ~select-window-for-buffer (buf)
+  "Display BUF in a target window and select it."
+  (when-let ((target-win (~target-window-for-buffer buf)))
+    (let ((frame (window-frame target-win)))
+      (when (and (frame-live-p frame)
+                 (not (eq frame (selected-frame))))
+        (select-frame-set-input-focus frame))
+      (select-window target-win)
+      (unless (eq (current-buffer) buf)
+        (switch-to-buffer buf nil t))
+      target-win)))
+
 (defun ~server-select-window-where-buffer-is-visible ()
-  "Switches to the frame&window where the current buffer is visible.
+  "Switch to an existing frame/window for the current server buffer.
 
 Intended to be called from `server-switch-hook'.
 My use-case is improving the behavior when writing Latex and jumping from preview to source.
@@ -86,14 +180,10 @@ If I was doing something else in another Emacs frame,
 I come back to the preview and I jump to the source from the preview,
 the buffer gets opened in the last used frame,which is never what I want.
 
-In the future, I should integrate this with perspectives too.
-Instead of jumping to the window which shows the buffer,
-I should jump to the window which shows any buffer from the same perspective.
-"
-  (let ((win (get-buffer-window (current-buffer) 'visible)))
-    (when (window-live-p win)
-      (select-frame-set-input-focus (window-frame win))
-      (select-window win))))
+If the buffer is already assigned to a perspective (persp-mode / Doom workspaces),
+and there's a visible frame whose current perspective matches, prefer that frame
+even if the buffer isn't currently visible there."
+  (~select-window-for-buffer (current-buffer)))
 
 (after! server
   (add-hook! server-switch #'~server-select-window-where-buffer-is-visible))

@@ -46,6 +46,8 @@ end
 
 set -x PARALLEL_SHELL bash
 
+set -x DELTA_FEATURES "diff-so-fancy"
+
 # I think -g does nothing here. It means "global" as opposed to "local".
 set -gx PATH ~/.local/share/rdot/bin $PATH
 set -gx PATH ~/.local/share/go/bin $PATH

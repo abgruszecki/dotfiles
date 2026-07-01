@@ -31,3 +31,5 @@ conflictstyle = zdiff3
 [init]
 	defaultBranch = master
 	# defaultBranch = main
+[include]
+	path = ~/.config/,local/git/config

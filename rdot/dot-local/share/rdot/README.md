@@ -187,3 +187,32 @@ It's different functionality.
 But it'd be good to have it somewhere anyway.
 
 - vd is installed with `uv`: `uv tool install visidata`
+
+# Notes
+## 20260614 - Adding visidata config to all repos
+Started a tmux session.
+
+Opened a new window for each remote:
+```bash
+# parallel -j1 -- tmux neww -e remote={} -n {} ::: boa robolang robolidar explorer perlmutter
+```
+
+Used ,tmux-broadcast.sh to send the following commands:
+```bash
+# rdot-repo-push.sh dotfiles/ $remote
+# rdot-repo-pull.sh dotfiles/ $remote
+# ssh $remote 'cd ~/dotfiles && stow -v -S visidata && echo ok'
+```
+
+### Reflection
+It helps to have tmux-windows open for each remote since something may break on each.
+E.g., I may not have the key for Perlmutter.
+And manual fixups are easier if I can just switch tmux windows.
+
+To automate this further, it'd help to:
+- broadcast only to *other* panes
+- temporarily change tmux window name while the command is running
+  (have timeouts too?)
+- ring the bell if there's any error
+
+It'd help to keep a list of stow-packages & check it out with parallel.
