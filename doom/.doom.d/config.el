@@ -67,12 +67,12 @@
 ;;; Emacs config
 (setf (alist-get 'undecorated default-frame-alist) t)
 
-(setq! compilation-skip-threshold 2
+(setopt compilation-skip-threshold 2
        compilation-scroll-output 'first-error)
 
-(setq! pop-up-windows nil)
+(setopt pop-up-windows nil)
 
-(setq! frame-title-format `("[" (:eval (safe-persp-name (get-current-persp))) "] %b – Doom Emacs"))
+(setopt frame-title-format `("[" (:eval (safe-persp-name (get-current-persp))) "] %b – Doom Emacs"))
 
 (add-to-list 'default-frame-alist '(fullscreen . maximized))
 
@@ -189,11 +189,14 @@ even if the buffer isn't currently visible there."
   (add-hook! server-switch #'~server-select-window-where-buffer-is-visible))
 
 ;;; Doom module config
-(setq! +evil-want-o/O-to-continue-comments nil)
+(setopt +evil-want-o/O-to-continue-comments nil)
 
 (map! "M-=" #'universal-argument
       (:map universal-argument-map "M-=" #'universal-argument-more)
       )
+
+(after! better-jumper
+  (unbind-key "M-," global-map))
 
 ;; TODO I forgot to load a file yet another time. That should be automatic.
 (defmacro load-config-fragments (&rest names)
@@ -248,17 +251,20 @@ even if the buffer isn't currently visible there."
 
 (after! citar-markdown
   ;; NOTE `citar-markdown' is loaded only when citar needs markdown-specific code.
-  (setq! citar-markdown-prompt-for-extra-arguments nil))
+  (setopt citar-markdown-prompt-for-extra-arguments nil))
 
 ;;;; tame evil-snipe
 ;; TODO This had to be eval'd manually. Should it only be run after loading evil-snipe?
 ;; (add-hook! doom-first-input-hook ...)
 ;; (after! evil-snipe ...)
-(map! (:map evil-snipe-local-mode-map
-       :nv "s" nil
-       :nv "S" nil
-       :nvo "C-s" #'evil-snipe-s
-       :nvo "C-S-s" #'evil-snipe-S)
+(map! (:map evil-snipe-override-local-mode-map
+       :m "," nil
+       )
+      (:map evil-snipe-local-mode-map
+       :mnv "s" nil
+       :mnv "S" nil
+       :mnvo "C-s" #'evil-snipe-s
+       :mnvo "C-S-s" #'evil-snipe-S)
       (:map evil-surround-mode-map
        :v "s" nil
        :v "S" nil)
@@ -271,13 +277,13 @@ even if the buffer isn't currently visible there."
 
 ;; (if (not (eq (car company-global-modes) 'not))
 ;;     (warn "`company-global-mode' is not as expected!")
-;;   (setq! company-global-modes
+;;   (setopt company-global-modes
 ;;          (nconc `(not org-mode LaTeX-mode)
 ;;                 (cdr company-global-modes))
 ;;          ))
 
 ;; (after! centaur-tabs
-;;   (setq! centaur-tabs-adjust-buffer-order 'left)
+;;   (setopt centaur-tabs-adjust-buffer-order 'left)
 ;;   (pushnew! centaur-tabs-excluded-prefixes "*doom" "*compilation"))
 
 ;;; tame evil-textobj-anyblock
@@ -341,7 +347,7 @@ even if the buffer isn't currently visible there."
 
 (use-package! evil-lisp-state
   :config
-  (setq! evil-lisp-state-cursor '("salmon" box))
+  (setopt evil-lisp-state-cursor '("salmon" box))
   (evil-lisp-state-leader "H-,")
   (map! :map evil-lisp-state-map
         "u" #'evil-undo

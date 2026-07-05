@@ -11,8 +11,36 @@
 (use-package! ox-gfm
   :after org)
 
+(use-package! org-tidy
+  :after org
+  :ensure t
+  :hook
+  (org-mode . org-tidy-mode))
+
 (after! org
-  (setq! org-timestamp-formats '("%Y-%m-%d" . "%Y-%m-%d %H:%M")
+  ;; org-timestamp-inactive / org-read-date daemon failure:
+  ;;
+  ;; In a Doom Emacs daemon session, the first inactive Org timestamp prompt can
+  ;; fail with:
+  ;;
+  ;;   org-timestamp: Terminal 0 is locked, cannot read from it
+  ;;
+  ;; After that, Emacs may be left with minibuffer-depth = 1 and recursion-depth = 1
+  ;; even though the minibuffer buffer is inactive/empty. Echo-area messages then
+  ;; appear bracketed, and `abort-recursive-edit' / injected C-g can report
+  ;; "No catch for tag: exit", i.e. the daemon's recursive minibuffer state is stale
+  ;; and not cleanly recoverable from Lisp.
+  ;;
+  ;; The failure path appears to be Org's `org-read-date': timestamp insertion opens
+  ;; the popup Calendar before calling `read-string'. In this Doom daemon setup,
+  ;; that can interact badly with terminal/minibuffer locking, causing Emacs to
+  ;; attempt a minibuffer read while the terminal is already considered busy.
+  ;;
+  ;; Workaround: avoid Org's popup calendar in date prompts. Timestamp insertion
+  ;; still works through the minibuffer date parser.
+  (setopt org-read-date-popup-calendar nil)
+
+  (setopt org-timestamp-formats '("%Y-%m-%d" . "%Y-%m-%d %H:%M")
          ;; NOTE Changing org-todo-keywords only takes effect at Emacs startup.
          ;; This may be related to how Org is initialized.
          ;; NOTE !,@ (see docs) "log" the changes in an ugly way.
@@ -33,7 +61,7 @@
          org-hide-block-startup t
          org-startup-folded "fold")
 
-  (setq! org-capture-templates
+  (setopt org-capture-templates
          '(
            ("h" "Log here" entry
             ;; (file+headline "~/org/roam/20240717071652-large_language_models.org" "Notes")
@@ -117,13 +145,13 @@
   ;; end after! org
   )
 
-(setq! bibtex-completion-bibliography '("~/.cache/zotero-export/PhD.bib")
+(setopt bibtex-completion-bibliography '("~/.cache/zotero-export/PhD.bib")
        bibtex-completion-library-path "~/zotero-pdf/"
        bibtex-completion-notes-path "~/org/roam/"
        bibtex-completion-pdf-open-function (lambda ($1) (call-process "open" nil 0 nil $1))
        org-ref-show-citation-on-enter nil)
 
-(setq! citar-bibliography '("~/.cache/zotero-export/PhD.bib"))
+(setopt citar-bibliography '("~/.cache/zotero-export/PhD.bib"))
 
 (after! org-roam
   ;; this advice uses deprecated functions like org-roam-teardown.
@@ -134,11 +162,11 @@
   (advice-remove 'org-roam-db-query #'+org-roam-try-init-db-a)
   )
 
-(setq! org-roam-directory "~/org/roam"
+(setopt org-roam-directory "~/org/roam"
        org-roam-db-location "~/.cache/org-roam/org-roam.db"
        org-roam-node-display-template "${title:120} ${tags:30}")
 
-(setq! org-roam-capture-templates
+(setopt org-roam-capture-templates
           `(("z" "zasób" plain "%?"
              :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org"
                                 "#+title: ${title}\n#+filetags: :@zasób:\n")
@@ -169,7 +197,7 @@
              :unnarrowed
              )))
 
-(setq! citar-org-roam-note-title-template "${title}"
+(setopt citar-org-roam-note-title-template "${title}"
        citar-org-roam-capture-template-key "p")
 
 ;; These are already set by Doom.

@@ -70,6 +70,7 @@
 
 (package! org-web-tools)
 (package! ox-gfm)
+(package! org-tidy :recipe (:host github :repo "jxq0/org-tidy" :files ("*.el")))
 
 ;; (package! gptel)
 (package! aider :recipe (:host github :repo "tninja/aider.el" :files ("*.el")))

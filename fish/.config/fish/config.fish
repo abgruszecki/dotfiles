@@ -24,6 +24,8 @@ end
 #     end
 # end
 
+alias ,p1 ,print1
+
 set -g fish_greeting "Welcome to fish, the friendly interactive shell. Remember: M-e for navi, M-E for aichat."
  
 bind alt-e _navi-smart-replace
