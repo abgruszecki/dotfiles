@@ -83,6 +83,11 @@ which should always be ahead of the remote copy of the master branch.
 Locally, you also have a git remote for the remote repository.
 This lets you use `git` to push and pull changes, while keeping things as simple as possible.
 
+## Managing remote/local binaries
+Rdot can run bash scripts on remote machines.
+The script can install a local project which can then be linked via stow.
+The script can run remote hostnames as well as `localhost`.
+
 # Dev notes
 Remember: one reason for piping scripts into `ssh bash -` is remotely executing local scripts.
 You can develop the script locally and then exec it remotely, no need to push it first.
@@ -145,7 +150,6 @@ But here, despite the `echo`, `parallel` will run part of the command _locally_:
 ``` bash
 parallel -j1 echo tmux neww -n{} ssh {} 'cd \~/dotfiles && stow -v git' ::: explorer boa robolang robolidar perlmutter
 ```
-
 
 ## Improving ssh scripts
 Goal:

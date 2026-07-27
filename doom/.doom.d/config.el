@@ -195,8 +195,10 @@ even if the buffer isn't currently visible there."
       (:map universal-argument-map "M-=" #'universal-argument-more)
       )
 
-(after! better-jumper
-  (unbind-key "M-," global-map))
+(map! :map general-override-mode-map
+      :n "M-," (kbd! ","))
+;; (after! better-jumper
+;;   (unbind-key "M-," global-map))
 
 ;; TODO I forgot to load a file yet another time. That should be automatic.
 (defmacro load-config-fragments (&rest names)

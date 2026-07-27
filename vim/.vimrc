@@ -44,6 +44,14 @@ syntax on
 filetype plugin indent on
 " }}}
 
+" Lazy.nvim {{{
+if has('nvim')
+lua << EOF
+require("user.lazy")
+EOF
+endif
+" }}}
+
 " Pathogen {{{
 runtime bundle/vim-pathogen/autoload/pathogen.vim
 let g:pathogen_disabled=[ 'vim-pandoc', 'vim-pandoc-syntax', ] " 'vim-colors-solarized' ]
@@ -189,6 +197,7 @@ let g:syntastic_mode_map = { 'mode': 'active',
 let g:syntastic_cpp_compiler_options = "-std=c++11 -Wall -Wextra -Wpedantic"
 
 " solarized scheme
+silent! packadd vim-solarized8
 set background=dark
 let g:solarized_t_Co=16
 colorscheme solarized8

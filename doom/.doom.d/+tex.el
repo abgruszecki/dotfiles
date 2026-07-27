@@ -127,7 +127,8 @@
   ;; \ A clanker can do it.
   (~assert-straight-package-commit
    'auctex
-  "1939acb54bb90a1b358eb479aa949af150ac06ec"
+   ;; "1939acb54bb90a1b358eb479aa949af150ac06ec"
+   "276636b47a8cd2d9c54eb9d8b76a415fa0a58271"
    "`~tex/source-correlate-sync-source'")
   (defun ~tex/source-correlate-sync-source (file linecol &rest _ignored)
     "Show TeX FILE with point at LINECOL, reusing a matching perspective frame."
