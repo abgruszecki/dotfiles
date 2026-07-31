@@ -6,23 +6,30 @@ repo=$1
 remote=$2
 
 local_repo_dir=~/"$repo"
-remote_repo_dir="\$HOME/$repo"
+remote_repo_dir_template="\$HOME/$repo"
 
 
 aloud cd "$local_repo_dir" || exit
-log Checking if git remote exists: "$remote"
-git remote -v | cut -f1 | grep "$remote" > /dev/null
+remote_repo_dir=$(aloud ssh "$remote" echo "$remote_repo_dir_template")
 ret=$?
 test $ret == 0 || {
-    log git remote not found: "$remote"
-    log git remotes:
-    git remote -v | cut -f1 | sort | uniq
-    # Is there any reason not to run this automatically?
-    # The script anyway doesn't support anything but the default dir.
-    log Consider running the following command.
-    log "git -C \"$local_repo_dir\" remote add \"$remote\" \"ssh://$remote/$remote_repo_dir\""
+    log Failed to resolve remote repo dir.
     exit $ret
 }
+log Resolved remote repo dir: "$remote_repo_dir"
+
+remote_repo_git_target=$(printf 'ssh://%s/%s' "$remote" "$remote_repo_dir")
+git_remote_row=$(git remote -v | grep -F "(fetch)" | grep "^$remote")
+if test $? == 0; then
+    test "$(echo "$git_remote_row" | awk '{ print $2 }')" == "$remote_repo_git_target" || {
+        log git remote found, but has an unexpected target
+        log git remote -v prints: "$git_remote_row"
+        exit 1
+    }
+else
+    log git remote not found: "$remote"
+    aloud git -C "$local_repo_dir" remote add "$remote" "$remote_repo_git_target" || exit
+fi
 
 
 # Notes.

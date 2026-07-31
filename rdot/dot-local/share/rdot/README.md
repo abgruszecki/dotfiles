@@ -193,7 +193,49 @@ But it'd be good to have it somewhere anyway.
 - vd is installed with `uv`: `uv tool install visidata`
 
 # Notes
-## 20260614 - Adding visidata config to all repos
+## 20260731 -- Initializing aicr
+
+```bash
+remote=aicr
+
+cd 
+cd dotfiles-private
+mkdir -p $remote/bash-local
+touch $remote/bash-local/source-all.sh
+git add .
+git commit -m "add $remote"
+
+rdot-repo-init.sh dotfiles $remote
+rdot-repo-init.sh dotfiles-private $remote
+# the pushes are necessary, but I'm not sure why?
+rdot-repo-push.sh dotfiles $remote
+rdot-repo-push.sh dotfiles-private $remote
+
+ssh $remote
+cd dotfiles
+stow -v -v bash--universal
+stow -v -v git--universal nvim--remote tmux visidata 
+# there was a script to do this, but it was causing problems, so for now it's manual
+ln -srv dotfiles-private/aicr/bash-local/ .bash.d/local
+# lastly: do the equivalent of echo '. ~/.bash.d/source-all.sh' >> ~/.bashrc
+# (this may cause issues, will need to cross-check with e.g. boa)
+```
+
+### installing commands
+
+```bash
+remote=aicr
+_rdot-install-stow.sh $remote
+
+_rdot-install-vim.sh $remote
+_rdot-install-fzf.sh $remote
+_rdot-install-mlr.sh $remote
+
+_rdot-install-uv.sh $remote
+_rdot-install-visidata.sh $remote
+```
+
+## 20260614 -- Adding visidata config to all repos
 Started a tmux session.
 
 Opened a new window for each remote:
