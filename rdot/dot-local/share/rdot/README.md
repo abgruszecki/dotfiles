@@ -195,8 +195,18 @@ But it'd be good to have it somewhere anyway.
 # Notes
 ## 20260731 -- Initializing aicr
 
+### post-reflection
+these commands are really easiest to run in tmux,
+one pane per command
+
+tmux is better for tracing command output
+zmx is more for tui apps which need the scrollback
+
+### commands
 ```bash
 remote=aicr
+
+#### init
 
 cd 
 cd dotfiles-private
@@ -217,14 +227,12 @@ stow -v -v bash--universal
 stow -v -v git--universal nvim--remote tmux visidata 
 # there was a script to do this, but it was causing problems, so for now it's manual
 ln -srv dotfiles-private/aicr/bash-local/ .bash.d/local
-# lastly: do the equivalent of echo '. ~/.bash.d/source-all.sh' >> ~/.bashrc
-# (this may cause issues, will need to cross-check with e.g. boa)
-```
+# lastly, do the equivalent of:
+# $ echo '. ~/.bash.d/source-all.sh' >> ~/.bashrc
+# (unconditionally sourcing may not be the best idea, should cross-check with boa)
 
-### installing commands
+#### installing commands
 
-```bash
-remote=aicr
 _rdot-install-stow.sh $remote
 
 _rdot-install-vim.sh $remote
