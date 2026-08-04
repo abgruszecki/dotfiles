@@ -225,11 +225,12 @@ ssh $remote
 cd dotfiles
 stow -v -v bash--universal
 stow -v -v git--universal nvim--remote tmux visidata 
+cd 
 # there was a script to do this, but it was causing problems, so for now it's manual
 ln -srv dotfiles-private/aicr/bash-local/ .bash.d/local
-# lastly, do the equivalent of:
+# lastly, do something like:
 # $ echo '. ~/.bash.d/source-all.sh' >> ~/.bashrc
-# (unconditionally sourcing may not be the best idea, should cross-check with boa)
+# the file should be sourced even for non-interactive sessions (eg to support ssh+z)
 
 #### installing commands
 
@@ -238,6 +239,7 @@ _rdot-install-stow.sh $remote
 _rdot-install-vim.sh $remote
 _rdot-install-fzf.sh $remote
 _rdot-install-mlr.sh $remote
+_rdot-install-zoxide.sh $remote
 
 _rdot-install-uv.sh $remote
 _rdot-install-visidata.sh $remote
